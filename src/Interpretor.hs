@@ -2,7 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Interpretor (Player(..),
+module Interpretor (repl,
+                    Player(..),
                     PlayerType(..),
                     Missile(..),
                     Cell(..),
@@ -125,3 +126,20 @@ instance FromJSON GameState where
 instance ToJSON GameState where
   toJSON (GameState players gameMap gameDetails) =
     object ["players" .= players, "gameMap" .= gameMap, "gameDetails" .= gameDetails]
+
+stateFilePath :: String
+stateFilePath = "state.json"
+
+commandFilePath :: String
+commandFilePath = "command.txt"
+
+readGameState :: IO GameState
+readGameState = return (GameState [] [] (GameDetails 0 0 0 (BuildingPriceIndex 0 0 0)))
+
+printGameState :: string ->  IO ()
+printGameState gameState = return ()
+
+type Command = String
+
+repl :: (GameState -> Command) -> IO ()
+repl evaluate = fmap evaluate readGameState >>= printGameState
