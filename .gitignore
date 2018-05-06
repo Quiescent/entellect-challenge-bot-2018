@@ -1,5 +1,10 @@
 # Editor files
 *~
+TAGS
+
+# Project (stack) files
+.stack-work/
+EntelectChallenge2018.cabal
 
 # Compiled files
 *.o
