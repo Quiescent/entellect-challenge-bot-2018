@@ -12,7 +12,8 @@ module Interpretor (repl,
                     CellStateContainer(..),
                     BuildingPriceIndex(..),
                     GameDetails(..),
-                    GameState(..))
+                    GameState(..),
+                    Command)
   where
 
 import Data.Aeson (FromJSON,
@@ -27,7 +28,7 @@ import Data.Vector as V
 import GHC.Generics (Generic)
 
 data PlayerType =
-  A | B deriving (Show, Generic)
+  A | B deriving (Show, Generic, Eq)
 
 instance FromJSON PlayerType
 instance ToJSON   PlayerType
@@ -55,7 +56,7 @@ instance FromJSON Cell
 instance ToJSON   Cell
 
 data BuildingType = Defense | Attack | Energy
-  deriving (Show, Generic)
+  deriving (Show, Generic, Eq)
 
 instance FromJSON BuildingType
 instance ToJSON   BuildingType
@@ -111,21 +112,21 @@ instance FromJSON GameDetails
 instance ToJSON   GameDetails
 
 data GameState = GameState { players     :: [Player],
-                             gameMap     :: [CellStateContainer],
-                             gameDetails :: GameDetails}
+                             gameMap     :: [[CellStateContainer]],
+                             gameDetails :: GameDetails }
 
 instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
-    players       <- v .: "players"
-    playersList   <- Prelude.mapM parseJSON $ V.toList players
-    gameMapObject <- v .: "gameMap"
-    gameMap       <- Prelude.mapM parseJSON $ V.toList gameMapObject
-    gameDetails   <- v .: "gameDetails"
-    return $ GameState playersList gameMap gameDetails
+    playersProp     <- v .: "players"
+    playersList     <- Prelude.mapM parseJSON $ V.toList playersProp
+    gameMapObject   <- v .: "gameMap"
+    gameMapProp     <- Prelude.mapM parseJSON $ V.toList gameMapObject
+    gameDetailsProp <- v .: "gameDetails"
+    return $ GameState playersList gameMapProp gameDetailsProp
 
 instance ToJSON GameState where
-  toJSON (GameState players gameMap gameDetails) =
-    object ["players" .= players, "gameMap" .= gameMap, "gameDetails" .= gameDetails]
+  toJSON (GameState gamePlayers mapForGame details) =
+    object ["players" .= gamePlayers, "gameMap" .= mapForGame, "gameDetails" .= details]
 
 stateFilePath :: String
 stateFilePath = "state.json"
@@ -134,10 +135,12 @@ commandFilePath :: String
 commandFilePath = "command.txt"
 
 readGameState :: IO GameState
-readGameState = return (GameState [] [] (GameDetails 0 0 0 (BuildingPriceIndex 0 0 0)))
+readGameState = do
+  _ <- readFile stateFilePath
+  return (GameState [] [] (GameDetails 0 0 0 (BuildingPriceIndex 0 0 0)))
 
-printGameState :: string ->  IO ()
-printGameState gameState = return ()
+printGameState :: String ->  IO ()
+printGameState command = writeFile commandFilePath command
 
 type Command = String
 
