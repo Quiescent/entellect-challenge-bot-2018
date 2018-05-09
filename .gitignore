@@ -8,3 +8,8 @@ EntelectChallenge2018.cabal
 
 # Compiled files
 *.o
+bin/
+
+# Game files
+command.txt
+state.json
