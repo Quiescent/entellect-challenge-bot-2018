@@ -38,7 +38,6 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    - -fno-warn-name-shadowing
     dependencies:
     - EntelectChallenge2018
 
