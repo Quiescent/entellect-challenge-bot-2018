@@ -24,7 +24,7 @@ cellBelongsTo typeOfPlayer =
 
 cellContainsBuildingType :: BuildingType -> CellStateContainer -> Bool
 cellContainsBuildingType typeOfBuilding =
-  any (==typeOfBuilding) . map buildingType . buildings
+  any ((==typeOfBuilding) . buildingType) . buildings
 
 enemyHasAttacking :: GameState -> Int -> Bool
 enemyHasAttacking state =
@@ -38,9 +38,9 @@ cellBelongsToMe = cellBelongsTo A
 
 iDontHaveDefense :: GameState -> Int -> Bool
 iDontHaveDefense state =
-  any cellDoesntContainDefenseFromMe . ((gameMap state) !!)
+  not . any cellContainDefenseFromMe . ((gameMap state) !!)
   where
-    cellDoesntContainDefenseFromMe =
+    cellContainDefenseFromMe =
       cellBelongsToMe &&& (cellContainsBuildingType DEFENSE)
 
 thereIsAnEmptyCellInRow :: GameState -> Int -> Bool
@@ -49,7 +49,7 @@ thereIsAnEmptyCellInRow (GameState {gameMap = gameMap'})=
 
 indexOfFirstEmpty :: GameState -> Int -> Maybe Int
 indexOfFirstEmpty (GameState {gameMap = gameMap'}) =
-  fmap yPos . find cellIsEmpty . (gameMap' !!)
+  fmap yPos . find (cellIsEmpty &&& cellBelongsToMe) . (gameMap' !!)
 
 defendAttack :: GameState -> Maybe (Int, Int, BuildingType)
 defendAttack state@(GameState _ _ (GameDetails _ _ height _)) = do

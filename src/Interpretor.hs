@@ -220,4 +220,7 @@ printGameState command = Prelude.writeFile commandFilePath command
 type Command = String
 
 repl :: (GameState -> Command) -> IO ()
-repl evaluate = fmap evaluate readGameState >>= printGameState
+repl evaluate = do
+  tmp <- readGameState
+  -- print $ show tmp
+  fmap evaluate readGameState >>= printGameState
