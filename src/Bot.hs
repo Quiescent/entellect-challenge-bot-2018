@@ -27,8 +27,8 @@ cellContainsBuildingType typeOfBuilding =
   any (==typeOfBuilding) . map buildingType . buildings
 
 enemyHasAttacking :: GameState -> Int -> Bool
-enemyHasAttacking state row =
-  any cellContainsEnemyAttacker ((gameMap state) !! row)
+enemyHasAttacking state =
+  any cellContainsEnemyAttacker . ((gameMap state) !!)
   where
     cellContainsEnemyAttacker =
       (cellBelongsTo B) &&& (cellContainsBuildingType ATTACK)
