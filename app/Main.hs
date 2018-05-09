@@ -1,6 +1,10 @@
 module Main where
 
 import Interpretor (repl)
+import Bot (decide)
+import System.Random
 
 main :: IO ()
-main = repl ( \ _ -> "")
+main = do
+  gen <- getStdGen
+  repl (decide gen)

@@ -16,7 +16,8 @@ module Interpretor (repl,
                     Command)
   where
 
-import Data.Aeson (FromJSON,
+import Data.Aeson (decode,
+                   FromJSON,
                    parseJSON,
                    withObject,
                    (.:),
@@ -26,6 +27,7 @@ import Data.Aeson (FromJSON,
                    (.=))
 import Data.Vector as V
 import GHC.Generics (Generic)
+import Data.ByteString.Lazy as B
 
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
@@ -68,13 +70,60 @@ data Building = Building { integrity              :: Int,
                            weaponSpeed            :: Int,
                            weaponCooldownTimeLeft :: Int,
                            weaponCooldownPeriod   :: Int,
-                           destroyScore           :: Int,
+                           destroyMultiplier      :: Int,
+                           constructionScore      :: Int,
                            energyGeneratedPerTurn :: Int,
-                           buildingType           :: BuildingType }
-                deriving (Show, Generic)
+                           buildingType           :: BuildingType,
+                           buildingX              :: Int,
+                           buildingY              :: Int,
+                           buildingOwner          :: Int }
+                deriving (Show, Generic, Eq)
 
-instance FromJSON Building
-instance ToJSON   Building
+instance FromJSON Building where
+  parseJSON = withObject "Building" $ \ v -> 
+    Building <$> v .: "health"
+             <*> v .: "constructionTimeLeft"
+             <*> v .: "price"
+             <*> v .: "weaponDamage"
+             <*> v .: "weaponSpeed"
+             <*> v .: "weaponCooldownTimeLeft"
+             <*> v .: "weaponCooldownPeriod"
+             <*> v .: "destroyMultiplier"
+             <*> v .: "constructionScore"
+             <*> v .: "energyGeneratedPerTurn"
+             <*> v .: "buildingType"
+             <*> v .: "x"
+             <*> v .: "y"
+             <*> v .: "playerType"
+instance ToJSON Building where
+  toJSON (Building integrity'
+                   constructionTimeLeft'
+                   price'
+                   weaponDamage'
+                   weaponSpeed'
+                   weaponCooldownTimeLeft'
+                   weaponCooldownPeriod'
+                   destroyMultiplier'
+                   constructionScore'
+                   energyGeneratedPerTurn'
+                   buildingType'
+                   buildingX'
+                   buildingY'
+                   buildingOwner') =
+    object ["health"                 .= integrity',
+            "constructionTimeLeft"   .= constructionTimeLeft',
+            "price"                  .= price',
+            "weaponDamage"           .= weaponDamage',
+            "weaponSpeed"            .= weaponSpeed',
+            "weaponCooldownTimeLeft" .= weaponCooldownTimeLeft',
+            "weaponCooldownPeriod"   .= weaponCooldownPeriod',
+            "destroyMultiplier"      .= destroyMultiplier',
+            "constructionScore"      .= constructionScore',
+            "energyGeneratedPerTurn" .= energyGeneratedPerTurn',
+            "buildingType"           .= buildingType',
+            "x"                      .= buildingX',
+            "y"                      .= buildingY',
+            "playerType"             .= buildingOwner']
 
 data CellStateContainer = CellStateContainer { xPos      :: Int,
                                                yPos      :: Int,
@@ -83,8 +132,24 @@ data CellStateContainer = CellStateContainer { xPos      :: Int,
                                                missiles  :: [Missile] }
                           deriving (Show, Generic)
 
-instance FromJSON CellStateContainer
-instance ToJSON   CellStateContainer
+instance FromJSON CellStateContainer where
+  parseJSON = withObject "CellStateContainer" $ \ v ->
+    CellStateContainer <$> v .: "x"
+                       <*> v .: "y"
+                       <*> v .: "cellOwner"
+                       <*> v .: "buildings"
+                       <*> v .: "missiles"
+instance ToJSON CellStateContainer where
+  toJSON (CellStateContainer xPos'
+                             yPos'
+                             cellOwner'
+                             buildings'
+                             missiles') =
+    object ["x"         .= xPos',
+            "y"         .= yPos',
+            "cellOwner" .= cellOwner',
+            "buildings" .= buildings',
+            "missiles"  .= missiles']
 
 data BuildingPriceIndex = BuildingPriceIndex { attackTowerCost  :: Int,
                                                defenseTowerCost :: Int,
@@ -114,6 +179,7 @@ instance ToJSON   GameDetails
 data GameState = GameState { players     :: [Player],
                              gameMap     :: [[CellStateContainer]],
                              gameDetails :: GameDetails }
+                 deriving (Show, Generic)
 
 instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
@@ -136,11 +202,12 @@ commandFilePath = "command.txt"
 
 readGameState :: IO GameState
 readGameState = do
-  _ <- readFile stateFilePath
-  return (GameState [] [] (GameDetails 0 0 0 (BuildingPriceIndex 0 0 0)))
+  stateString <- B.readFile stateFilePath
+  let Just state = decode stateString
+  return state
 
 printGameState :: String ->  IO ()
-printGameState command = writeFile commandFilePath command
+printGameState command = Prelude.writeFile commandFilePath command
 
 type Command = String
 

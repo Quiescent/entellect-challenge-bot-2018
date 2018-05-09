@@ -11,9 +11,11 @@ import Interpretor (GameState(..),
                     BuildingPriceIndex(..),
                     Player(..))
 import Data.List
+import System.Random
+import Control.Monad
 
-bothPredicates :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-bothPredicates f g = \ input -> f input && g input
+(&&&) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(&&&) f g = \ input -> f input && g input
 
 cellBelongsTo :: PlayerType -> CellStateContainer -> Bool
 cellBelongsTo typeOfPlayer =
@@ -28,20 +30,35 @@ enemyHasAttacking state row =
   any cellContainsEnemyAttacker ((gameMap state) !! row)
   where
     cellContainsEnemyAttacker =
-      bothPredicates (cellBelongsTo B) (cellContainsBuildingType Attack)
+      (cellBelongsTo B) &&& (cellContainsBuildingType Attack)
+
+cellBelongsToMe :: CellStateContainer -> Bool
+cellBelongsToMe = cellBelongsTo A
 
 iDontHaveDefense :: GameState -> Int -> Bool
-iDontHaveDefense state row =
-  any cellDoesntContainDefenseFromMe ((gameMap state) !! row)
+iDontHaveDefense state =
+  any cellDoesntContainDefenseFromMe . ((gameMap state) !!)
   where
     cellDoesntContainDefenseFromMe =
-      bothPredicates (cellBelongsTo A) (cellContainsBuildingType Defense)
+      cellBelongsToMe &&& (cellContainsBuildingType Defense)
 
-underAttack :: GameState -> Maybe Int
-underAttack state@(GameState _ _ (GameDetails _ width _ _)) =
-  find rowUnderAttack [0..width - 1]
+thereIsAnEmptyCellInRow :: GameState -> Int -> Bool
+thereIsAnEmptyCellInRow (GameState {gameMap = gameMap'})=
+  any cellIsEmpty . (gameMap' !!)
+
+indexOfFirstEmpty :: GameState -> Int -> Maybe Int
+indexOfFirstEmpty (GameState {gameMap = gameMap'}) =
+  fmap yPos . find cellIsEmpty . (gameMap' !!)
+
+defendAttack :: GameState -> Maybe (Int, Int, BuildingType)
+defendAttack state@(GameState _ _ (GameDetails _ _ height _)) = do
+  x <- find rowUnderAttack [0..height - 1]
+  y <- indexOfFirstEmpty state x
+  return (x, y, Defense)
   where
-    rowUnderAttack = bothPredicates (enemyHasAttacking state) (iDontHaveDefense state)
+    rowUnderAttack = (enemyHasAttacking state) &&&
+                     (iDontHaveDefense state) &&&
+                     (thereIsAnEmptyCellInRow state)
 
 hasEnoughEnergyForMostExpensiveBuilding :: GameState -> Bool
 hasEnoughEnergyForMostExpensiveBuilding state@(GameState _ _ (GameDetails { buildingPrices = prices })) =
@@ -52,11 +69,53 @@ hasEnoughEnergyForMostExpensiveBuilding state@(GameState _ _ (GameDetails { buil
     maxPrice = maximum towerPrices
     towerPrices = map ($ prices) [attackTowerCost, defenseTowerCost, energyTowerCost]
 
+cellIsEmpty :: CellStateContainer -> Bool
+cellIsEmpty = ([] ==) . buildings
+
+myEmptyCells :: [[CellStateContainer]] -> [CellStateContainer]
+myEmptyCells =
+  concat . map (filter isMineAndIsEmpty)
+  where
+      isMineAndIsEmpty = cellIsEmpty &&& cellBelongsToMe
+
+randomEmptyCell :: RandomGen g => g -> GameState -> ((Int, Int), g)
+randomEmptyCell gen (GameState {gameMap = mapGrid}) =
+  let emptyCells                = myEmptyCells mapGrid
+      (randomInt, newGenerator) = next gen
+      emptyCell                 = emptyCells !! mod randomInt (length emptyCells)
+  in ((xPos emptyCell, yPos emptyCell), newGenerator)
+
+randomBuilding :: RandomGen g => g -> (BuildingType, g)
+randomBuilding gen =
+  let (randomInt, gen') = next gen
+      buildingIndex     = mod randomInt 3
+  in (case buildingIndex of
+        0 -> Defense
+        1 -> Attack
+        _ -> Energy,
+      gen')
+
+buildRandomly :: RandomGen g => g -> GameState -> Maybe (Int, Int, BuildingType)
+buildRandomly gen state =
+  if not $ hasEnoughEnergyForMostExpensiveBuilding state
+  then Nothing
+  else let ((x, y),   gen') = randomEmptyCell gen  state
+           (building, _)    = randomBuilding gen'
+       in Just (x, y, building)
+
 doNothingCommand :: Command
 doNothingCommand = ""
 
-defendRow :: GameState -> Command
-defendRow _ = doNothingCommand
+build :: Int -> Int -> BuildingType -> Command
+build x y buildingType' =
+  show x ++ "," ++ show y ++ "," ++
+  case buildingType' of
+    Defense -> "0"
+    Attack  -> "1"
+    Energy  -> "2"
 
-buildRandom :: GameState -> Command
-buildRandom _ = doNothingCommand
+decide :: RandomGen g => g -> GameState -> Command
+decide gen state =
+  case msum [defendAttack state, buildRandomly gen state] of
+    Just (x, y, building) -> build x y building
+    Nothing               -> doNothingCommand
