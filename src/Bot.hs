@@ -10,9 +10,11 @@ import Interpretor (GameState(..),
                     BuildingType(..),
                     BuildingPriceIndex(..),
                     Player(..))
-import Data.List
+import Data.List as L
 import System.Random
 import Control.Monad
+import Data.Maybe
+import Data.Vector as V
 
 -- Predicate combination operator
 (&&&) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
@@ -24,11 +26,11 @@ cellBelongsTo typeOfPlayer =
 
 cellContainsBuildingType :: BuildingType -> CellStateContainer -> Bool
 cellContainsBuildingType typeOfBuilding =
-  any ((==typeOfBuilding) . buildingType) . buildings
+  V.any ((==typeOfBuilding) . buildingType) . buildings
 
 enemyHasAttacking :: GameState -> Int -> Bool
 enemyHasAttacking state =
-  any cellContainsEnemyAttacker . ((gameMap state) !!)
+  V.any cellContainsEnemyAttacker . ((gameMap state) V.!)
   where
     cellContainsEnemyAttacker =
       (cellBelongsTo B) &&& (cellContainsBuildingType ATTACK)
@@ -38,22 +40,22 @@ cellBelongsToMe = cellBelongsTo A
 
 iDontHaveDefense :: GameState -> Int -> Bool
 iDontHaveDefense state =
-  not . any cellContainDefenseFromMe . ((gameMap state) !!)
+  not . V.any cellContainDefenseFromMe . ((gameMap state) V.!)
   where
     cellContainDefenseFromMe =
       cellBelongsToMe &&& (cellContainsBuildingType DEFENSE)
 
 thereIsAnEmptyCellInRow :: GameState -> Int -> Bool
 thereIsAnEmptyCellInRow (GameState {gameMap = gameMap'})=
-  any cellIsEmpty . (gameMap' !!)
+  V.any cellIsEmpty . (gameMap' V.!)
 
 indexOfFirstEmpty :: GameState -> Int -> Maybe Int
 indexOfFirstEmpty (GameState {gameMap = gameMap'}) =
-  fmap yPos . find (cellIsEmpty &&& cellBelongsToMe) . (gameMap' !!)
+  fmap yPos . V.find (cellIsEmpty &&& cellBelongsToMe) . (gameMap' V.!)
 
 defendAttack :: GameState -> Maybe (Int, Int, BuildingType)
 defendAttack state@(GameState _ _ (GameDetails _ _ height _)) = do
-  x <- find rowUnderAttack [0..height - 1]
+  x <- L.find rowUnderAttack [0..height - 1]
   y <- indexOfFirstEmpty state x
   return (x, y, DEFENSE)
   where
@@ -66,16 +68,16 @@ hasEnoughEnergyForMostExpensiveBuilding state@(GameState _ _ (GameDetails { buil
   ourEnergy >= maxPrice
   where
     ourEnergy = energy ourPlayer
-    ourPlayer = (head . filter ((==A) . playerType) . players) state
-    maxPrice = maximum towerPrices
-    towerPrices = map ($ prices) [attackTowerCost, defenseTowerCost, energyTowerCost]
+    ourPlayer = (fromJust . V.find ((==A) . playerType) . players) state
+    maxPrice = L.maximum towerPrices
+    towerPrices = fmap ($ prices) [attackTowerCost, defenseTowerCost, energyTowerCost]
 
 cellIsEmpty :: CellStateContainer -> Bool
-cellIsEmpty = ([] ==) . buildings
+cellIsEmpty = (V.empty ==) . buildings
 
-myEmptyCells :: [[CellStateContainer]] -> [CellStateContainer]
+myEmptyCells :: V.Vector (V.Vector CellStateContainer) -> [CellStateContainer]
 myEmptyCells =
-  concat . map (filter isMineAndIsEmpty)
+  L.concat . L.map (L.filter isMineAndIsEmpty . V.toList) . V.toList
   where
       isMineAndIsEmpty = cellIsEmpty &&& cellBelongsToMe
 
@@ -83,7 +85,7 @@ randomEmptyCell :: RandomGen g => g -> GameState -> ((Int, Int), g)
 randomEmptyCell gen (GameState {gameMap = mapGrid}) =
   let emptyCells                = myEmptyCells mapGrid
       (randomInt, newGenerator) = next gen
-      emptyCell                 = emptyCells !! mod randomInt (length emptyCells)
+      emptyCell                 = emptyCells !! mod randomInt (L.length emptyCells)
   in ((xPos emptyCell, yPos emptyCell), newGenerator)
 
 randomBuilding :: RandomGen g => g -> (BuildingType, g)
@@ -109,7 +111,7 @@ doNothingCommand = ""
 
 build :: Int -> Int -> BuildingType -> Command
 build x y buildingType' =
-  show x ++ "," ++ show y ++ "," ++
+  show x L.++ "," L.++ show y L.++ "," L.++
   case buildingType' of
     DEFENSE -> "0"
     ATTACK  -> "1"

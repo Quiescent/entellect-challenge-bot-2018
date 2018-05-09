@@ -128,8 +128,8 @@ instance ToJSON Building where
 data CellStateContainer = CellStateContainer { xPos      :: Int,
                                                yPos      :: Int,
                                                cellOwner :: PlayerType,
-                                               buildings :: [Building],
-                                               missiles  :: [Missile] }
+                                               buildings :: V.Vector Building,
+                                               missiles  :: V.Vector Missile }
                           deriving (Show, Generic, Eq)
 
 instance FromJSON CellStateContainer where
@@ -138,14 +138,12 @@ instance FromJSON CellStateContainer where
     y'          <- v .: "y"
     cellOwner'  <- v .: "cellOwner"
     buildings'  <- v .: "buildings"
-    buildings'' <- Prelude.mapM parseJSON $ V.toList buildings'
     missiles'   <- v .: "missiles"
-    missiles''  <- Prelude.mapM parseJSON $ V.toList missiles'
     return $ CellStateContainer x'
                                 y'
                                 cellOwner'
-                                buildings''
-                                missiles''
+                                buildings'
+                                missiles'
 
 instance ToJSON CellStateContainer where
   toJSON (CellStateContainer xPos'
@@ -184,23 +182,13 @@ data GameDetails = GameDetails { round          :: Int,
 instance FromJSON GameDetails
 instance ToJSON   GameDetails
 
-data GameState = GameState { players     :: [Player],
-                             gameMap     :: [[CellStateContainer]],
+data GameState = GameState { players     :: V.Vector Player,
+                             gameMap     :: V.Vector (V.Vector CellStateContainer),
                              gameDetails :: GameDetails }
                  deriving (Show, Generic, Eq)
 
-instance FromJSON GameState where
-  parseJSON = withObject "GameState" $ \ v -> do
-    playersProp     <- v .: "players"
-    playersList     <- Prelude.mapM parseJSON $ V.toList playersProp
-    gameMapObject   <- v .: "gameMap"
-    gameMapProp     <- Prelude.mapM parseJSON $ V.toList gameMapObject
-    gameDetailsProp <- v .: "gameDetails"
-    return $ GameState playersList gameMapProp gameDetailsProp
-
-instance ToJSON GameState where
-  toJSON (GameState gamePlayers mapForGame details) =
-    object ["players" .= gamePlayers, "gameMap" .= mapForGame, "gameDetails" .= details]
+instance FromJSON GameState
+instance ToJSON   GameState
 
 stateFilePath :: String
 stateFilePath = "state.json"
