@@ -57,7 +57,7 @@ data Cell = Cell { x :: Int, y :: Int, owner :: PlayerType }
 instance FromJSON Cell
 instance ToJSON   Cell
 
-data BuildingType = Defense | Attack | Energy
+data BuildingType = DEFENSE | ATTACK | ENERGY
   deriving (Show, Generic, Eq)
 
 instance FromJSON BuildingType
@@ -76,7 +76,7 @@ data Building = Building { integrity              :: Int,
                            buildingType           :: BuildingType,
                            buildingX              :: Int,
                            buildingY              :: Int,
-                           buildingOwner          :: Int }
+                           buildingOwner          :: PlayerType }
                 deriving (Show, Generic, Eq)
 
 instance FromJSON Building where
@@ -133,12 +133,20 @@ data CellStateContainer = CellStateContainer { xPos      :: Int,
                           deriving (Show, Generic)
 
 instance FromJSON CellStateContainer where
-  parseJSON = withObject "CellStateContainer" $ \ v ->
-    CellStateContainer <$> v .: "x"
-                       <*> v .: "y"
-                       <*> v .: "cellOwner"
-                       <*> v .: "buildings"
-                       <*> v .: "missiles"
+  parseJSON = withObject "CellStateContainer" $ \ v -> do
+    x'          <- v .: "x"
+    y'          <- v .: "y"
+    cellOwner'  <- v .: "cellOwner"
+    buildings'  <- v .: "buildings"
+    buildings'' <- Prelude.mapM parseJSON $ V.toList buildings'
+    missiles'   <- v .: "missiles"
+    missiles''  <- Prelude.mapM parseJSON $ V.toList missiles'
+    return $ CellStateContainer x'
+                                y'
+                                cellOwner'
+                                buildings''
+                                missiles''
+
 instance ToJSON CellStateContainer where
   toJSON (CellStateContainer xPos'
                              yPos'

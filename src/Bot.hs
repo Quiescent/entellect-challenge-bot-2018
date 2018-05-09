@@ -30,7 +30,7 @@ enemyHasAttacking state row =
   any cellContainsEnemyAttacker ((gameMap state) !! row)
   where
     cellContainsEnemyAttacker =
-      (cellBelongsTo B) &&& (cellContainsBuildingType Attack)
+      (cellBelongsTo B) &&& (cellContainsBuildingType ATTACK)
 
 cellBelongsToMe :: CellStateContainer -> Bool
 cellBelongsToMe = cellBelongsTo A
@@ -40,7 +40,7 @@ iDontHaveDefense state =
   any cellDoesntContainDefenseFromMe . ((gameMap state) !!)
   where
     cellDoesntContainDefenseFromMe =
-      cellBelongsToMe &&& (cellContainsBuildingType Defense)
+      cellBelongsToMe &&& (cellContainsBuildingType DEFENSE)
 
 thereIsAnEmptyCellInRow :: GameState -> Int -> Bool
 thereIsAnEmptyCellInRow (GameState {gameMap = gameMap'})=
@@ -54,7 +54,7 @@ defendAttack :: GameState -> Maybe (Int, Int, BuildingType)
 defendAttack state@(GameState _ _ (GameDetails _ _ height _)) = do
   x <- find rowUnderAttack [0..height - 1]
   y <- indexOfFirstEmpty state x
-  return (x, y, Defense)
+  return (x, y, DEFENSE)
   where
     rowUnderAttack = (enemyHasAttacking state) &&&
                      (iDontHaveDefense state) &&&
@@ -90,9 +90,9 @@ randomBuilding gen =
   let (randomInt, gen') = next gen
       buildingIndex     = mod randomInt 3
   in (case buildingIndex of
-        0 -> Defense
-        1 -> Attack
-        _ -> Energy,
+        0 -> DEFENSE
+        1 -> ATTACK
+        _ -> ENERGY,
       gen')
 
 buildRandomly :: RandomGen g => g -> GameState -> Maybe (Int, Int, BuildingType)
@@ -110,9 +110,9 @@ build :: Int -> Int -> BuildingType -> Command
 build x y buildingType' =
   show x ++ "," ++ show y ++ "," ++
   case buildingType' of
-    Defense -> "0"
-    Attack  -> "1"
-    Energy  -> "2"
+    DEFENSE -> "0"
+    ATTACK  -> "1"
+    ENERGY  -> "2"
 
 decide :: RandomGen g => g -> GameState -> Command
 decide gen state =
