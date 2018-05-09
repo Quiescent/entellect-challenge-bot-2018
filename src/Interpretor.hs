@@ -40,19 +40,19 @@ data Player = Player { playerType :: PlayerType,
                        health     :: Int,
                        hitsTaken  :: Int,
                        score      :: Int }
-              deriving (Show, Generic)
+              deriving (Show, Generic, Eq)
 
 instance FromJSON Player
 instance ToJSON   Player
 
 data Missile = Missile { damage :: Int, speed :: Int }
-  deriving (Show, Generic)
+  deriving (Show, Generic, Eq)
 
 instance FromJSON Missile
 instance ToJSON   Missile
 
 data Cell = Cell { x :: Int, y :: Int, owner :: PlayerType }
-  deriving (Show, Generic)
+  deriving (Show, Generic, Eq)
 
 instance FromJSON Cell
 instance ToJSON   Cell
@@ -130,7 +130,7 @@ data CellStateContainer = CellStateContainer { xPos      :: Int,
                                                cellOwner :: PlayerType,
                                                buildings :: [Building],
                                                missiles  :: [Missile] }
-                          deriving (Show, Generic)
+                          deriving (Show, Generic, Eq)
 
 instance FromJSON CellStateContainer where
   parseJSON = withObject "CellStateContainer" $ \ v -> do
@@ -162,7 +162,7 @@ instance ToJSON CellStateContainer where
 data BuildingPriceIndex = BuildingPriceIndex { attackTowerCost  :: Int,
                                                defenseTowerCost :: Int,
                                                energyTowerCost  :: Int }
-                          deriving (Show, Generic)
+                          deriving (Show, Generic, Eq)
 
 instance FromJSON BuildingPriceIndex where
   parseJSON = withObject "BuildingPriceIndex" $ \ v -> 
@@ -179,7 +179,7 @@ data GameDetails = GameDetails { round          :: Int,
                                  mapWidth       :: Int,
                                  mapHeight      :: Int,
                                  buildingPrices :: BuildingPriceIndex }
-                   deriving (Show, Generic)
+                   deriving (Show, Generic, Eq)
 
 instance FromJSON GameDetails
 instance ToJSON   GameDetails
@@ -187,7 +187,7 @@ instance ToJSON   GameDetails
 data GameState = GameState { players     :: [Player],
                              gameMap     :: [[CellStateContainer]],
                              gameDetails :: GameDetails }
-                 deriving (Show, Generic)
+                 deriving (Show, Generic, Eq)
 
 instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
