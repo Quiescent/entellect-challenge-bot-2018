@@ -14,6 +14,7 @@ import Data.List
 import System.Random
 import Control.Monad
 
+-- Predicate combination operator
 (&&&) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (&&&) f g = \ input -> f input && g input
 
