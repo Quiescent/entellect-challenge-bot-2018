@@ -1,4 +1,4 @@
-module Player (ourPlayer, ourEnergy)
+module Player (ourPlayer, theirPlayer, ourEnergy, theirEnergy)
   where
 
 import Interpretor (GameState(..),
@@ -7,8 +7,20 @@ import Interpretor (GameState(..),
 import Data.Vector as V
 import Data.Maybe
 
+player :: PlayerType -> GameState -> Player
+player playerType' = (fromJust . V.find ((==playerType') . playerType) . players)
+
 ourPlayer :: GameState -> Player
-ourPlayer = (fromJust . V.find ((==A) . playerType) . players)
+ourPlayer = player A
+
+theirPlayer :: GameState -> Player
+theirPlayer = player B
+
+playerEnergy :: (GameState -> Player) -> GameState -> Int
+playerEnergy player' = energy . player'
 
 ourEnergy :: GameState -> Int
-ourEnergy = energy . ourPlayer
+ourEnergy = playerEnergy ourPlayer
+
+theirEnergy :: GameState -> Int
+theirEnergy = playerEnergy theirPlayer
