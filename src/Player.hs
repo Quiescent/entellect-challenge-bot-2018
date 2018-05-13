@@ -1,4 +1,4 @@
-module Player (ourPlayer, theirPlayer, ourEnergy, theirEnergy)
+module Player (ourPlayer, oponentsPlayer, ourEnergy, oponentsEnergy)
   where
 
 import Interpretor (GameState(..),
@@ -13,8 +13,8 @@ player playerType' = (fromJust . V.find ((==playerType') . playerType) . players
 ourPlayer :: GameState -> Player
 ourPlayer = player A
 
-theirPlayer :: GameState -> Player
-theirPlayer = player B
+oponentsPlayer :: GameState -> Player
+oponentsPlayer = player B
 
 playerEnergy :: (GameState -> Player) -> GameState -> Int
 playerEnergy player' = energy . player'
@@ -22,5 +22,5 @@ playerEnergy player' = energy . player'
 ourEnergy :: GameState -> Int
 ourEnergy = playerEnergy ourPlayer
 
-theirEnergy :: GameState -> Int
-theirEnergy = playerEnergy theirPlayer
+oponentsEnergy :: GameState -> Int
+oponentsEnergy = playerEnergy oponentsPlayer

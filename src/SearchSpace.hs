@@ -1,4 +1,4 @@
-module SearchSpace
+module SearchSpace (ourAvailableMoves, oponentsAvailableMoves)
   where
 
 import Interpretor (GameState(..),
@@ -18,10 +18,10 @@ import Towers
 -- a building in it.  This leads me to believe that buildings might
 -- end up having add-ons.
 
-availableMoves :: GameState -> [Command]
-availableMoves state@(GameState {gameMap = mapGrid}) = do
+availableMoves :: (CellStateContainer -> Bool) -> (GameState -> Int) -> GameState -> [Command]
+availableMoves constrainCellsTo playerEnergy state@(GameState {gameMap = mapGrid}) = do
   row      <- toList mapGrid
-  openCell <- L.filter cellBelongsToMe $ toList row
+  openCell <- L.filter constrainCellsTo $ toList row
   building <- buildingsThatCanBeBuilt openCell
   return $ build (xPos openCell) (yPos openCell) building
   where
@@ -29,5 +29,11 @@ availableMoves state@(GameState {gameMap = mapGrid}) = do
       | buildings' == V.empty = buildingsWhichICanAfford
       | otherwise             = []
     buildingsWhichICanAfford  = L.map snd $ L.filter ((<= energy') . fst) prices
-    energy'                   = ourEnergy state
+    energy'                   = playerEnergy state
     prices                    = towerPrices $ gameDetails state
+
+ourAvailableMoves :: GameState -> [Command]
+ourAvailableMoves = availableMoves cellBelongsToMe ourEnergy
+
+oponentsAvailableMoves :: GameState -> [Command]
+oponentsAvailableMoves = availableMoves cellBelongsToOponent oponentsEnergy

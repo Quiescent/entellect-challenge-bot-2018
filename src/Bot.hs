@@ -25,7 +25,7 @@ enemyHasAttacking state =
   V.any cellContainsEnemyAttacker . ((gameMap state) V.!)
   where
     cellContainsEnemyAttacker =
-      cellBelongsToHim &&& (cellContainsBuildingType ATTACK)
+      cellBelongsToOponent &&& (cellContainsBuildingType ATTACK)
 
 iDontHaveDefense :: GameState -> Int -> Bool
 iDontHaveDefense state =

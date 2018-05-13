@@ -1,4 +1,4 @@
-module Cell (cellBelongsToHim, cellBelongsToMe, cellIsEmpty, cellContainsBuildingType)
+module Cell (cellBelongsToOponent, cellBelongsToMe, cellIsEmpty, cellContainsBuildingType)
   where
 
 import Interpretor (CellStateContainer(..),
@@ -14,8 +14,8 @@ cellBelongsTo typeOfPlayer =
 cellBelongsToMe :: CellStateContainer -> Bool
 cellBelongsToMe = cellBelongsTo A
 
-cellBelongsToHim :: CellStateContainer -> Bool
-cellBelongsToHim = cellBelongsTo B
+cellBelongsToOponent :: CellStateContainer -> Bool
+cellBelongsToOponent = cellBelongsTo B
 
 cellIsEmpty :: CellStateContainer -> Bool
 cellIsEmpty = (V.empty ==) . buildings
