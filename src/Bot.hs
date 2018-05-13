@@ -4,39 +4,28 @@ module Bot
 import Interpretor (GameState(..),
                     Command,
                     GameDetails(..),
-                    Building(..),
                     CellStateContainer(..),
-                    PlayerType(..),
                     BuildingType(..),
-                    BuildingPriceIndex(..),
                     Player(..))
+import Player
+import Command
+import Cell
+import Towers
 import Data.List as L
 import System.Random
 import Control.Monad
-import Data.Maybe
 import Data.Vector as V
 
 -- Predicate combination operator
 (&&&) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (&&&) f g = \ input -> f input && g input
 
-cellBelongsTo :: PlayerType -> CellStateContainer -> Bool
-cellBelongsTo typeOfPlayer =
-  (==typeOfPlayer) . cellOwner
-
-cellContainsBuildingType :: BuildingType -> CellStateContainer -> Bool
-cellContainsBuildingType typeOfBuilding =
-  V.any ((==typeOfBuilding) . buildingType) . buildings
-
 enemyHasAttacking :: GameState -> Int -> Bool
 enemyHasAttacking state =
   V.any cellContainsEnemyAttacker . ((gameMap state) V.!)
   where
     cellContainsEnemyAttacker =
-      (cellBelongsTo B) &&& (cellContainsBuildingType ATTACK)
-
-cellBelongsToMe :: CellStateContainer -> Bool
-cellBelongsToMe = cellBelongsTo A
+      cellBelongsToHim &&& (cellContainsBuildingType ATTACK)
 
 iDontHaveDefense :: GameState -> Int -> Bool
 iDontHaveDefense state =
@@ -64,16 +53,10 @@ defendAttack state@(GameState _ _ (GameDetails _ _ height _)) = do
                      (thereIsAnEmptyCellInRow state)
 
 hasEnoughEnergyForMostExpensiveBuilding :: GameState -> Bool
-hasEnoughEnergyForMostExpensiveBuilding state@(GameState _ _ (GameDetails { buildingPrices = prices })) =
-  ourEnergy >= maxPrice
+hasEnoughEnergyForMostExpensiveBuilding state =
+  (ourEnergy state) >= maxPrice
   where
-    ourEnergy = energy ourPlayer
-    ourPlayer = (fromJust . V.find ((==A) . playerType) . players) state
-    maxPrice = L.maximum towerPrices
-    towerPrices = fmap ($ prices) [attackTowerCost, defenseTowerCost, energyTowerCost]
-
-cellIsEmpty :: CellStateContainer -> Bool
-cellIsEmpty = (V.empty ==) . buildings
+    maxPrice = L.maximum $ L.map fst $ towerPrices $ gameDetails state
 
 myEmptyCells :: V.Vector (V.Vector CellStateContainer) -> [CellStateContainer]
 myEmptyCells =
@@ -105,17 +88,6 @@ buildRandomly gen state =
   else let ((x, y),   gen') = randomEmptyCell gen  state
            (building, _)    = randomBuilding gen'
        in Just (x, y, building)
-
-doNothingCommand :: Command
-doNothingCommand = ""
-
-build :: Int -> Int -> BuildingType -> Command
-build x y buildingType' =
-  show x L.++ "," L.++ show y L.++ "," L.++
-  case buildingType' of
-    DEFENSE -> "0"
-    ATTACK  -> "1"
-    ENERGY  -> "2"
 
 decide :: RandomGen g => g -> GameState -> Command
 decide gen state =
