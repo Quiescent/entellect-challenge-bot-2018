@@ -11,6 +11,13 @@ import Data.List as L
 import Player
 import Towers
 
+-- Notes: the bot rules aren't very clear on the rules surrounding
+-- buildings in a block.  Their own example bot leads one to believe
+-- that you can have multiple buildings in a cell at a time; however,
+-- the rules state that you can't build in a square which already has
+-- a building in it.  This leads me to believe that buildings might
+-- end up having add-ons.
+
 availableMoves :: GameState -> [Command]
 availableMoves state@(GameState {gameMap = mapGrid}) = do
   row      <- toList mapGrid
@@ -18,9 +25,9 @@ availableMoves state@(GameState {gameMap = mapGrid}) = do
   building <- buildingsThatCanBeBuilt openCell
   return $ build (xPos openCell) (yPos openCell) building
   where
-    -- TODO: When is a cell full of buildings?
-    -- NOTE: Takes a cell as input
-    buildingsThatCanBeBuilt _ = buildingsWhichICanAfford
+    buildingsThatCanBeBuilt (CellStateContainer { buildings = buildings' })
+      | buildings' == V.empty = buildingsWhichICanAfford
+      | otherwise             = []
     buildingsWhichICanAfford  = L.map snd $ L.filter ((<= energy') . fst) prices
     energy'                   = ourEnergy state
     prices                    = towerPrices $ gameDetails state
