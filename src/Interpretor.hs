@@ -13,7 +13,7 @@ module Interpretor (repl,
                     BuildingPriceIndex(..),
                     GameDetails(..),
                     GameState(..),
-                    Command)
+                    Command(..))
   where
 
 import Data.Aeson (decode,
@@ -202,10 +202,21 @@ readGameState = do
   let Just state = decode stateString
   return state
 
-printGameState :: String ->  IO ()
-printGameState command = Prelude.writeFile commandFilePath command
+data Command = Command { xCoord   :: Int,
+                         yCoord   :: Int,
+                         building :: BuildingType }
+               | NothingCommand
 
-type Command = String
+instance Show Command where
+  show (Command x' y' building') =
+    show x' Prelude.++ show y' Prelude.++ case building' of
+    DEFENSE -> "0"
+    ATTACK  -> "1"
+    ENERGY  -> "2"
+  show NothingCommand = ""
+
+printCommand :: Command ->  IO ()
+printCommand = Prelude.writeFile commandFilePath . show
 
 repl :: (GameState -> Command) -> IO ()
-repl evaluate = fmap evaluate readGameState >>= printGameState
+repl evaluate = fmap evaluate readGameState >>= printCommand

@@ -2,13 +2,11 @@ module Bot
   where
 
 import Interpretor (GameState(..),
-                    Command,
+                    Command(..),
                     GameDetails(..),
                     CellStateContainer(..),
-                    BuildingType(..),
-                    Player(..))
+                    BuildingType(..))
 import Player
-import Command
 import Cell
 import Towers
 import Data.List as L
@@ -85,12 +83,12 @@ buildRandomly :: RandomGen g => g -> GameState -> Maybe (Int, Int, BuildingType)
 buildRandomly gen state =
   if not $ hasEnoughEnergyForMostExpensiveBuilding state
   then Nothing
-  else let ((x, y),   gen') = randomEmptyCell gen  state
-           (building, _)    = randomBuilding gen'
-       in Just (x, y, building)
+  else let ((x, y),    gen') = randomEmptyCell gen  state
+           (building', _)    = randomBuilding gen'
+       in Just (x, y, building')
 
 decide :: RandomGen g => g -> GameState -> Command
 decide gen state =
   case msum [defendAttack state, buildRandomly gen state] of
-    Just (x, y, building) -> build x y building
-    Nothing               -> doNothingCommand
+    Just (x, y, building') -> Command x y building'
+    Nothing                -> NothingCommand

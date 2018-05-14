@@ -1,11 +1,12 @@
-module SearchSpace (ourAvailableMoves, oponentsAvailableMoves)
+module SearchSpace (ourAvailableMoves, oponentsAvailableMoves, advanceState)
   where
 
 import Interpretor (GameState(..),
-                    Command,
+                    Command(..),
                     CellStateContainer(..))
+import Missile
+import GameState as G
 import Cell
-import Command
 import Data.Vector as V
 import Data.List as L
 import Player
@@ -20,10 +21,10 @@ import Towers
 
 availableMoves :: (CellStateContainer -> Bool) -> (GameState -> Int) -> GameState -> [Command]
 availableMoves constrainCellsTo playerEnergy state@(GameState {gameMap = mapGrid}) = do
-  row      <- toList mapGrid
-  openCell <- L.filter constrainCellsTo $ toList row
-  building <- buildingsThatCanBeBuilt openCell
-  return $ build (xPos openCell) (yPos openCell) building
+  row       <- toList mapGrid
+  openCell  <- L.filter constrainCellsTo $ toList row
+  building' <- buildingsThatCanBeBuilt openCell
+  return $ Command (xPos openCell) (yPos openCell) building'
   where
     buildingsThatCanBeBuilt (CellStateContainer { buildings = buildings' })
       | buildings' == V.empty = buildingsWhichICanAfford
@@ -37,3 +38,13 @@ ourAvailableMoves = availableMoves cellBelongsToMe ourEnergy
 
 oponentsAvailableMoves :: GameState -> [Command]
 oponentsAvailableMoves = availableMoves cellBelongsToOponent oponentsEnergy
+
+advanceState :: GameState -> [GameState]
+advanceState state = do
+  ourMove      <- ourAvailableMoves state
+  oponentsMove <- oponentsAvailableMoves state
+  -- NOTE: Possible optimisation: do missiles, then our move as
+  -- intermediaries
+  return $ state `G.update` ourMove `G.update` oponentsMove `G.updateMissiles` newMissilePositions
+  where
+    newMissilePositions = advanceMissiles state
