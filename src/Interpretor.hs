@@ -201,7 +201,7 @@ instance ToJSON   GameState where
                                                     (mapHeight gameDetails'),
             "buildingPrices" .= gameDetails']
 
-data CellContents = CellContents { buildingInCell :: Building,
+data CellContents = CellContents { buildingInCell :: Maybe Building,
                                    missilesInCell :: V.Vector Missile }
           deriving (Show, Generic, Eq)
 

@@ -1,4 +1,4 @@
-module Player (ourPlayer, oponentsPlayer, ourEnergy, oponentsEnergy)
+module Player (updateEnergy, myPlayer, oponentsPlayer, myEnergy, oponentsEnergy)
   where
 
 import Interpretor (GameState(..),
@@ -10,8 +10,8 @@ import Data.Maybe
 player :: PlayerType -> GameState -> Player
 player playerType' = (fromJust . V.find ((==playerType') . playerType) . players)
 
-ourPlayer :: GameState -> Player
-ourPlayer = player A
+myPlayer :: GameState -> Player
+myPlayer = player A
 
 oponentsPlayer :: GameState -> Player
 oponentsPlayer = player B
@@ -19,8 +19,15 @@ oponentsPlayer = player B
 playerEnergy :: (GameState -> Player) -> GameState -> Int
 playerEnergy player' = energy . player'
 
-ourEnergy :: GameState -> Int
-ourEnergy = playerEnergy ourPlayer
+myEnergy :: GameState -> Int
+myEnergy = playerEnergy myPlayer
 
 oponentsEnergy :: GameState -> Int
 oponentsEnergy = playerEnergy oponentsPlayer
+
+updateEnergy :: GameState -> (Int, Int) -> GameState
+updateEnergy state (myEnergy', oponentsEnergy') =
+  let myPlayer'     = myPlayer state
+      oponentPlayer = oponentsPlayer state
+  in state { players = V.fromList [myPlayer'     { energy = myEnergy' },
+                                   oponentPlayer { energy = oponentsEnergy' }] }

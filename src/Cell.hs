@@ -25,6 +25,10 @@ cellBelongsToMe (GameState {gameDetails = details}) =
 cellBelongsToOponent :: GameState -> (Int, Int) -> Bool
 cellBelongsToOponent state = not . (cellBelongsToMe state)
 
+isJust :: Maybe a -> Bool
+isJust (Just _) = True
+isJust Nothing  = False
+
 cellContainsBuildingType :: BuildingType -> CellContents -> Bool
 cellContainsBuildingType typeOfBuilding =
-  ((==typeOfBuilding) . buildingType) . buildingInCell
+  isJust . fmap (((==typeOfBuilding) . buildingType)) . buildingInCell

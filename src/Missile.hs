@@ -1,13 +1,7 @@
-module Missile (MissilePosition(..), advanceMissiles)
+module Missile (tickMissiles)
   where
 
-import Interpretor (Missile(..),
-                    GameState(..))
+import Interpretor (GameState(..))
 
-data MissilePosition =
-  MissilePosition { missileToMove :: Missile,
-                    newX          :: Int,
-                    newY          :: Int }
-
-advanceMissiles :: GameState -> [MissilePosition]
-advanceMissiles state = []
+tickMissiles :: GameState -> GameState
+tickMissiles state = state

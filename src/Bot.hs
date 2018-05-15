@@ -13,7 +13,7 @@ import Control.Monad
 
 hasEnoughEnergyForMostExpensiveBuilding :: GameState -> Bool
 hasEnoughEnergyForMostExpensiveBuilding state =
-  (ourEnergy state) >= maxPrice
+  (myEnergy state) >= maxPrice
   where
     maxPrice = L.maximum $ L.map fst $ towerPrices $ gameDetails state
 
