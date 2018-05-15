@@ -16,11 +16,14 @@ allCells (GameState {gameDetails = details}) =
 cellIsEmpty :: SparseMap -> (Int, Int) -> Bool
 cellIsEmpty = flip M.member
 
+-- TODO: which is width and which is height? (for both of the next
+-- two)
 cellBelongsToMe :: GameState -> (Int, Int) -> Bool
-cellBelongsToMe _ _ = True
+cellBelongsToMe (GameState {gameDetails = details}) =
+  (< (div (mapWidth details) 2)) . snd
 
 cellBelongsToOponent :: GameState -> (Int, Int) -> Bool
-cellBelongsToOponent _ _ = True
+cellBelongsToOponent state = not . (cellBelongsToMe state)
 
 cellContainsBuildingType :: BuildingType -> CellContents -> Bool
 cellContainsBuildingType typeOfBuilding =
