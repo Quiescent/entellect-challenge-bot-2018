@@ -209,7 +209,7 @@ data Command = Command { xCoord   :: Int,
 
 instance Show Command where
   show (Command x' y' building') =
-    show x' Prelude.++ show y' Prelude.++ case building' of
+    show x' Prelude.++ "," Prelude.++ show y' Prelude.++ ","  Prelude.++ case building' of
     DEFENSE -> "0"
     ATTACK  -> "1"
     ENERGY  -> "2"
