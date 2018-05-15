@@ -6,14 +6,16 @@ module Interpretor (repl,
                     Player(..),
                     PlayerType(..),
                     Missile(..),
-                    Cell(..),
+                    CellContents(..),
                     BuildingType(..),
                     Building(..),
                     CellStateContainer(..),
                     BuildingPriceIndex(..),
                     GameDetails(..),
                     GameState(..),
-                    Command(..))
+                    Command(..),
+                    SparseMap,
+                    DenseMap)
   where
 
 import Data.Aeson (decode,
@@ -28,6 +30,7 @@ import Data.Aeson (decode,
 import Data.Vector as V
 import GHC.Generics (Generic)
 import Data.ByteString.Lazy as B
+import Data.Map.Strict as M
 
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
@@ -50,12 +53,6 @@ data Missile = Missile { damage :: Int, speed :: Int }
 
 instance FromJSON Missile
 instance ToJSON   Missile
-
-data Cell = Cell { x :: Int, y :: Int, owner :: PlayerType }
-  deriving (Show, Generic, Eq)
-
-instance FromJSON Cell
-instance ToJSON   Cell
 
 data BuildingType = DEFENSE | ATTACK | ENERGY
   deriving (Show, Generic, Eq)
@@ -183,12 +180,40 @@ instance FromJSON GameDetails
 instance ToJSON   GameDetails
 
 data GameState = GameState { players     :: V.Vector Player,
-                             gameMap     :: V.Vector (V.Vector CellStateContainer),
+                             gameMap     :: SparseMap,
                              gameDetails :: GameDetails }
                  deriving (Show, Generic, Eq)
 
-instance FromJSON GameState
-instance ToJSON   GameState
+instance FromJSON GameState where
+  parseJSON = withObject "GameState" $ \ v -> do
+    players'      <- v.: "players"
+    denseGameMap  <- v.: "gameMap"
+    gameDetails'  <- v.: "gameDetails"
+    return $ GameState players'
+      (toSparseMap denseGameMap)
+      gameDetails'
+-- TODO: check whether this works (in particular the sparse to dense
+-- map part)
+instance ToJSON   GameState where
+  toJSON (GameState players' gameMap' gameDetails') =
+    object ["players"        .= players',
+            "gameMap"        .= toDenseMap gameMap' (mapWidth gameDetails')
+                                                    (mapHeight gameDetails'),
+            "buildingPrices" .= gameDetails']
+
+data CellContents = CellContents { buildingInCell :: Building,
+                                   missilesInCell :: V.Vector Missile }
+          deriving (Show, Generic, Eq)
+
+type SparseMap = M.Map (Int, Int) CellContents
+
+type DenseMap = V.Vector (V.Vector CellStateContainer) 
+
+toSparseMap :: DenseMap -> SparseMap
+toSparseMap denseMap = M.empty
+
+toDenseMap :: SparseMap -> Int -> Int -> DenseMap
+toDenseMap sparseMap maxX maxY = V.empty
 
 stateFilePath :: String
 stateFilePath = "state.json"

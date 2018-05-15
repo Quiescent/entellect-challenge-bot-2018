@@ -1,13 +1,12 @@
-module SearchSpace (ourAvailableMoves, oponentsAvailableMoves, advanceState)
+module SearchSpace (ourAvailableMoves, oponentsAvailableMoves, advanceState, allCells, cellIsEmpty)
   where
 
 import Interpretor (GameState(..),
-                    Command(..),
-                    CellStateContainer(..))
+                    Command(..))
+import Cell
+import Logic
 import Missile
 import GameState as G
-import Cell
-import Data.Vector as V
 import Data.List as L
 import Player
 import Towers
@@ -19,25 +18,21 @@ import Towers
 -- a building in it.  This leads me to believe that buildings might
 -- end up having add-ons.
 
-availableMoves :: (CellStateContainer -> Bool) -> (GameState -> Int) -> GameState -> [Command]
+availableMoves :: ((Int, Int) -> Bool) -> (GameState -> Int) -> GameState -> [Command]
 availableMoves constrainCellsTo playerEnergy state@(GameState {gameMap = mapGrid}) = do
-  row       <- toList mapGrid
-  openCell  <- L.filter constrainCellsTo $ toList row
-  building' <- buildingsThatCanBeBuilt openCell
-  return $ Command (xPos openCell) (yPos openCell) building'
+  (x, y)    <- L.filter (cellIsEmpty mapGrid &&& constrainCellsTo) $ allCells state
+  building' <- buildingsWhichICanAfford
+  return $ Command x y building'
   where
-    buildingsThatCanBeBuilt (CellStateContainer { buildings = buildings' })
-      | buildings' == V.empty = buildingsWhichICanAfford
-      | otherwise             = []
-    buildingsWhichICanAfford  = L.map snd $ L.filter ((<= energy') . fst) prices
-    energy'                   = playerEnergy state
-    prices                    = towerPrices $ gameDetails state
+    buildingsWhichICanAfford = L.map snd $ L.filter ((<= energy') . fst) prices
+    energy'                  = playerEnergy state
+    prices                   = towerPrices $ gameDetails state
 
 ourAvailableMoves :: GameState -> [Command]
-ourAvailableMoves = availableMoves cellBelongsToMe ourEnergy
+ourAvailableMoves state = availableMoves (cellBelongsToMe state) ourEnergy state
 
 oponentsAvailableMoves :: GameState -> [Command]
-oponentsAvailableMoves = availableMoves cellBelongsToOponent oponentsEnergy
+oponentsAvailableMoves state = availableMoves (cellBelongsToOponent state) oponentsEnergy state
 
 advanceState :: GameState -> [GameState]
 advanceState state = do
