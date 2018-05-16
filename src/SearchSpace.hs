@@ -40,12 +40,8 @@ oponentsAvailableMoves state = availableMoves (cellBelongsToOponent state) opone
 
 advanceState :: GameState -> [GameState]
 advanceState state = do
-  -- TODO: create engine and make it depend on missiles and
-  -- buildings to tick both of them.  It'll iterate through
-  -- everything in one go and produce a new base map on which my
-  -- moves will be made as a final step.
   let newMap   = tickEngine state
-  myMove      <- myAvailableMoves state
+  myMove       <- myAvailableMoves state
   oponentsMove <- oponentsAvailableMoves state
   -- NOTE: Possible optimisation: do missiles, then my move as
   -- intermediaries
