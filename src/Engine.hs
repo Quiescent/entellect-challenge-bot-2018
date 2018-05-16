@@ -43,9 +43,13 @@ incrementEnergy state
 
 collideMissiles :: GameState -> GameState
 collideMissiles state =
-  state { gameMap = foldr collide (gameMap state) contents }
+  state { gameMap = foldr collide (gameMap state) contentsWithCoords }
   where
-    contents = mapContents state
+    contentsWithCoords = mapContentsWithCoords state
 
-collide :: CellContents -> SparseMap -> SparseMap
-collide contents' gameMap' = gameMap'
+collide :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
+collide ((x, y), (CellContents _ missiles)) gameMap'
+  | missilesEmpty missiles = gameMap'
+  | otherwise              = missilesFoldr (iterCollide x y) gameMap' missiles
+    where
+      iterCollide x' y' missile gameMap'' = gameMap''
