@@ -1,4 +1,10 @@
-module Cell (cellBelongsToOponent, cellBelongsToMe, cellIsEmpty, cellContainsBuildingType, allCells)
+module Cell (cellBelongsToOponent,
+             cellBelongsToMe,
+             cellIsEmpty,
+             cellContainsBuildingType,
+             allCells,
+             removeMissiles,
+             addMissile)
   where
 
 import Interpretor (CellContents(..),
@@ -6,8 +12,10 @@ import Interpretor (CellContents(..),
                     Building(..),
                     GameState(..),
                     GameDetails(..),
+                    Missile(..),
                     SparseMap)
 import Data.Map.Strict as M
+import Data.Vector     as V
 
 allCells :: GameState -> [(Int, Int)]
 allCells (GameState {gameDetails = details}) =
@@ -32,3 +40,10 @@ isJust Nothing  = False
 cellContainsBuildingType :: BuildingType -> CellContents -> Bool
 cellContainsBuildingType typeOfBuilding =
   isJust . fmap (((==typeOfBuilding) . buildingType)) . buildingInCell
+
+removeMissiles :: CellContents -> CellContents
+removeMissiles (CellContents building _) = CellContents building V.empty
+
+addMissile :: Missile -> CellContents -> CellContents
+addMissile missile cellContents@(CellContents _ missiles') =
+  cellContents { missilesInCell = V.cons missile missiles' }
