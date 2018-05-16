@@ -55,19 +55,24 @@ collide ((x, y), (CellContents _ missiles)) gameMap'
   | missilesEmpty missiles = gameMap'
   | otherwise              = missilesFoldr (checkCollision x y) gameMap' missiles
     where
-      checkCollision x' y' (Missile damage' speed') gameMap'' =
-        iterCollide (y' - speed') speed' gameMap''
+      -- This tells me if this missile collided but doesn't allow me
+      -- to remove it...
+      checkCollision x' y' missile@(Missile damage' speed') gameMap'' =
+        let collisionResult = iterCollide (y' - speed') speed' gameMap''
+        in case collisionResult of
+          Just (newMap) -> newMap
+          Nothing       -> gameMap''
         where
           -- TODO which direction did the missile come from??
-          iterCollide :: Int -> Int -> SparseMap -> SparseMap
-          iterCollide _   0         gameMap''' = gameMap'''
+          iterCollide :: Int -> Int -> SparseMap -> Maybe SparseMap
+          iterCollide _   0         _          = Nothing
           iterCollide y'' remaining gameMap''' =
             case getAt (x', y'') gameMap''' of
               Just (CellContents (Just _) _) ->
                 let adjustedMap = adjustAt (damageBuilding damage')
                                            (x, y'')
                                            gameMap'''
-                in iterCollide (y'' + 1) (remaining - 1) adjustedMap
+                in Just adjustedMap
               _                                      ->
                 iterCollide (y'' + 1) (remaining - 1) gameMap'''
 
