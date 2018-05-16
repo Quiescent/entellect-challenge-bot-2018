@@ -42,7 +42,9 @@ incrementEnergy state
              energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
      Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
 
-
+-- TODO Remove missiles which collide with the player
+-- TODO Keep track of hits to player
+-- TODO Keep track of score
 collideMissiles :: GameState -> GameState
 collideMissiles state =
   state { gameMap = foldr collide (gameMap state) contentsWithCoords }
