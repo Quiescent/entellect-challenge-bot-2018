@@ -4,7 +4,9 @@ module Engine (tickEngine)
 import Interpretor (GameState(..),
                     SparseMap,
                     CellContents(..),
-                    Building(..))
+                    Building(..),
+                    Missile(..),
+                    CellContents(..))
 import Cell
 import Player
 import Missile
@@ -47,9 +49,32 @@ collideMissiles state =
   where
     contentsWithCoords = mapContentsWithCoords state
 
+-- TODO remove the missile
 collide :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
 collide ((x, y), (CellContents _ missiles)) gameMap'
   | missilesEmpty missiles = gameMap'
-  | otherwise              = missilesFoldr (iterCollide x y) gameMap' missiles
+  | otherwise              = missilesFoldr (checkCollision x y) gameMap' missiles
     where
-      iterCollide x' y' missile gameMap'' = gameMap''
+      checkCollision x' y' (Missile damage' speed') gameMap'' =
+        iterCollide (y' - speed') speed' gameMap''
+        where
+          -- TODO which direction did the missile come from??
+          iterCollide :: Int -> Int -> SparseMap -> SparseMap
+          iterCollide _   0         gameMap''' = gameMap'''
+          iterCollide y'' remaining gameMap''' =
+            case getAt (x', y'') gameMap''' of
+              Just (CellContents (Just _) _) ->
+                let adjustedMap = adjustAt (damageBuilding damage')
+                                           (x, y'')
+                                           gameMap'''
+                in iterCollide (y'' + 1) (remaining - 1) adjustedMap
+              _                                      ->
+                iterCollide (y'' + 1) (remaining - 1) gameMap'''
+
+damageBuilding :: Int -> CellContents -> CellContents
+damageBuilding damage' cellContents =
+  let (Just building') = buildingInCell cellContents
+      integrity'       = integrity building'
+  in if integrity' <= damage'
+     then cellContents { buildingInCell = Nothing }
+     else cellContents { buildingInCell = Just (building' { integrity = integrity' - damage' }) }
