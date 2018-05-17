@@ -14,6 +14,8 @@ module Interpretor (repl,
                     GameDetails(..),
                     GameState(..),
                     Command(..),
+                    BuildingStats(..),
+                    TowerStats(..),
                     SparseMap,
                     DenseMap)
   where
@@ -170,14 +172,39 @@ instance ToJSON BuildingPriceIndex where
             "DEFENSE" .= defenseCost,
             "ENERGY"  .= energyCost]
 
-data GameDetails = GameDetails { round          :: Int,
-                                 mapWidth       :: Int,
-                                 mapHeight      :: Int,
-                                 buildingPrices :: BuildingPriceIndex }
+data GameDetails = GameDetails { round             :: Int,
+                                 mapWidth          :: Int,
+                                 mapHeight         :: Int,
+                                 roundIncomeEnergy :: Int,
+                                 buildingPrices    :: BuildingPriceIndex,
+                                 buildingStats     :: BuildingStats }
                    deriving (Show, Generic, Eq)
 
 instance FromJSON GameDetails
 instance ToJSON   GameDetails
+
+data BuildingStats = BuildingStats { attackTowerStats  :: TowerStats,
+                                     defenseTowerStats :: TowerStats,
+                                     energyTowerStats  :: TowerStats }
+                   deriving (Show, Generic, Eq)
+
+-- TODO override to convert from screeming snake case
+instance FromJSON BuildingStats
+instance ToJSON   BuildingStats
+
+data TowerStats = TowerStats { initialIntegrity            :: Int,
+                               constructionTime            :: Int,
+                               towerPrice                  :: Int,
+                               towerWeaponDamage           :: Int,
+                               towerWeaponSpeed            :: Int,
+                               towerWeaponCooldownPeriod   :: Int,
+                               towerEnergyGeneratedPerTurn :: Int,
+                               towerDestroyMultiplier      :: Int,
+                               towerConstructionScore      :: Int }
+                  deriving (Show, Generic, Eq)
+
+instance FromJSON TowerStats
+instance ToJSON   TowerStats
 
 data GameState = GameState { players     :: V.Vector Player,
                              gameMap     :: SparseMap,
@@ -222,6 +249,7 @@ toSparseMap denseMap =
          then sparseMap
          else M.insert (x, y) (CellContents building' missiles') sparseMap
 
+-- TODO Implement
 toDenseMap :: SparseMap -> Int -> Int -> DenseMap
 toDenseMap sparseMap maxX maxY = V.empty
 
