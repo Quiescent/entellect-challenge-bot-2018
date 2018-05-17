@@ -157,7 +157,6 @@ instance FromJSON CellStateContainer where
     missiles'   <- v .: "missiles"
     return $ CellStateContainer x'
                                 y'
-                                
                                 cellOwner'
                                 buildings'
                                 missiles'
@@ -195,7 +194,7 @@ data GameDetails = GameDetails { round             :: Int,
                                  mapHeight         :: Int,
                                  roundIncomeEnergy :: Int,
                                  buildingPrices    :: BuildingPriceIndex,
-                                 buildingStats     :: BuildingStats }
+                                 buildingsStats    :: BuildingStats }
                    deriving (Show, Generic, Eq)
 
 instance FromJSON GameDetails
@@ -228,8 +227,36 @@ data TowerStats = TowerStats { initialIntegrity            :: Int,
                                towerConstructionScore      :: Int }
                   deriving (Show, Generic, Eq)
 
-instance FromJSON TowerStats
-instance ToJSON   TowerStats
+instance FromJSON TowerStats where
+  parseJSON = withObject "TowerStats" $ \ v ->
+    TowerStats <$> v.: "health"
+               <*> v.: "constructionTime"
+               <*> v.: "price"
+               <*> v.: "weaponDamage"
+               <*> v.: "weaponSpeed"
+               <*> v.: "weaponCooldownPeriod"
+               <*> v.: "energyGeneratedPerTurn"
+               <*> v.: "destroyMultiplier"
+               <*> v.: "constructionScore"
+instance ToJSON TowerStats where
+  toJSON (TowerStats health'
+                     constructionTime'
+                     price'
+                     weaponDamage'
+                     weaponSpeed'
+                     weaponCooldownPeriod'
+                     energyGeneratedPerTurn'
+                     destroyMultiplier'
+                     constructionScore') =
+    object ["health"                 .= health',
+            "constructionTime"       .= constructionTime',
+            "price"                  .= price',
+            "weaponDamage"           .= weaponDamage',
+            "weaponSpeed"            .= weaponSpeed',
+            "weaponCooldownPeriod"   .= weaponCooldownPeriod',
+            "energyGeneratedPerTurn" .= energyGeneratedPerTurn',
+            "destroyMultiplier"      .= destroyMultiplier',
+            "constructionScore"      .= constructionScore']
 
 data GameState = GameState { players     :: V.Vector Player,
                              gameMap     :: SparseMap,
