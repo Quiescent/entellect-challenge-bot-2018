@@ -188,9 +188,16 @@ data BuildingStats = BuildingStats { attackTowerStats  :: TowerStats,
                                      energyTowerStats  :: TowerStats }
                    deriving (Show, Generic, Eq)
 
--- TODO override to convert from screeming snake case
-instance FromJSON BuildingStats
-instance ToJSON   BuildingStats
+instance FromJSON BuildingStats where
+  parseJSON = withObject "BuildingStats" $ \ v ->
+    BuildingStats <$> v.: "ATTACK"
+                  <*> v.: "DEFENSE"
+                  <*> v.: "ENERGY"
+instance ToJSON BuildingStats where
+  toJSON (BuildingStats attackTowerStats' defenseTowerStats' energyTowerStats') =
+    object ["ATTACK"  .= attackTowerStats',
+            "DEFENSE" .= defenseTowerStats',
+            "ENERGY"  .= energyTowerStats']
 
 data TowerStats = TowerStats { initialIntegrity            :: Int,
                                constructionTime            :: Int,
