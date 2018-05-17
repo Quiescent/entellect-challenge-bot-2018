@@ -21,7 +21,7 @@ moveMissiles (coordinate, (CellContents _ missiles')) gameMap'
 
 -- TODO which direction is the missile going?
 moveMissile :: (Int, Int) -> Missile -> SparseMap -> SparseMap
-moveMissile (x, y) missile@(Missile _ speed') gameMap' =
+moveMissile (x, y) missile@(Missile { speed = speed' }) gameMap' =
   adjustAt (addMissile missile) (x, y + speed') gameMap'
 
 mapMissiles :: (a -> b) -> V.Vector a -> V.Vector b

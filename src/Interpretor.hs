@@ -50,11 +50,28 @@ data Player = Player { playerType :: PlayerType,
 instance FromJSON Player
 instance ToJSON   Player
 
-data Missile = Missile { damage :: Int, speed :: Int }
+data Missile = Missile { damage :: Int,
+                         speed  :: Int,
+                         owner  :: PlayerType,
+                         xDisp  :: Int,
+                         yDisp  :: Int }
   deriving (Show, Generic, Eq)
 
-instance FromJSON Missile
-instance ToJSON   Missile
+instance FromJSON Missile where
+  parseJSON = withObject "Missile" $ \ v ->
+    Missile <$> v.: "damage"
+            <*> v.: "speed"
+            <*> v.: "playerType"
+            <*> v.: "x"
+            <*> v.: "y"
+instance ToJSON Missile where
+  toJSON (Missile damage' speed' owner' xDisp' yDisp') =
+    object ["damage"     .= damage',
+            "speed"      .= speed',
+            "playerType" .= owner',
+            "x"          .= xDisp',
+            "y"          .= yDisp']
+    
 
 data BuildingType = DEFENSE | ATTACK | ENERGY
   deriving (Show, Generic, Eq)
@@ -140,6 +157,7 @@ instance FromJSON CellStateContainer where
     missiles'   <- v .: "missiles"
     return $ CellStateContainer x'
                                 y'
+                                
                                 cellOwner'
                                 buildings'
                                 missiles'

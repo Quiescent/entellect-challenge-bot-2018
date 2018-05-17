@@ -59,7 +59,7 @@ collide ((x, y), (CellContents _ missiles)) gameMap'
     where
       -- This tells me if this missile collided but doesn't allow me
       -- to remove it...
-      checkCollision x' y' missile@(Missile damage' speed') gameMap'' =
+      checkCollision x' y' missile@(Missile damage' speed' owner' _ _) gameMap'' =
         let collisionResult = iterCollide (y' - speed') speed' gameMap''
         in case collisionResult of
           Just (newMap) -> newMap
