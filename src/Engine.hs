@@ -2,6 +2,7 @@ module Engine (tickEngine)
   where
 
 import Interpretor (GameState(..),
+                    GameDetails(..),
                     SparseMap,
                     CellContents(..),
                     Building(..),
@@ -16,10 +17,6 @@ import GameMap
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
 
--- TODO learn energy per turn
-energyPerTurn :: Int
-energyPerTurn = 10
-
 gainEnergy :: GameState -> GameState
 gainEnergy state =
   updateEnergy state mineAndOponentsEnergy
@@ -33,14 +30,15 @@ incrementEnergy state
                 coordinate
                 (CellContents { buildingInCell = building' })
                 (myEnergy', oponentsEnergy') =
-  case building'
-  of Just (Building {energyGeneratedPerTurn = energyGeneratedPerTurn'}) ->
-       if cellBelongsToMe state coordinate
-       then (energyPerTurn + myEnergy' + energyGeneratedPerTurn',
-             energyPerTurn + oponentsEnergy')
-       else (energyPerTurn + myEnergy',
-             energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
-     Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
+  let energyPerTurn = roundIncomeEnergy $ gameDetails state
+  in case building'
+     of Just (Building {energyGeneratedPerTurn = energyGeneratedPerTurn'}) ->
+          if cellBelongsToMe state coordinate
+          then (energyPerTurn + myEnergy' + energyGeneratedPerTurn',
+                energyPerTurn + oponentsEnergy')
+          else (energyPerTurn + myEnergy',
+                energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
+        Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
 
 -- TODO Remove missiles which collide with the player
 -- TODO Keep track of hits to player
