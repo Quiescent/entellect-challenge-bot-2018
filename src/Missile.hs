@@ -1,7 +1,7 @@
 module Missile (tickMissiles, mapMissiles, missilesEmpty, missilesFoldr)
   where
 
-import Interpretor (GameState(..), Missile(..), CellContents(..), SparseMap)
+import Interpretor (PlayerType(..), GameState(..), Missile(..), CellContents(..), SparseMap)
 import GameMap
 import Cell
 
@@ -19,10 +19,10 @@ moveMissiles (coordinate, (CellContents _ missiles')) gameMap'
     let withMissilesRemoved = adjustAt removeMissiles coordinate gameMap'
     in missilesFoldr (moveMissile coordinate) withMissilesRemoved missiles'
 
--- TODO which direction is the missile going?
 moveMissile :: (Int, Int) -> Missile -> SparseMap -> SparseMap
-moveMissile (x, y) missile@(Missile { speed = speed' }) gameMap' =
-  adjustAt (addMissile missile) (x, y + speed') gameMap'
+moveMissile (x, y) missile@(Missile { speed = speed', owner = owner' }) gameMap' =
+  let adjustment = if owner' == A then speed' else (-speed')
+  in adjustAt (addMissile missile) (x, y + adjustment) gameMap'
 
 mapMissiles :: (a -> b) -> V.Vector a -> V.Vector b
 mapMissiles = V.map
