@@ -1,7 +1,8 @@
 module Engine (tickEngine)
   where
 
-import Interpretor (GameState(..),
+import Interpretor (PlayerType(..),
+                    GameState(..),
                     GameDetails(..),
                     SparseMap,
                     CellContents(..),
@@ -50,6 +51,7 @@ collideMissiles state =
     contentsWithCoords = mapContentsWithCoords state
 
 -- TODO remove the missile
+-- TODO account for points
 collide :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
 collide ((x, y), (CellContents _ missiles)) gameMap'
   | missilesEmpty missiles = gameMap'
@@ -60,10 +62,12 @@ collide ((x, y), (CellContents _ missiles)) gameMap'
       checkCollision x' y' missile@(Missile damage' speed' owner' _ _) gameMap'' =
         let collisionResult = iterCollide (y' - speed') speed' gameMap''
         in case collisionResult of
-          Just (newMap) -> newMap
+          Just (newMap) -> adjustAt (removeMissile missile)
+                                    (x', y')
+                                    newMap
           Nothing       -> gameMap''
         where
-          -- TODO which direction did the missile come from??
+          missileDisp = if owner' == A then 1 else (-1)
           iterCollide :: Int -> Int -> SparseMap -> Maybe SparseMap
           iterCollide _   0         _          = Nothing
           iterCollide y'' remaining gameMap''' =
@@ -74,7 +78,7 @@ collide ((x, y), (CellContents _ missiles)) gameMap'
                                            gameMap'''
                 in Just adjustedMap
               _                                      ->
-                iterCollide (y'' + 1) (remaining - 1) gameMap'''
+                iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
 
 damageBuilding :: Int -> CellContents -> CellContents
 damageBuilding damage' cellContents =
