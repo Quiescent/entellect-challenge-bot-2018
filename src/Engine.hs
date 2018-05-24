@@ -41,44 +41,54 @@ incrementEnergy state
                 energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
         Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
 
--- TODO Remove missiles which collide with the player
 -- TODO Keep track of hits to player
 -- TODO Keep track of score
 collideMissiles :: GameState -> GameState
-collideMissiles state =
-  state { gameMap = foldr collide (gameMap state) contentsWithCoords }
+collideMissiles state@(GameState { gameDetails = gameDetails' }) =
+  state { gameMap = gameMap' }
   where
+    (gameMap', collisions) = foldr (collide (mapWidth gameDetails')) ((gameMap state), []) contentsWithCoords
     contentsWithCoords = mapContentsWithCoords state
 
--- TODO remove the missile
--- TODO account for points
-collide :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
-collide ((x, y), (CellContents _ missiles)) gameMap'
-  | missilesEmpty missiles = gameMap'
-  | otherwise              = missilesFoldr (checkCollision x y) gameMap' missiles
+data CollisionType = HitPlayer | HitBuilding
+
+data Collision = Collision CollisionType
+                           SparseMap
+                           PlayerType
+
+collide :: Int -> ((Int, Int), CellContents) -> (SparseMap, [Collision]) -> (SparseMap, [Collision])
+collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
+  | missilesEmpty missiles = (gameMap', collisions)
+  | otherwise              = missilesFoldr (checkCollision x y) (gameMap', collisions) missiles
     where
-      -- This tells me if this missile collided but doesn't allow me
-      -- to remove it...
-      checkCollision x' y' missile@(Missile damage' speed' owner' _ _) gameMap'' =
+      checkCollision x' y' missile@(Missile damage' speed' owner' _ _) (gameMap'', collisions') =
         let collisionResult = iterCollide (y' - speed') speed' gameMap''
         in case collisionResult of
-          Just (newMap) -> adjustAt (removeMissile missile)
-                                    (x', y')
-                                    newMap
-          Nothing       -> gameMap''
+          Just collision@(Collision _ newMap _) -> (adjustAt (removeMissile missile)
+                                                    (x', y')
+                                                    newMap,
+                                                    collision : collisions')
+          Nothing       -> (gameMap'', collisions')
         where
           missileDisp = if owner' == A then 1 else (-1)
-          iterCollide :: Int -> Int -> SparseMap -> Maybe SparseMap
+          iterCollide :: Int -> Int -> SparseMap -> Maybe Collision
           iterCollide _   0         _          = Nothing
           iterCollide y'' remaining gameMap''' =
             case getAt (x', y'') gameMap''' of
-              Just (CellContents (Just _) _) ->
+              Just (CellContents (Just building') _) ->
                 let adjustedMap = adjustAt (damageBuilding damage')
                                            (x, y'')
                                            gameMap'''
-                in Just adjustedMap
+                in Just (Collision HitBuilding adjustedMap (buildingOwner building'))
               _                                      ->
-                iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
+                let playerCollidedWith = if x' == -1
+                                         then Just A
+                                         else if x' == width
+                                              then Just B
+                                              else Nothing
+                in case playerCollidedWith of
+                  (Just player) -> Just (Collision HitPlayer gameMap'' player)
+                  _             -> iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
 
 damageBuilding :: Int -> CellContents -> CellContents
 damageBuilding damage' cellContents =
