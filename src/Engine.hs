@@ -14,6 +14,8 @@ import Player
 import Missile
 import Building
 import GameMap
+import GameDetails
+import Collision (CollisionType(..), Collision(..))
 
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
@@ -50,11 +52,12 @@ collideMissiles state@(GameState { gameDetails = gameDetails' }) =
     (gameMap', collisions) = foldr (collide (mapWidth gameDetails')) ((gameMap state), []) contentsWithCoords
     contentsWithCoords = mapContentsWithCoords state
 
-data CollisionType = HitPlayer | HitBuilding
-
-data Collision = Collision CollisionType
-                           SparseMap
-                           PlayerType
+accountForCollisions :: GameState -> [Collision] -> GameState
+accountForCollisions state collissions =
+  foldr accountForCollision state collissions
+  where
+    accountForCollision (Collision HitPlayer   _ playerHit) =
+      incrementPlayerHits playerHit . updatePoints playerHit HitPlayer
 
 collide :: Int -> ((Int, Int), CellContents) -> (SparseMap, [Collision]) -> (SparseMap, [Collision])
 collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
