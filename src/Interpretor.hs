@@ -258,6 +258,7 @@ instance ToJSON TowerStats where
             "destroyMultiplier"      .= destroyMultiplier',
             "constructionScore"      .= constructionScore']
 
+-- TODO change to playerA and playerB
 data GameState = GameState { players     :: V.Vector Player,
                              gameMap     :: SparseMap,
                              gameDetails :: GameDetails }
