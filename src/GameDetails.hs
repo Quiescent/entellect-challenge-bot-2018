@@ -5,10 +5,11 @@ import Interpretor(GameDetails(..),
                    GameState(..),
                    PlayerType(..))
 import Collision (CollisionType(..))
+import Player
 
 incrementPlayerHits :: PlayerType -> GameState -> GameState
-incrementPlayerHits A state = state
-incrementPlayerHits B state = state
+incrementPlayerHits A = incrementMyHitsTaken
+incrementPlayerHits B = incrementOponentsHitsTaken
 
 updatePoints :: PlayerType -> CollisionType -> GameState -> GameState
 updatePoints A HitBuilding state = state
