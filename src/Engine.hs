@@ -43,8 +43,23 @@ incrementEnergy state
                 energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
         Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
 
--- TODO Keep track of hits to player
 -- TODO Keep track of score
+-- TODO Score
+
+-- Each player will have a score based on the damage dealt by the
+-- player on both the opponent's health and buildings, as well as the
+-- players own energy generated and buildings built.
+
+-- Scores are calculated by adding the following together:
+
+--     Total damage dealt to opponent buildings
+--     Fixed score for each building constructed
+--     Total energy generated
+--     Damage bonus for any damage done to your opponent's health
+
+-- Note that damage bonus is awarded each time your opponent's health
+-- pool is damaged, the player receives points equal to damage dealt
+-- times 100.
 collideMissiles :: GameState -> GameState
 collideMissiles state@(GameState { gameDetails = gameDetails' }) =
   state { gameMap = gameMap' }
@@ -56,8 +71,8 @@ accountForCollisions :: GameState -> [Collision] -> GameState
 accountForCollisions state collissions =
   foldr accountForCollision state collissions
   where
-    accountForCollision (Collision HitPlayer   _ playerHit) =
-      incrementPlayerHits playerHit . updatePoints playerHit HitPlayer
+    accountForCollision (Collision hitType _ playerHit damage) =
+      incrementPlayerHits playerHit . updatePointsForHits playerHit hitType damage
 
 collide :: Int -> ((Int, Int), CellContents) -> (SparseMap, [Collision]) -> (SparseMap, [Collision])
 collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
@@ -67,7 +82,7 @@ collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
       checkCollision x' y' missile@(Missile damage' speed' owner' _ _) (gameMap'', collisions') =
         let collisionResult = iterCollide (y' - speed') speed' gameMap''
         in case collisionResult of
-          Just collision@(Collision _ newMap _) -> (adjustAt (removeMissile missile)
+          Just collision@(Collision _ newMap _ _) -> (adjustAt (removeMissile missile)
                                                     (x', y')
                                                     newMap,
                                                     collision : collisions')
@@ -82,7 +97,7 @@ collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
                 let adjustedMap = adjustAt (damageBuilding damage')
                                            (x, y'')
                                            gameMap'''
-                in Just (Collision HitBuilding adjustedMap (buildingOwner building'))
+                in Just (Collision HitBuilding adjustedMap (buildingOwner building') damage')
               _                                      ->
                 let playerCollidedWith = if x' == -1
                                          then Just A
@@ -90,7 +105,7 @@ collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
                                               then Just B
                                               else Nothing
                 in case playerCollidedWith of
-                  (Just player) -> Just (Collision HitPlayer gameMap'' player)
+                  (Just player) -> Just (Collision HitPlayer gameMap'' player damage')
                   _             -> iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
 
 damageBuilding :: Int -> CellContents -> CellContents

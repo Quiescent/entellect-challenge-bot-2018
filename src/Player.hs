@@ -1,4 +1,12 @@
-module Player (updateEnergy, myPlayer, oponentsPlayer, myEnergy, oponentsEnergy, incrementMyHitsTaken, incrementOponentsHitsTaken)
+module Player (updateEnergy,
+               myPlayer,
+               oponentsPlayer,
+               myEnergy,
+               oponentsEnergy,
+               incrementMyHitsTaken,
+               incrementOponentsHitsTaken,
+               incrementMyPoints,
+               incrementOponentsPoints)
   where
 
 import Interpretor (GameState(..),
@@ -33,19 +41,21 @@ updateEnergy state (myEnergy', oponentsEnergy') =
   in state { players = V.fromList [myPlayer'     { energy = myEnergy' },
                                    oponentPlayer { energy = oponentsEnergy' }] }
 
-mapPlayer :: (GameState -> Player) -> (Player -> Player) -> GameState -> GameState
+type MapPlayer = (Player -> Player) -> GameState -> GameState
+
+mapPlayer :: (GameState -> Player) -> MapPlayer
 mapPlayer player f state =
   let players'  = players state
       player' = player state
   in state { players = V.filter (== player') players' `V.snoc` (f player') }
 
-mapMyPlayer :: (Player -> Player) -> GameState -> GameState
+mapMyPlayer :: MapPlayer
 mapMyPlayer = mapPlayer myPlayer
 
-mapOponentsPlayer :: (Player -> Player) -> GameState -> GameState
+mapOponentsPlayer :: MapPlayer
 mapOponentsPlayer = mapPlayer oponentsPlayer
 
-incrementHitsTaken :: ((Player -> Player) -> GameState -> GameState) -> GameState -> GameState
+incrementHitsTaken :: MapPlayer -> GameState -> GameState
 incrementHitsTaken mapPlayer' =
   mapPlayer' ( \ player'@(Player { hitsTaken = hitsTaken' }) -> player' { hitsTaken = hitsTaken' + 1 })
 
@@ -54,3 +64,13 @@ incrementMyHitsTaken = incrementHitsTaken mapMyPlayer
 
 incrementOponentsHitsTaken :: GameState -> GameState
 incrementOponentsHitsTaken = incrementHitsTaken mapOponentsPlayer
+
+incrementPoints :: MapPlayer -> Int -> GameState -> GameState
+incrementPoints mapPlayer' points =
+  mapPlayer' ( \ player'@(Player { score = score' }) -> player' { score = score' + points })
+
+incrementMyPoints :: Int -> GameState -> GameState
+incrementMyPoints = incrementPoints mapMyPlayer
+
+incrementOponentsPoints :: Int -> GameState -> GameState
+incrementOponentsPoints = incrementPoints mapOponentsPlayer
