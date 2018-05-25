@@ -3,5 +3,7 @@ module Building (tickBuildings)
 
 import Interpretor (GameState(..))
 
+-- TODO Implement
+-- TODO Score for completed ones
 tickBuildings :: GameState -> GameState
 tickBuildings state = state

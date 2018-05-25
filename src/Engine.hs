@@ -20,6 +20,7 @@ import Collision (CollisionType(..), Collision(..))
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
 
+-- TODO Score for energy gained
 gainEnergy :: GameState -> GameState
 gainEnergy state =
   updateEnergy state mineAndOponentsEnergy
@@ -43,23 +44,6 @@ incrementEnergy state
                 energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
         Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
 
--- TODO Keep track of score
--- TODO Score
-
--- Each player will have a score based on the damage dealt by the
--- player on both the opponent's health and buildings, as well as the
--- players own energy generated and buildings built.
-
--- Scores are calculated by adding the following together:
-
---     Total damage dealt to opponent buildings
---     Fixed score for each building constructed
---     Total energy generated
---     Damage bonus for any damage done to your opponent's health
-
--- Note that damage bonus is awarded each time your opponent's health
--- pool is damaged, the player receives points equal to damage dealt
--- times 100.
 collideMissiles :: GameState -> GameState
 collideMissiles state@(GameState { gameDetails = gameDetails' }) =
   state { gameMap = gameMap' }

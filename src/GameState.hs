@@ -4,7 +4,7 @@ module GameState (update)
 import Interpretor (GameState(..),
                     Command(..))
 
--- TODO implement!!!
+-- TODO implement executing a command
 update :: GameState -> Command -> GameState
 update state NothingCommand            = state
 update state (Command x' y' building') = state
