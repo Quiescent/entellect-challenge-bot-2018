@@ -20,14 +20,17 @@ import Collision (CollisionType(..), Collision(..))
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
 
--- TODO Score for energy gained
 gainEnergy :: GameState -> GameState
 gainEnergy state =
-  updateEnergy state mineAndOponentsEnergy
+  updatePointsForEnergy mineAndOponentsEnergy $ updateEnergy state mineAndOponentsEnergy
   where
     mineAndOponentsEnergy = foldGameMap (incrementEnergy state)
                                         (myEnergy state, oponentsEnergy state)
                                         state
+
+updatePointsForEnergy :: (Int, Int) -> GameState -> GameState
+updatePointsForEnergy (myEnergy, oponentsEnergy) =
+  updatePlayerPointsForEnergy A myEnergy . updatePlayerPointsForEnergy B oponentsEnergy
 
 incrementEnergy :: GameState -> (Int, Int) -> CellContents -> (Int, Int) -> (Int, Int)
 incrementEnergy state
