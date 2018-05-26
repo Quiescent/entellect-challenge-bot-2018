@@ -7,6 +7,7 @@ import Interpretor (GameState(..),
                     BuildingType(..),
                     SparseMap)
 import GameMap
+import Cell
 
 tickBuildings :: GameState -> GameState
 tickBuildings state =
@@ -24,18 +25,23 @@ generateMissiles contentsWithCoords state =
   where
     gameMap' = foldr generateMissile (gameMap state) contentsWithCoords
 
---- TODO implement cooldown update
 generateMissile :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
-generateMissile ((x, y), (CellContents Nothing         _)) gameMap' = gameMap'
+generateMissile (_,      (CellContents Nothing         _)) gameMap' = gameMap'
 generateMissile ((x, y), (CellContents
                           (Just (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
                                             weaponCooldownPeriod   = weaponCooldownPeriod',
-                                            buildingType           = buildingType'})) _)) gameMap' =
-  case buildingType' of
-    ATTACK -> adjustAt todo
-                       (x, y)
-                       gameMap'
-    _      -> gameMap'
+                                            buildingType           = buildingType',
+                                            buildingOwner          = owner,
+                                            weaponDamage           = weaponDamage',
+                                            weaponSpeed            = weaponSpeed' })) _)) gameMap' =
+  case (buildingType', weaponCooldownTimeLeft') of
+    (ATTACK, 0) -> adjustAt (resetCooldownAndCreateMissile owner
+                                                           weaponCooldownPeriod'
+                                                           weaponDamage'
+                                                           weaponSpeed')
+                            (x, y)
+                            gameMap'
+    _           -> gameMap'
 
 updateBuildingProgress :: [((Int, Int), CellContents)] -> GameState -> GameState
 updateBuildingProgress contentsWithCoords state =
@@ -45,7 +51,7 @@ updateBuildingProgress contentsWithCoords state =
 
 -- TODO Implement build progress update
 updateBuildingProgress' :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
-updateBuildingProgress' ((x, y), (CellContents Nothing         _)) gameMap' = gameMap'
+updateBuildingProgress' (_,      (CellContents Nothing         _)) gameMap' = gameMap'
 updateBuildingProgress' ((x, y), (CellContents
                           (Just (Building { buildingType         = buildingType',
                                             constructionTimeLeft = constructionTimeLeft' })) _)) gameMap' =

@@ -5,7 +5,8 @@ module Cell (cellBelongsToOponent,
              allCells,
              removeMissiles,
              removeMissile,
-             addMissile)
+             addMissile,
+             resetCooldownAndCreateMissile)
   where
 
 import Interpretor (CellContents(..),
@@ -14,6 +15,7 @@ import Interpretor (CellContents(..),
                     GameState(..),
                     GameDetails(..),
                     Missile(..),
+                    PlayerType(..),
                     SparseMap)
 import Data.Map.Strict as M
 import Data.Vector     as V
@@ -61,3 +63,12 @@ removeMissile missile cellContents =
 addMissile :: Missile -> CellContents -> CellContents
 addMissile missile cellContents@(CellContents _ missiles') =
   cellContents { missilesInCell = V.cons missile missiles' }
+
+resetCooldownAndCreateMissile :: PlayerType -> Int -> Int -> Int -> CellContents -> CellContents
+resetCooldownAndCreateMissile owner' cooldown damage' speed' =
+  addMissile (Missile damage' speed' owner' 0 0) . resetBuildingCooldown cooldown
+
+resetBuildingCooldown :: Int -> CellContents -> CellContents
+resetBuildingCooldown _        cellContents@(CellContents Nothing _)          = cellContents
+resetBuildingCooldown cooldown cellContents@(CellContents (Just building') _) =
+  cellContents { buildingInCell = Just (building' { weaponCooldownTimeLeft = cooldown }) }

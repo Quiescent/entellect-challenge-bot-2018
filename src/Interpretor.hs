@@ -50,6 +50,7 @@ data Player = Player { playerType :: PlayerType,
 instance FromJSON Player
 instance ToJSON   Player
 
+-- Remove the silly x and y disp
 data Missile = Missile { damage :: Int,
                          speed  :: Int,
                          owner  :: PlayerType,
