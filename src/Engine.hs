@@ -17,8 +17,6 @@ import GameMap
 import GameDetails
 import Collision (CollisionType(..), Collision(..))
 
--- TODO Correct order (right now I'm building, generating missiles and
--- then moving them -- pretty sure that's wrong)
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
 
