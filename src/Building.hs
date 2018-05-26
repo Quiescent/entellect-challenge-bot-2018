@@ -1,4 +1,4 @@
-module Building (tickBuildings)
+module Building (tickBuildings, attackTowerStats', defenseTowerStats', energyTowerStats')
   where
 
 import Interpretor (GameState(..),
@@ -6,6 +6,9 @@ import Interpretor (GameState(..),
                     Building(..),
                     BuildingType(..),
                     PlayerType(..),
+                    BuildingStats(..),
+                    GameDetails(..),
+                    TowerStats(..),
                     SparseMap)
 import Player
 import GameMap
@@ -83,3 +86,15 @@ scoreBuilding (_, (CellContents
        then (myPoints + constructionScore', oponentsPoints)
        else (myPoints,                     oponentsPoints + constructionScore')
   else points
+
+towerStats :: (BuildingStats -> TowerStats) -> GameState -> TowerStats
+towerStats stats = stats . buildingsStats . gameDetails
+
+attackTowerStats' :: GameState -> TowerStats
+attackTowerStats' = towerStats attackTowerStats
+
+defenseTowerStats' :: GameState -> TowerStats
+defenseTowerStats' = towerStats defenseTowerStats
+
+energyTowerStats' :: GameState -> TowerStats
+energyTowerStats' = towerStats energyTowerStats
