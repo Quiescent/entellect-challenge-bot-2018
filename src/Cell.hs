@@ -6,7 +6,8 @@ module Cell (cellBelongsToOponent,
              removeMissiles,
              removeMissile,
              addMissile,
-             resetCooldownAndCreateMissile)
+             resetCooldownAndCreateMissile,
+             mapBuilding)
   where
 
 import Interpretor (CellContents(..),
@@ -72,3 +73,7 @@ resetBuildingCooldown :: Int -> CellContents -> CellContents
 resetBuildingCooldown _        cellContents@(CellContents Nothing _)          = cellContents
 resetBuildingCooldown cooldown cellContents@(CellContents (Just building') _) =
   cellContents { buildingInCell = Just (building' { weaponCooldownTimeLeft = cooldown }) }
+
+mapBuilding :: (Building -> Building) -> CellContents -> CellContents
+mapBuilding f contents =
+  contents { buildingInCell = (fmap f $ buildingInCell contents) }

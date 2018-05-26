@@ -5,7 +5,9 @@ import Interpretor (GameState(..),
                     CellContents(..),
                     Building(..),
                     BuildingType(..),
+                    PlayerType(..),
                     SparseMap)
+import Player
 import GameMap
 import Cell
 
@@ -16,8 +18,6 @@ tickBuildings state =
    updateBuildingProgress contentsWithCoords) state
   where
     contentsWithCoords = mapContentsWithCoords state
-
-todo = undefined
 
 generateMissiles :: [((Int, Int), CellContents)] -> GameState -> GameState
 generateMissiles contentsWithCoords state =
@@ -33,7 +33,8 @@ generateMissile ((x, y), (CellContents
                                             buildingType           = buildingType',
                                             buildingOwner          = owner,
                                             weaponDamage           = weaponDamage',
-                                            weaponSpeed            = weaponSpeed' })) _)) gameMap' =
+                                            weaponSpeed            = weaponSpeed' })) _))
+                gameMap' =
   case (buildingType', weaponCooldownTimeLeft') of
     (ATTACK, 0) -> adjustAt (resetCooldownAndCreateMissile owner
                                                            weaponCooldownPeriod'
@@ -49,32 +50,36 @@ updateBuildingProgress contentsWithCoords state =
   where
     gameMap' = foldr updateBuildingProgress' (gameMap state) contentsWithCoords
 
--- TODO Implement build progress update
 updateBuildingProgress' :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
 updateBuildingProgress' (_,      (CellContents Nothing         _)) gameMap' = gameMap'
 updateBuildingProgress' ((x, y), (CellContents
-                          (Just (Building { buildingType         = buildingType',
-                                            constructionTimeLeft = constructionTimeLeft' })) _)) gameMap' =
-  case buildingType' of
-    ATTACK -> adjustAt todo
-                       (x, y)
-                       gameMap'
-    _      -> gameMap'
+                          (Just (Building { constructionTimeLeft = constructionTimeLeft' })) _))
+                        gameMap' =
+  if   constructionTimeLeft' /= 0
+  then adjustAt decrementBuildingTimeLeft
+                (x, y)
+                gameMap'
+  else gameMap'
+
+decrementBuildingTimeLeft :: CellContents -> CellContents
+decrementBuildingTimeLeft =
+  mapBuilding ( \ building -> building { constructionTimeLeft = constructionTimeLeft building - 1 })
 
 scoreBuildings :: [((Int, Int), CellContents)] -> GameState -> GameState
-scoreBuildings contentsWithCoords state =
-  state { gameMap = gameMap'}
+scoreBuildings contentsWithCoords =
+  incrementMyPoints myPoints . incrementOponentsPoints oponentsPoints
   where
-    gameMap' = foldr scoreBuilding (gameMap state) contentsWithCoords
+    (myPoints, oponentsPoints) = foldr scoreBuilding (0, 0) contentsWithCoords
 
--- TODO Score for completed ones
-scoreBuilding :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
-scoreBuilding ((x, y), (CellContents Nothing         _)) gameMap' = gameMap'
-scoreBuilding ((x, y), (CellContents
-                          (Just (Building { buildingType         = buidingType',
-                                            constructionTimeLeft = constructionTimeLeft' })) _)) gameMap' =
-  case buidingType' of
-    ATTACK -> adjustAt todo
-                       (x, y)
-                       gameMap'
-    _      -> gameMap'
+scoreBuilding :: ((Int, Int), CellContents) -> (Int, Int) -> (Int, Int)
+scoreBuilding (_, (CellContents Nothing         _)) points = points
+scoreBuilding (_, (CellContents
+                    (Just (Building { constructionTimeLeft = constructionTimeLeft',
+                                      constructionScore    = constructionScore',
+                                      buildingOwner        = owner })) _))
+              points@(myPoints, oponentsPoints) =
+  if constructionTimeLeft' == 1
+  then if owner == A
+       then (myPoints + constructionScore', oponentsPoints)
+       else (myPoints,                     oponentsPoints + constructionScore')
+  else points
