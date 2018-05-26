@@ -1,7 +1,7 @@
 module Collision (CollisionType(..), Collision(..))
   where
 
-import Interpretor(PlayerType(..), SparseMap(..))
+import Interpretor(PlayerType(..), SparseMap)
 
 data CollisionType = HitPlayer | HitBuilding
 
