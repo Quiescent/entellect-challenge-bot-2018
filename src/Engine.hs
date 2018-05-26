@@ -31,8 +31,8 @@ gainEnergy state =
                                         state
 
 updatePointsForEnergy :: (Int, Int) -> GameState -> GameState
-updatePointsForEnergy (myEnergy, oponentsEnergy) =
-  updatePlayerPointsForEnergy A myEnergy . updatePlayerPointsForEnergy B oponentsEnergy
+updatePointsForEnergy (myEnergy', oponentsEnergy') =
+  updatePlayerPointsForEnergy A myEnergy' . updatePlayerPointsForEnergy B oponentsEnergy'
 
 incrementEnergy :: GameState -> (Int, Int) -> CellContents -> (Int, Int) -> (Int, Int)
 incrementEnergy state
@@ -51,7 +51,7 @@ incrementEnergy state
 
 collideMissiles :: GameState -> GameState
 collideMissiles state@(GameState { gameDetails = gameDetails' }) =
-  state { gameMap = gameMap' }
+  accountForCollisions (state { gameMap = gameMap' }) collisions
   where
     (gameMap', collisions) = foldr (collide (mapWidth gameDetails')) ((gameMap state), []) contentsWithCoords
     contentsWithCoords = mapContentsWithCoords state
@@ -60,8 +60,8 @@ accountForCollisions :: GameState -> [Collision] -> GameState
 accountForCollisions state collissions =
   foldr accountForCollision state collissions
   where
-    accountForCollision (Collision hitType _ playerHit damage) =
-      incrementPlayerHits playerHit . updatePointsForHits playerHit hitType damage
+    accountForCollision (Collision hitType _ playerHit damage') =
+      incrementPlayerHits playerHit . updatePointsForHits playerHit hitType damage'
 
 collide :: Int -> ((Int, Int), CellContents) -> (SparseMap, [Collision]) -> (SparseMap, [Collision])
 collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
