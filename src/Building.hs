@@ -3,9 +3,17 @@ module Building (tickBuildings)
 
 import Interpretor (GameState(..))
 
--- TODO Implement
--- TODO Implement missile generation
--- TODO Implement build progress
--- TODO Score for completed ones
 tickBuildings :: GameState -> GameState
-tickBuildings state = state
+tickBuildings = scoreBuildings . generateMissiles . updateBuildingProgress
+
+-- TODO Implement missile generation
+generateMissiles :: GameState -> GameState
+generateMissiles state = state
+
+-- TODO Implement build progress
+updateBuildingProgress :: GameState -> GameState
+updateBuildingProgress state = state
+
+-- TODO Score for completed ones
+scoreBuildings :: GameState -> GameState
+scoreBuildings state = state
