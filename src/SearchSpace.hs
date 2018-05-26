@@ -6,7 +6,8 @@ module SearchSpace (myAvailableMoves,
   where
 
 import Interpretor (GameState(..),
-                    Command(..))
+                    Command(..),
+                    PlayerType(..))
 import Engine
 import Cell
 import Logic
@@ -31,9 +32,15 @@ myAvailableMoves state = availableMoves (cellBelongsToMe state) myEnergy state
 oponentsAvailableMoves :: GameState -> [Command]
 oponentsAvailableMoves state = availableMoves (cellBelongsToOponent state) oponentsEnergy state
 
+updateMyMove :: GameState -> Command -> GameState
+updateMyMove = G.update A
+
+updateOponentsMove :: GameState -> Command -> GameState
+updateOponentsMove = G.update B
+
 advanceState :: GameState -> [GameState]
 advanceState state = do
   let newMap   = tickEngine state
   myMove       <- myAvailableMoves state
   oponentsMove <- oponentsAvailableMoves state
-  return $ newMap `G.update` myMove `G.update` oponentsMove
+  return $ newMap `updateMyMove` myMove `updateOponentsMove` oponentsMove

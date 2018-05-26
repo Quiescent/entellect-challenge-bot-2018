@@ -11,18 +11,16 @@ import Interpretor (GameState(..),
 import Building
 import GameMap
 
-update :: GameState -> Command -> GameState
-update state NothingCommand                                                   = state
-update state@(GameState { gameMap = gameMap' }) (Command x' y' buildingType') =
+update :: PlayerType -> GameState -> Command -> GameState
+update _      state NothingCommand                                                   = state
+update player state@(GameState { gameMap = gameMap' }) (Command x' y' buildingType') =
   case (getAt (x', y') gameMap') of
     Nothing                          -> state
     (Just (CellContents (Just _) _)) -> state
     (Just (CellContents Nothing  _)) ->
-      state { gameMap = adjustAt (addBuilding state buildingType')
+      state { gameMap = adjustAt (addBuilding player state buildingType')
                                  (x', y')
                                  gameMap' }
-
-todo = undefined
 
 buildingFromStats :: PlayerType -> BuildingType -> TowerStats -> Building
 buildingFromStats owner buildingType' (TowerStats initialIntegrity'
@@ -50,16 +48,19 @@ buildingFromStats owner buildingType' (TowerStats initialIntegrity'
                 buildingY              = 0,
                 buildingOwner          = owner }
 
-             
-
--- TODO Pass the building player down
-addBuilding :: GameState -> BuildingType -> CellContents -> CellContents
-addBuilding state ATTACK  contents = todo
+addBuilding :: PlayerType -> GameState -> BuildingType -> CellContents -> CellContents
+addBuilding player state ATTACK  contents =
+  contents { buildingInCell = Just building' }
   where
     stats = attackTowerStats' state
-addBuilding state DEFENSE contents = todo
+    building' = buildingFromStats player ATTACK stats
+addBuilding player state DEFENSE contents =
+  contents { buildingInCell = Just building' }
   where
     stats = defenseTowerStats' state
-addBuilding state ENERGY  contents = todo
+    building' = buildingFromStats player DEFENSE stats
+addBuilding player state ENERGY  contents =
+  contents { buildingInCell = Just building' }
   where
     stats = energyTowerStats' state
+    building' = buildingFromStats player ENERGY stats
