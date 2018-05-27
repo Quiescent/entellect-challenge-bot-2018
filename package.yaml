@@ -36,7 +36,9 @@ executables:
     source-dirs:         app
     ghc-options:
     - -threaded
+    - -O2
     - -rtsopts
+    - -with-rtsopts=-A128m
     - -with-rtsopts=-N
     dependencies:
     - EntelectChallenge2018
