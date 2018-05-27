@@ -44,10 +44,10 @@ updateEnergy state (myEnergy', oponentsEnergy') =
 type MapPlayer = (Player -> Player) -> GameState -> GameState
 
 mapPlayer :: (GameState -> Player) -> MapPlayer
-mapPlayer player f state =
-  let players'  = players state
-      player' = player state
-  in state { players = V.filter (== player') players' `V.snoc` (f player') }
+mapPlayer player' f state =
+  let players' = players state
+      player'' = player' state
+  in state { players = V.filter (/= player'') players' `V.snoc` (f player'') }
 
 mapMyPlayer :: MapPlayer
 mapMyPlayer = mapPlayer myPlayer
