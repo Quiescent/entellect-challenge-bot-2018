@@ -11,6 +11,8 @@ import Data.List as L
 import System.Random
 import Control.Monad
 
+import Debug.Trace
+
 hasEnoughEnergyForMostExpensiveBuilding :: GameState -> Bool
 hasEnoughEnergyForMostExpensiveBuilding state =
   (myEnergy state) >= maxPrice
@@ -45,5 +47,5 @@ buildRandomly gen state =
 decide :: RandomGen g => g -> GameState -> Command
 decide gen state =
   case msum [buildRandomly gen state] of
-    Just (x, y, building') -> Command x y building'
+    Just (x, y, building') -> trace ("Advanced: " ++ show (advanceState state)) (Command x y building')
     Nothing                -> NothingCommand
