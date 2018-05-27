@@ -1,4 +1,8 @@
-module Building (tickBuildings, attackTowerStats', defenseTowerStats', energyTowerStats')
+module Building (tickBuildings,
+                 attackTowerStats',
+                 defenseTowerStats',
+                 energyTowerStats',
+                 buildingIsConstructed)
   where
 
 import Interpretor (GameState(..),
@@ -28,9 +32,13 @@ generateMissiles contentsWithCoords state =
   where
     gameMap' = foldr generateMissile (gameMap state) contentsWithCoords
 
+-- TODO DRY(!)
+buildingInCellIsConstructed :: CellContents -> Bool
+buildingInCellIsConstructed = buildingPredicate buildingIsConstructed
+
 generateMissile :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
-generateMissile (_,      (CellContents Nothing         _)) gameMap' = gameMap'
-generateMissile ((x, y), (CellContents
+generateMissile (_,               (CellContents Nothing _)) gameMap' = gameMap'
+generateMissile ((x, y), contents@(CellContents
                           (Just (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
                                             weaponCooldownPeriod   = weaponCooldownPeriod',
                                             buildingType           = buildingType',
@@ -38,14 +46,14 @@ generateMissile ((x, y), (CellContents
                                             weaponDamage           = weaponDamage',
                                             weaponSpeed            = weaponSpeed' })) _))
                 gameMap' =
-  case (buildingType', weaponCooldownTimeLeft') of
-    (ATTACK, 0) -> adjustAt (resetCooldownAndCreateMissile owner
-                                                           weaponCooldownPeriod'
-                                                           weaponDamage'
-                                                           weaponSpeed')
-                            (x, y)
-                            gameMap'
-    _           -> gameMap'
+  case (buildingType', weaponCooldownTimeLeft', buildingInCellIsConstructed contents) of
+    (ATTACK, 0, True) -> adjustAt (resetCooldownAndCreateMissile owner
+                                                                 weaponCooldownPeriod'
+                                                                 weaponDamage'
+                                                                 weaponSpeed')
+                                  (x, y)
+                                  gameMap'
+    _                 -> gameMap'
 
 updateBuildingProgress :: [((Int, Int), CellContents)] -> GameState -> GameState
 updateBuildingProgress contentsWithCoords state =
@@ -98,3 +106,6 @@ defenseTowerStats' = towerStats defenseTowerStats
 
 energyTowerStats' :: GameState -> TowerStats
 energyTowerStats' = towerStats energyTowerStats
+
+buildingIsConstructed :: Building -> Bool
+buildingIsConstructed = ((== -1) . constructionTimeLeft)

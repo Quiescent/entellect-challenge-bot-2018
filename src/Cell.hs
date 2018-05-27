@@ -7,7 +7,8 @@ module Cell (cellBelongsToOponent,
              removeMissile,
              addMissile,
              resetCooldownAndCreateMissile,
-             mapBuilding)
+             mapBuilding,
+             buildingPredicate)
   where
 
 import Interpretor (CellContents(..),
@@ -77,3 +78,9 @@ resetBuildingCooldown cooldown cellContents@(CellContents (Just building') _) =
 mapBuilding :: (Building -> Building) -> CellContents -> CellContents
 mapBuilding f contents =
   contents { buildingInCell = (fmap f $ buildingInCell contents) }
+
+buildingPredicate :: (Building -> Bool) -> CellContents -> Bool
+buildingPredicate p contents =
+  case ((fmap p . buildingInCell) contents) of
+    Just True -> True
+    _         -> False

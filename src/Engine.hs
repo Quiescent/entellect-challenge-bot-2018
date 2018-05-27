@@ -61,6 +61,9 @@ accountForCollisions state collissions =
     accountForCollision (Collision hitType _ playerHit damage') =
       incrementPlayerHits playerHit . updatePointsForHits playerHit hitType damage'
 
+buildingInCellIsConstructed :: CellContents -> Bool
+buildingInCellIsConstructed = buildingPredicate buildingIsConstructed
+
 collide :: Int -> ((Int, Int), CellContents) -> (SparseMap, [Collision]) -> (SparseMap, [Collision])
 collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
   | missilesEmpty missiles = (gameMap', collisions)
@@ -80,12 +83,14 @@ collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
           iterCollide _   0         _          = Nothing
           iterCollide y'' remaining gameMap''' =
             case getAt (x', y'') gameMap''' of
-              Just (CellContents (Just building') _) ->
+              Just contents@(CellContents (Just building') _) ->
                 let adjustedMap = adjustAt (damageBuilding damage')
                                            (x, y'')
                                            gameMap'''
-                in Just (Collision HitBuilding adjustedMap (buildingOwner building') damage')
-              _                                      ->
+                in if buildingInCellIsConstructed contents
+                   then Just (Collision HitBuilding adjustedMap (buildingOwner building') damage')
+                   else continue
+              _                                               ->
                 let playerCollidedWith = if x' == -1
                                          then Just A
                                          else if x' == width
@@ -93,7 +98,9 @@ collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
                                               else Nothing
                 in case playerCollidedWith of
                   (Just player) -> Just (Collision HitPlayer gameMap'' player damage')
-                  _             -> iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
+                  _             -> continue
+            where
+              continue = iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
 
 damageBuilding :: Int -> CellContents -> CellContents
 damageBuilding damage' cellContents =
