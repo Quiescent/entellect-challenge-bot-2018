@@ -38,9 +38,13 @@ updateMyMove = G.update A
 updateOponentsMove :: GameState -> Command -> GameState
 updateOponentsMove = G.update B
 
+doNothingIfNoMoves :: [Command] -> [Command]
+doNothingIfNoMoves [] = [NothingCommand]
+doNothingIfNoMoves xs = xs
+
 advanceState :: GameState -> [GameState]
 advanceState state = do
   let newMap   = tickEngine state
-  myMove       <- myAvailableMoves state
-  oponentsMove <- oponentsAvailableMoves state
+  myMove       <- doNothingIfNoMoves $ myAvailableMoves state
+  oponentsMove <- doNothingIfNoMoves $ oponentsAvailableMoves state
   return $ newMap `updateMyMove` myMove `updateOponentsMove` oponentsMove
