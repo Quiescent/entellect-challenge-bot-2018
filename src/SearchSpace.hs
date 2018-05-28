@@ -42,9 +42,9 @@ doNothingIfNoMoves :: [Command] -> [Command]
 doNothingIfNoMoves [] = [NothingCommand]
 doNothingIfNoMoves xs = xs
 
-advanceState :: GameState -> [GameState]
+advanceState :: GameState -> [(GameState, Command)]
 advanceState state = do
-  let newMap   = tickEngine state
+  let newState   = tickEngine state
   myMove       <- doNothingIfNoMoves $ myAvailableMoves state
   oponentsMove <- doNothingIfNoMoves $ oponentsAvailableMoves state
-  return $ newMap `updateMyMove` myMove `updateOponentsMove` oponentsMove
+  return $ (newState `updateMyMove` myMove `updateOponentsMove` oponentsMove, myMove)
