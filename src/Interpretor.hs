@@ -262,7 +262,8 @@ instance ToJSON TowerStats where
 -- TODO change to playerA and playerB
 data GameState = GameState { players     :: V.Vector Player,
                              gameMap     :: SparseMap,
-                             gameDetails :: GameDetails }
+                             gameDetails :: GameDetails,
+                             boardScore  :: Int }
                  deriving (Show, Generic, Eq)
 
 instance FromJSON GameState where
@@ -273,10 +274,11 @@ instance FromJSON GameState where
     return $ GameState players'
       (toSparseMap denseGameMap)
       gameDetails'
+      0
 -- TODO: check whether this works (in particular the sparse to dense
 -- map part)
 instance ToJSON   GameState where
-  toJSON (GameState players' gameMap' gameDetails') =
+  toJSON (GameState players' gameMap' gameDetails' _) =
     object ["players"        .= players',
             "gameMap"        .= toDenseMap gameMap' (mapWidth gameDetails')
                                                     (mapHeight gameDetails'),
