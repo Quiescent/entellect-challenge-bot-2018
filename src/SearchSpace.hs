@@ -2,7 +2,8 @@ module SearchSpace (myAvailableMoves,
                     oponentsAvailableMoves,
                     advanceState,
                     allCells,
-                    cellIsEmpty)
+                    cellIsEmpty,
+                    search)
   where
 
 import Interpretor (GameState(..),
@@ -44,6 +45,14 @@ doNothingIfNoMoves :: [Command] -> [Command]
 doNothingIfNoMoves [] = [NothingCommand]
 doNothingIfNoMoves xs = xs
 
+-- TODO dynamically scale the number of choices
+-- TODO Iteratively search deeper
+search :: RandomGen g => g -> GameState -> (Command, g)
+search g state =
+  (snd $ head choices, g')
+  where
+    (choices, g') = chooseN 1 g $ score $ advanceState state
+
 advanceState :: GameState -> [(GameState, Command)]
 advanceState state = do
   let newState = tickEngine state
@@ -66,8 +75,8 @@ zipCDF xs =
 eliteChoices :: Int
 eliteChoices = 3
 
-chooseN :: RandomGen g => Int -> [(Float, (GameState, Command))] -> g -> ([(GameState, Command)], g)
-chooseN n xs g =
+chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Command))] -> ([(GameState, Command)], g)
+chooseN n g xs =
   (elite ++ randomChoices, g''')
   where
     (_, max')              = genRange g
