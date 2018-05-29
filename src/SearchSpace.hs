@@ -17,6 +17,8 @@ import GameState as G
 import Data.List as L
 import Player
 import Towers
+import Objective (Move(..),
+                  score)
 import Data.Maybe
 
 availableMoves :: ((Int, Int) -> Bool) -> (GameState -> Int) -> GameState -> [Command]
@@ -49,33 +51,29 @@ doNothingIfNoMoves xs = xs
 -- TODO Iteratively search deeper
 search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
-  Just (snd $ head choices, g')
+  Just (myMove $ snd $ head choices, g')
   where
-    (choices, g') = chooseN 1 g $ score $ advanceState state
+    (choices, g') = chooseN 1 g $ zipCDF $ map score $ advanceState state
 
-advanceState :: GameState -> [(GameState, Command)]
+advanceState :: GameState -> [(GameState, Move)]
 advanceState state = do
-  let newState = tickEngine state
-  myMove       <- doNothingIfNoMoves $ myAvailableMoves state
-  oponentsMove <- doNothingIfNoMoves $ oponentsAvailableMoves state
-  return $ (newState `updateMyMove` myMove `updateOponentsMove` oponentsMove, myMove)
+  let newState   = tickEngine state
+  myMove'       <- doNothingIfNoMoves $ myAvailableMoves state
+  oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
+  return $ (newState `updateMyMove` myMove' `updateOponentsMove` oponentsMove', Move myMove' oponentsMove')
 
--- TODO Implement a better scoring function
-score :: [(GameState, Command)] -> [(Float, (GameState, Command))]
-score = zip [0..]
-
-zipCDF :: [(GameState, Command)] -> [(Float, (GameState, Command))]
+zipCDF :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
 zipCDF xs =
-  zip normalised $ sorted
+  zipWith ( \ x (_, y) -> (x, y)) normalised sorted
   where
     normalised = map (/ (head summed)) summed
-    summed     = (reverse . scanl1 (+) . map (fromIntegral . boardScore . fst)) sorted
-    sorted     = sortOn (boardScore . fst) xs
+    summed     = (reverse . scanl1 (+) . map fst) sorted
+    sorted     = sortOn fst xs
 
 eliteChoices :: Int
 eliteChoices = 3
 
-chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Command))] -> ([(GameState, Command)], g)
+chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Move))] -> ([(GameState, Move)], g)
 chooseN n g xs =
   (elite ++ randomChoices, g''')
   where
