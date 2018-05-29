@@ -51,6 +51,10 @@ advanceState state = do
   oponentsMove <- doNothingIfNoMoves $ oponentsAvailableMoves state
   return $ (newState `updateMyMove` myMove `updateOponentsMove` oponentsMove, myMove)
 
+-- TODO Implement a better scoring function
+score :: [(GameState, Command)] -> [(Float, (GameState, Command))]
+score = zip [0..]
+
 zipCDF :: [(GameState, Command)] -> [(Float, (GameState, Command))]
 zipCDF xs =
   zip normalised $ sorted
