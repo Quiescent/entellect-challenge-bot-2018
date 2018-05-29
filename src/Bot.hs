@@ -11,8 +11,6 @@ import Data.List as L
 import System.Random
 import Control.Monad
 
-import Debug.Trace
-
 hasEnoughEnergyForMostExpensiveBuilding :: GameState -> Bool
 hasEnoughEnergyForMostExpensiveBuilding state =
   (myEnergy state) >= maxPrice
@@ -36,16 +34,16 @@ randomBuilding gen =
         _ -> ENERGY,
       gen')
 
-buildRandomly :: RandomGen g => g -> GameState -> Maybe (Int, Int, BuildingType)
+buildRandomly :: RandomGen g => g -> GameState -> Maybe Command
 buildRandomly gen state =
   if not $ hasEnoughEnergyForMostExpensiveBuilding state
   then Nothing
   else let ((x, y),    gen') = randomEmptyCell gen  state
            (building', _)    = randomBuilding gen'
-       in Just (x, y, building')
+       in Just (Command x y building')
 
 decide :: RandomGen g => g -> GameState -> Command
 decide gen state =
-  case msum [buildRandomly gen state] of
-    Just (x, y, building') -> trace ("Advanced: " ++ show (advanceState state)) (Command x y building')
-    Nothing                -> NothingCommand
+  case msum [fmap fst $ search gen state, buildRandomly gen state] of
+    Just x  -> x
+    Nothing -> NothingCommand

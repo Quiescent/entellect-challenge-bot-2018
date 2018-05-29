@@ -47,9 +47,9 @@ doNothingIfNoMoves xs = xs
 
 -- TODO dynamically scale the number of choices
 -- TODO Iteratively search deeper
-search :: RandomGen g => g -> GameState -> (Command, g)
+search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
-  (snd $ head choices, g')
+  Just (snd $ head choices, g')
   where
     (choices, g') = chooseN 1 g $ score $ advanceState state
 
