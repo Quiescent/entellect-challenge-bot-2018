@@ -1,4 +1,4 @@
-module GameMap (mapContents, foldGameMap, mapContentsWithCoords, getAt, adjustAt)
+module GameMap (mapContents, foldGameMap, mapContentsWithCoords, getAt, adjustAt, definedAt)
   where
 
 import Interpretor (GameState(..),
@@ -20,3 +20,6 @@ foldGameMap f initial = M.foldrWithKey f initial . gameMap
 
 getAt :: (Int, Int) -> SparseMap -> Maybe CellContents
 getAt = M.lookup
+
+definedAt :: (Int, Int) -> SparseMap -> Bool
+definedAt = M.member

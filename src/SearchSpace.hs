@@ -17,8 +17,7 @@ import GameState as G
 import Data.List as L
 import Player
 import Towers
-import Objective (Move(..),
-                  score)
+import Objective
 import Data.Maybe
 
 availableMoves :: ((Int, Int) -> Bool) -> (GameState -> Int) -> GameState -> [Command]
@@ -53,7 +52,7 @@ search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
   Just (myMove $ snd $ head choices, g')
   where
-    (choices, g') = chooseN 1 g $ zipCDF $ map score $ advanceState state
+    (choices, g') = chooseN 1 g $ zipCDF $ map boardScore $ advanceState state
 
 advanceState :: GameState -> [(GameState, Move)]
 advanceState state = do
