@@ -19,7 +19,7 @@ hasEnoughEnergyForMostExpensiveBuilding state =
 
 randomEmptyCell :: RandomGen g => g -> GameState -> ((Int, Int), g)
 randomEmptyCell gen state@(GameState {gameMap = mapGrid}) =
-  let emptyCells                = L.filter (cellIsEmpty mapGrid) $ allCells state
+  let emptyCells                = L.filter (cellContainsNoBuildings mapGrid) $ allCells state
       (randomInt, newGenerator) = next gen
       emptyCell                 = emptyCells !! mod randomInt (L.length emptyCells)
   in (emptyCell, newGenerator)

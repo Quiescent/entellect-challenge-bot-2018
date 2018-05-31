@@ -1,6 +1,6 @@
 module Cell (cellBelongsToOponent,
              cellBelongsToMe,
-             cellIsEmpty,
+             cellContainsNoBuildings,
              cellContainsBuildingType,
              allCells,
              removeMissiles,
@@ -19,7 +19,7 @@ import Interpretor (CellContents(..),
                     Missile(..),
                     PlayerType(..),
                     SparseMap)
-import Data.Map.Strict as M
+import GameMap
 import Data.Vector     as V
 import Prelude         as P
 
@@ -27,8 +27,11 @@ allCells :: GameState -> [(Int, Int)]
 allCells (GameState {gameDetails = details}) =
   [(x, y) | x <- [0..(mapHeight details) - 1], y <- [0..(mapWidth details) - 1]]
 
-cellIsEmpty :: SparseMap -> (Int, Int) -> Bool
-cellIsEmpty = flip M.member
+cellContainsNoBuildings :: SparseMap -> (Int, Int) -> Bool
+cellContainsNoBuildings gameMap' (x', y') =
+  case getAt (x', y') gameMap' of
+    Just (CellContents (Just _) _) -> False
+    _                              -> True
 
 cellBelongsToMe :: GameState -> (Int, Int) -> Bool
 cellBelongsToMe (GameState {gameDetails = details}) =

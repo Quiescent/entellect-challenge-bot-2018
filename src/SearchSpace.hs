@@ -2,7 +2,7 @@ module SearchSpace (myAvailableMoves,
                     oponentsAvailableMoves,
                     advanceState,
                     allCells,
-                    cellIsEmpty,
+                    cellContainsNoBuildings,
                     search)
   where
 
@@ -22,7 +22,7 @@ import Data.Maybe
 
 availableMoves :: ((Int, Int) -> Bool) -> (GameState -> Int) -> GameState -> [Command]
 availableMoves constrainCellsTo playerEnergy state@(GameState {gameMap = mapGrid}) = do
-  (x, y)    <- L.filter (cellIsEmpty mapGrid &&& constrainCellsTo) $ allCells state
+  (x, y)    <- L.filter (cellContainsNoBuildings mapGrid &&& constrainCellsTo) $ allCells state
   building' <- buildingsWhichICanAfford
   return $ Command x y building'
   where
