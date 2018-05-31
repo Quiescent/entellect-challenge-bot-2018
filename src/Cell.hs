@@ -32,7 +32,7 @@ cellIsEmpty = flip M.member
 
 cellBelongsToMe :: GameState -> (Int, Int) -> Bool
 cellBelongsToMe (GameState {gameDetails = details}) =
-  (< (div (mapWidth details) 2)) . fst
+  (> (div (mapWidth details) 2)) . snd
 
 cellBelongsToOponent :: GameState -> (Int, Int) -> Bool
 cellBelongsToOponent state = not . (cellBelongsToMe state)
