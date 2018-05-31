@@ -25,7 +25,7 @@ import Prelude         as P
 
 allCells :: GameState -> [(Int, Int)]
 allCells (GameState {gameDetails = details}) =
-  [(x, y) | x <- [0..(mapWidth details) - 1], y <- [0..(mapHeight details) - 1]]
+  [(x, y) | x <- [0..(mapHeight details) - 1], y <- [0..(mapWidth details) - 1]]
 
 cellIsEmpty :: SparseMap -> (Int, Int) -> Bool
 cellIsEmpty = flip M.member
