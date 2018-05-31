@@ -118,23 +118,23 @@ cellHasMissile coord gameMap' =
 
 myMissilesInRow :: Int -> Int -> SparseMap -> [Missile]
 myMissilesInRow row midPoint gameMap' = do
-  y       <- filter (\ y' -> cellHasMissile (row, y') gameMap') [0..(midPoint - 1)]
-  missile <- V.toList $ missilesInCell $ fromJust $ getAt (row, y) gameMap'
+  x       <- filter (\ x' -> cellHasMissile (x', row) gameMap') [0..(midPoint - 1)]
+  missile <- V.toList $ missilesInCell $ fromJust $ getAt (x, row) gameMap'
   return missile
 
 oponentsMissilesInRow :: Int -> Int -> SparseMap -> [Missile]
 oponentsMissilesInRow row midPoint gameMap' = do
-  y       <- filter (\ y' -> cellHasMissile (row, y') gameMap') [midPoint..(2 * midPoint - 1)]
-  missile <- V.toList $ missilesInCell $ fromJust $ getAt (row, y) gameMap'
+  x       <- filter (\ x' -> cellHasMissile (x', row) gameMap') [midPoint..(2 * midPoint - 1)]
+  missile <- V.toList $ missilesInCell $ fromJust $ getAt (x, row) gameMap'
   return missile
 
 oponentsBuildingsInRow :: Int -> Int -> SparseMap -> [Building]
 oponentsBuildingsInRow row midPoint gameMap' = do
-  y <- filter (\ y' -> cellHasBuilding (row, y') gameMap') [midPoint..(2 * midPoint - 1)]
-  return $ fromJust $ buildingInCell $ fromJust $ getAt (row, y) gameMap'
+  x <- filter (\ x' -> cellHasBuilding (x', row) gameMap') [midPoint..(2 * midPoint - 1)]
+  return $ fromJust $ buildingInCell $ fromJust $ getAt (x, row) gameMap'
 
 -- TODO DRY!
 myBuildingsInRow :: Int -> Int -> SparseMap -> [Building]
 myBuildingsInRow row midPoint gameMap' = do
-  y <- filter (\ y' -> cellHasBuilding (row, y') gameMap') [0..(midPoint - 1)]
-  return $ fromJust $ buildingInCell $ fromJust $ getAt (row, y) gameMap'
+  x <- filter (\ x' -> cellHasBuilding (x', row) gameMap') [0..(midPoint - 1)]
+  return $ fromJust $ buildingInCell $ fromJust $ getAt (x, row) gameMap'
