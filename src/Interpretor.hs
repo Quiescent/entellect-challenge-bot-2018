@@ -292,16 +292,16 @@ type DenseMap = V.Vector (V.Vector CellStateContainer)
 
 toSparseMap :: DenseMap -> SparseMap
 toSparseMap denseMap =
-  V.foldr insertRow M.empty $ V.zip (V.fromList [0..(V.length denseMap)]) denseMap
+  V.foldr insertCol M.empty $ V.zip (V.fromList [0..(V.length denseMap)]) denseMap
   where
-    rowIndices = (V.fromList [0..(V.length (denseMap V.! 0))])
-    insertRow (x, row) sparseMap =
-      V.foldr (insertCell x) sparseMap $ V.zip rowIndices row
-    insertCell x (y, (CellStateContainer _ _ _ buildings' missiles')) sparseMap =
+    colIndices = (V.fromList [0..(V.length (denseMap V.! 0))])
+    insertCol (row, column) sparseMap =
+      V.foldr (insertCell row) sparseMap $ V.zip colIndices column
+    insertCell row (col, (CellStateContainer _ _ _ buildings' missiles')) sparseMap =
       let building' = if V.null buildings' then Nothing else Just (buildings' V.! 0)
       in if (V.null buildings' && V.null missiles')
          then sparseMap
-         else M.insert (x, y) (CellContents building' missiles') sparseMap
+         else M.insert (col, row) (CellContents building' missiles') sparseMap
 
 -- TODO Implement
 toDenseMap :: SparseMap -> Int -> Int -> DenseMap
