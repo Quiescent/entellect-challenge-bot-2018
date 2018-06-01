@@ -58,7 +58,7 @@ breadthToSearch :: Int
 breadthToSearch = 20
 
 depthToSearch :: Int
-depthToSearch = 10
+depthToSearch = 3
 
 searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
 searchDeeper g 0         states = (myMove $ snd $ head states, g)
