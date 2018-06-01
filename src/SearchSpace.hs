@@ -50,9 +50,29 @@ doNothingIfNoMoves xs = xs
 -- TODO Iteratively search deeper
 search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
-  Just (myMove $ snd $ head choices, g')
+  Just (searchDeeper g' depthToSearch initialChoices)
   where
-    (choices, g') = chooseN 1 g $ zipCDF $ map boardScore $ advanceState state
+    (initialChoices, g') = chooseN breadthToSearch g $ zipCDF $ map boardScore $ advanceState state
+
+breadthToSearch :: Int
+breadthToSearch = 20
+
+depthToSearch :: Int
+depthToSearch = 20
+
+searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
+searchDeeper g 0         states = (myMove $ snd $ head states, g)
+searchDeeper g remaining states =
+  searchDeeper g' (remaining - 1) nextStates
+  where
+    (nextStates, g') =
+      chooseN breadthToSearch g $
+      zipCDF $
+      map boardScore threadMoveIntoDeeperSearch
+    threadMoveIntoDeeperSearch = do
+      (state, move) <- states
+      (newState, _) <- advanceState state
+      return (newState, move)
 
 advanceState :: GameState -> [(GameState, Move)]
 advanceState state = do
