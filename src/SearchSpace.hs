@@ -58,7 +58,7 @@ breadthToSearch :: Int
 breadthToSearch = 20
 
 depthToSearch :: Int
-depthToSearch = 20
+depthToSearch = 10
 
 searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
 searchDeeper g 0         states = (myMove $ snd $ head states, g)
@@ -104,6 +104,9 @@ chooseN n g xs =
     choose _ (choices, g') =
       let (value, g'') = next g'
           normalised   = normalise value
-          scanForValue = (snd . fromJust . find ((<= normalised) . fst))
+          scanForValue = (snd . fromJust . lastIfNothing xs . find ((<= normalised) . fst))
       in (scanForValue xs : choices, g'')
 
+lastIfNothing :: [(Float, (GameState, Move))] -> Maybe (Float, (GameState, Move)) -> Maybe (Float, (GameState, Move))
+lastIfNothing _  x@(Just _) = x
+lastIfNothing xs Nothing    = Just $ last xs
