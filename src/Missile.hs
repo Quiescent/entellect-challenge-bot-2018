@@ -19,10 +19,14 @@ moveMissiles (coordinate, (CellContents _ missiles')) gameMap'
     let withMissilesRemoved = adjustAt removeMissiles coordinate gameMap'
     in missilesFoldr (moveMissile coordinate) withMissilesRemoved missiles'
 
+-- TODO: Clean up empty cells so that the map remains sparse
 moveMissile :: (Int, Int) -> Missile -> SparseMap -> SparseMap
 moveMissile (x, y) missile@(Missile { speed = speed', owner = owner' }) gameMap' =
   let adjustment = if owner' == A then speed' else (-speed')
-  in adjustAt (addMissile missile) (x, y + adjustment) gameMap'
+      newCoord   = (x, y + adjustment)
+  in if definedAt newCoord gameMap'
+     then adjustAt (addMissile missile) newCoord gameMap'
+     else addAt newCoord (addMissile missile emptyCell) gameMap'
 
 mapMissiles :: (a -> b) -> V.Vector a -> V.Vector b
 mapMissiles = V.map
