@@ -1,4 +1,4 @@
-module GameMap (mapContents, foldGameMap, mapContentsWithCoords, getAt, adjustAt, definedAt)
+module GameMap (mapContents, foldGameMap, mapContentsWithCoords, getAt, adjustAt, definedAt, addAt)
   where
 
 import Interpretor (GameState(..),
@@ -14,6 +14,10 @@ mapContentsWithCoords = M.assocs . gameMap
 
 adjustAt :: (CellContents -> CellContents) -> (Int, Int) -> SparseMap -> SparseMap
 adjustAt = M.adjust
+
+-- TODO Missiles might not be moving when there is no cell to move to...
+addAt :: (Int, Int) -> CellContents -> SparseMap -> SparseMap
+addAt = M.insert
 
 foldGameMap :: ((Int, Int) -> CellContents -> a -> a) -> a -> GameState -> a
 foldGameMap f initial = M.foldrWithKey f initial . gameMap

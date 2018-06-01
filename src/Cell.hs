@@ -8,7 +8,8 @@ module Cell (cellBelongsToOponent,
              addMissile,
              resetCooldownAndCreateMissile,
              mapBuilding,
-             buildingPredicate)
+             buildingPredicate,
+             emptyCell)
   where
 
 import Interpretor (CellContents(..),
@@ -35,7 +36,10 @@ cellContainsNoBuildings gameMap' (x', y') =
 
 cellBelongsToMe :: GameState -> (Int, Int) -> Bool
 cellBelongsToMe (GameState {gameDetails = details}) =
-  (> (div (mapWidth details) 2)) . snd
+  (< (div (mapWidth details) 2)) . fst
+
+emptyCell :: CellContents
+emptyCell = CellContents Nothing V.empty
 
 cellBelongsToOponent :: GameState -> (Int, Int) -> Bool
 cellBelongsToOponent state = not . (cellBelongsToMe state)

@@ -8,6 +8,7 @@ import Interpretor (GameState(..),
                     TowerStats(..),
                     BuildingType(..),
                     Command(..))
+import Cell
 import Building
 import GameMap
 
@@ -15,7 +16,8 @@ update :: PlayerType -> GameState -> Command -> GameState
 update _      state NothingCommand                                                   = state
 update player state@(GameState { gameMap = gameMap' }) (Command x' y' buildingType') =
   case (getAt (x', y') gameMap') of
-    Nothing                          -> state
+    Nothing                          ->
+      state { gameMap = addAt (x', y') (addBuilding player state buildingType' emptyCell) gameMap'}
     (Just (CellContents (Just _) _)) -> state
     (Just (CellContents Nothing  _)) ->
       state { gameMap = adjustAt (addBuilding player state buildingType')
