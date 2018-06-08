@@ -55,7 +55,7 @@ search g state =
     (initialChoices, g') = chooseN breadthToSearch g $ zipCDF $ map boardScore $ advanceState state
 
 breadthToSearch :: Int
-breadthToSearch = 20
+breadthToSearch = 5
 
 depthToSearch :: Int
 depthToSearch = 3
