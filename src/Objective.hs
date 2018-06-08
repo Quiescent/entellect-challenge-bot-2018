@@ -39,7 +39,7 @@ hitsTakenByMe :: GameState -> Float
 hitsTakenByMe = (*hitsMultiplier) . fromIntegral . hitsTaken . myPlayer
 
 turnsIntoFuture :: Int
-turnsIntoFuture = 5
+turnsIntoFuture = 10
 
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime state@(GameState { gameDetails = gameDetails' }) =
