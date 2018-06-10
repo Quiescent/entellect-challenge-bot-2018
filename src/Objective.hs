@@ -80,7 +80,7 @@ missilesInNTurns (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
                0
 
 turnsToTowerMultiplier :: Float
-turnsToTowerMultiplier = 10
+turnsToTowerMultiplier = 5
 
 divWithZero :: Int -> Int -> Int
 divWithZero x y =
@@ -99,7 +99,7 @@ turnsToNextTowerByTurnByMultiplier state@(GameState { gameMap = gameMap', gameDe
     priceIndex         = buildingPrices gameDetails'
     mostExpensiveTower = maximum $ map ($ priceIndex) [attackTowerCost, defenseTowerCost, energyTowerCost]
     myEnergy'          = myEnergy state
-    energyPerTurn      = sum $ map energyGeneratedPerTurn myBuildings
+    energyPerTurn      = (+ (roundIncomeEnergy gameDetails')) $ sum $ map energyGeneratedPerTurn myBuildings
     myBuildings        = [0..(mapHeight gameDetails') - 1] >>= ( \ row -> myBuildingsInRow row midPoint gameMap')
     midPoint           = mapWidth gameDetails'
 
