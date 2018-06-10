@@ -73,12 +73,16 @@ searchDeeper g remaining states =
       (state, move) <- states
       (newState, _) <- advanceState state
       return (newState, move)
+      
+removeDuplicatesByRow :: [Command] -> [Command]
+removeDuplicatesByRow =
+  L.nubBy (\ (Command _ thisY thisBuilding) (Command _ thatY thatBuilding) -> thisY == thatY && thisBuilding == thatBuilding)
 
 advanceState :: GameState -> [(GameState, Move)]
 advanceState state = do
   let newState   = tickEngine state
-  myMove'       <- doNothingIfNoMoves $ myAvailableMoves state
-  oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
+  myMove'       <- doNothingIfNoMoves $ removeDuplicatesByRow $ myAvailableMoves state
+  oponentsMove' <- doNothingIfNoMoves $ removeDuplicatesByRow $ oponentsAvailableMoves state
   return $ (newState `updateMyMove` myMove' `updateOponentsMove` oponentsMove', Move myMove' oponentsMove')
 
 zipCDF :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
