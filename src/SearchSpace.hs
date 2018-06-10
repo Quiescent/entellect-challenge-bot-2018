@@ -55,7 +55,7 @@ search g state =
     (initialChoices, g') = chooseN breadthToSearch g $ zipCDF $ map boardScore $ advanceState state
 
 breadthToSearch :: Int
-breadthToSearch = 20
+breadthToSearch = 2
 
 depthToSearch :: Int
 depthToSearch = 5
@@ -94,7 +94,7 @@ zipCDF xs =
     sorted     = sortOn fst xs
 
 eliteChoices :: Int
-eliteChoices = 3
+eliteChoices = 1
 
 chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Move))] -> ([(GameState, Move)], g)
 chooseN n g xs =
