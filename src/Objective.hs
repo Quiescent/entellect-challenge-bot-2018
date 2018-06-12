@@ -1,4 +1,4 @@
-module Objective (boardScore, Move(..))
+module Objective (myBoardScore, Move(..))
   where
 
 import Interpretor (GameState(..),
@@ -21,12 +21,12 @@ data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
           deriving (Show)
 
-boardScore :: (GameState, Command) -> (Float, (GameState, Command))
-boardScore withMove@(state, _) =
+myBoardScore :: (GameState, a) -> (Float, (GameState, a))
+myBoardScore withMove@(state, _) =
   (hitsSubtractTakenAfterTime state +
    hitsDealtToOponent state -
    hitsTakenByMe state -
-   turnsToNextTowerByTurnByMultiplier state,
+   myTurnsToNextTowerByTurnByMultiplier state,
     withMove)
 
 hitsMultiplier :: Float
@@ -75,12 +75,12 @@ missilesInNTurns (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
   else replicate (1 + (divWithZero (turnsIntoFuture - weaponCooldownTimeLeft') weaponCooldownPeriod')) $
        Missile weaponDamage' -- Doesn't matter for this from here down
                weaponSpeed'
-               A 
+               A
                0
                0
 
 turnsToTowerMultiplier :: Float
-turnsToTowerMultiplier = 5
+turnsToTowerMultiplier = 1
 
 divWithZero :: Int -> Int -> Int
 divWithZero x y =
@@ -88,12 +88,11 @@ divWithZero x y =
   then infinity
   else div x y
 
-
 infinity :: Int
 infinity = 10000000
 
-turnsToNextTowerByTurnByMultiplier :: GameState -> Float
-turnsToNextTowerByTurnByMultiplier state@(GameState { gameMap = gameMap', gameDetails = gameDetails' }) =
+myTurnsToNextTowerByTurnByMultiplier :: GameState -> Float
+myTurnsToNextTowerByTurnByMultiplier state@(GameState { gameMap = gameMap', gameDetails = gameDetails' }) =
   (turnsToTowerMultiplier *) $ fromIntegral $ divWithZero (mostExpensiveTower - myEnergy') energyPerTurn
   where
     priceIndex         = buildingPrices gameDetails'

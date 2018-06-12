@@ -57,33 +57,22 @@ searchDeeper g 0         states = (myMove $ snd $ head states, g)
 searchDeeper g remaining states =
   searchDeeper g'' (remaining - 1) selected
   where
-    (nextStates, g') = foldr ( \ (state, move) (statesAcc, g'') ->
-                                 let (newStates, g''') = advanceState g'' state
-                                 in  (map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc, g'''))
+    (nextStates, g') = foldr ( \ (state, move) (statesAcc, g''') ->
+                                 let (newStates, g'''') = advanceState g''' state
+                                 in  (map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc, g''''))
                              ([], g)
                              states
-    (selected, g'')  = pickN breadthToSearch g' nextStates
-
-pickN :: RandomGen g => Int -> g -> [(GameState, Move)] -> ([(GameState, Move)], g)
-pickN n g xs =
-  (randomChoices, g''')
-  where
-    (randomChoices, g''')  = foldr choose ([], g) [1..n]
-    upTo                   = length xs
-    choose _ (choices, g') =
-      let (value, g'') = next g'
-      in ((xs !! (value `mod` upTo)) : choices, g'')
+    (selected, g'')  = chooseN breadthToSearch g' $ zipCDF $ map myBoardScore nextStates
 
 breadthToSearch :: Int
 breadthToSearch = 20
 
 depthToSearch :: Int
-depthToSearch = 5
+depthToSearch = 100
 
 splay :: Int
 splay = 5
 
--- TODO use "myBoardScore" and "oponentsBoardScore" instead of the same for both
 advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
 advanceState g gameState =
   (do
@@ -93,9 +82,12 @@ advanceState g gameState =
               Move myCommand oponentsCommand),
     g'')
   where
-    chooseCandidates      = chooseN splay g . zipCDF . map boardScore
-    (myStates, g')        = chooseCandidates $ myMoves       gameState
-    (oponentsStates, g'') = chooseCandidates $ oponentsMoves gameState
+    chooseCandidates g''' = chooseN splay g''' . zipCDF
+    (myStates, g')        = chooseCandidates g  $ map myBoardScore $ myMoves       gameState
+    (oponentsStates, g'') = chooseCandidates g' $ invertScores $ map myBoardScore $ oponentsMoves gameState
+
+invertScores :: [(Float, (GameState, Command))] -> [(Float, (GameState, Command))]
+invertScores = map ( \ (score, x) -> (1.0 / score, x))
 
 myMoves :: GameState -> [(GameState, Command)]
 myMoves state = do
@@ -107,7 +99,7 @@ oponentsMoves state = do
   oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
   return $ (state `updateOponentsMove` oponentsMove', oponentsMove')
 
-zipCDF :: [(Float, (GameState, Command))] -> [(Float, (GameState, Command))]
+zipCDF :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 zipCDF xs =
   zipWith ( \ x (_, y) -> (x, y)) normalised sorted
   where
@@ -118,7 +110,7 @@ zipCDF xs =
 eliteChoices :: Int
 eliteChoices = 3
 
-chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Command))] -> ([(GameState, Command)], g)
+chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, a))] -> ([(GameState, a)], g)
 chooseN n g xs =
   (elite ++ randomChoices, g''')
   where
@@ -126,13 +118,13 @@ chooseN n g xs =
     floatingMax            = fromIntegral max'
     normalise              = (/ floatingMax) . fromIntegral . abs
     elite                  = (map snd $ take eliteChoices xs)
-    (randomChoices, g''')  = foldr choose ([], g) [1..n]
+    (randomChoices, g''')  = foldr choose ([], g) [1..(n - eliteChoices)]
     choose _ (choices, g') =
       let (value, g'') = next g'
           normalised   = normalise value
           scanForValue = (snd . fromJust . lastIfNothing xs . find ((<= normalised) . fst))
       in (scanForValue xs : choices, g'')
 
-lastIfNothing :: [(Float, (GameState, Command))] -> Maybe (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command))
+lastIfNothing :: [(Float, (GameState, a))] -> Maybe (Float, (GameState, a)) -> Maybe (Float, (GameState, a))
 lastIfNothing _  x@(Just _) = x
 lastIfNothing xs Nothing    = Just $ last xs
