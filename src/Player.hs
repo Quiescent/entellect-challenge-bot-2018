@@ -1,6 +1,4 @@
-module Player (myHealth,
-               oponentsHealth,
-               updateEnergy,
+module Player (updateEnergy,
                myPlayer,
                oponentsPlayer,
                myEnergy,
@@ -26,15 +24,6 @@ myPlayer = player A
 
 oponentsPlayer :: GameState -> Player
 oponentsPlayer = player B
-
-playerHealth :: (GameState -> Player) -> GameState -> Int
-playerHealth player' = health . player'
-
-myHealth :: GameState -> Int
-myHealth = playerHealth myPlayer
-
-oponentsHealth :: GameState -> Int
-oponentsHealth = playerHealth oponentsPlayer
 
 playerEnergy :: (GameState -> Player) -> GameState -> Int
 playerEnergy player' = energy . player'
