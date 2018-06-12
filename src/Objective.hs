@@ -21,7 +21,7 @@ data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
           deriving (Show)
 
-boardScore :: (GameState, Move) -> (Float, (GameState, Move))
+boardScore :: (GameState, Command) -> (Float, (GameState, Command))
 boardScore withMove@(state, _) =
   (hitsSubtractTakenAfterTime state +
    hitsDealtToOponent state -

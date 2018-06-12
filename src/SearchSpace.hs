@@ -46,13 +46,33 @@ doNothingIfNoMoves :: [Command] -> [Command]
 doNothingIfNoMoves [] = [NothingCommand]
 doNothingIfNoMoves xs = xs
 
--- TODO dynamically scale the number of choices
--- TODO Iteratively search deeper
 search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
   Just (searchDeeper g' depthToSearch initialChoices)
   where
-    (initialChoices, g') = chooseN breadthToSearch g $ zipCDF $ map boardScore $ advanceState state
+    (initialChoices, g') = advanceState g state
+
+searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
+searchDeeper g 0         states = (myMove $ snd $ head states, g)
+searchDeeper g remaining states =
+  searchDeeper g'' (remaining - 1) selected
+  where
+    (nextStates, g') = foldr ( \ (state, move) (statesAcc, g'') ->
+                                 let (newStates, g''') = advanceState g'' state
+                                 in  (map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc, g'''))
+                             ([], g)
+                             states
+    (selected, g'')  = pickN breadthToSearch g' nextStates
+
+pickN :: RandomGen g => Int -> g -> [(GameState, Move)] -> ([(GameState, Move)], g)
+pickN n g xs =
+  (randomChoices, g''')
+  where
+    (randomChoices, g''')  = foldr choose ([], g) [1..n]
+    upTo                   = length xs
+    choose _ (choices, g') =
+      let (value, g'') = next g'
+      in ((xs !! (value `mod` upTo)) : choices, g'')
 
 breadthToSearch :: Int
 breadthToSearch = 20
@@ -60,32 +80,34 @@ breadthToSearch = 20
 depthToSearch :: Int
 depthToSearch = 5
 
-searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
-searchDeeper g 0         states = (myMove $ snd $ head states, g)
-searchDeeper g remaining states =
-  searchDeeper g' (remaining - 1) nextStates
+splay :: Int
+splay = 5
+
+-- TODO use "myBoardScore" and "oponentsBoardScore" instead of the same for both
+advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
+advanceState g gameState =
+  (do
+      myCommand       <- map snd myStates
+      oponentsCommand <- map snd oponentsStates
+      return ((tickEngine gameState) `updateMyMove` myCommand `updateOponentsMove` oponentsCommand,
+              Move myCommand oponentsCommand),
+    g'')
   where
-    (nextStates, g') =
-      chooseN breadthToSearch g $
-      zipCDF $
-      map boardScore threadMoveIntoDeeperSearch
-    threadMoveIntoDeeperSearch = do
-      (state, move) <- states
-      (newState, _) <- advanceState state
-      return (newState, move)
-      
-removeDuplicatesByRow :: [Command] -> [Command]
-removeDuplicatesByRow =
-  L.nubBy (\ (Command _ thisY thisBuilding) (Command _ thatY thatBuilding) -> thisY == thatY && thisBuilding == thatBuilding)
+    chooseCandidates      = chooseN splay g . zipCDF . map boardScore
+    (myStates, g')        = chooseCandidates $ myMoves       gameState
+    (oponentsStates, g'') = chooseCandidates $ oponentsMoves gameState
 
-advanceState :: GameState -> [(GameState, Move)]
-advanceState state = do
-  let newState   = tickEngine state
-  myMove'       <- doNothingIfNoMoves $ removeDuplicatesByRow $ myAvailableMoves state
-  oponentsMove' <- doNothingIfNoMoves $ removeDuplicatesByRow $ oponentsAvailableMoves state
-  return $ (newState `updateMyMove` myMove' `updateOponentsMove` oponentsMove', Move myMove' oponentsMove')
+myMoves :: GameState -> [(GameState, Command)]
+myMoves state = do
+  myMove'       <- doNothingIfNoMoves $ myAvailableMoves state
+  return $ (state `updateMyMove` myMove', myMove')
 
-zipCDF :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
+oponentsMoves :: GameState -> [(GameState, Command)]
+oponentsMoves state = do
+  oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
+  return $ (state `updateOponentsMove` oponentsMove', oponentsMove')
+
+zipCDF :: [(Float, (GameState, Command))] -> [(Float, (GameState, Command))]
 zipCDF xs =
   zipWith ( \ x (_, y) -> (x, y)) normalised sorted
   where
@@ -96,7 +118,7 @@ zipCDF xs =
 eliteChoices :: Int
 eliteChoices = 3
 
-chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Move))] -> ([(GameState, Move)], g)
+chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, Command))] -> ([(GameState, Command)], g)
 chooseN n g xs =
   (elite ++ randomChoices, g''')
   where
@@ -111,6 +133,6 @@ chooseN n g xs =
           scanForValue = (snd . fromJust . lastIfNothing xs . find ((<= normalised) . fst))
       in (scanForValue xs : choices, g'')
 
-lastIfNothing :: [(Float, (GameState, Move))] -> Maybe (Float, (GameState, Move)) -> Maybe (Float, (GameState, Move))
+lastIfNothing :: [(Float, (GameState, Command))] -> Maybe (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command))
 lastIfNothing _  x@(Just _) = x
 lastIfNothing xs Nothing    = Just $ last xs
