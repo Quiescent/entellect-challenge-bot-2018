@@ -9,7 +9,6 @@ import Interpretor (GameState(..),
                     Building(..),
                     BuildingType(..),
                     BuildingPriceIndex(..),
-                    PlayerType(..),
                     Player(..),
                     SparseMap)
 import GameMap
@@ -52,32 +51,25 @@ hitsSubtractTakenAfterTime state@(GameState { gameDetails = gameDetails' }) =
       (healthOfOponentsBuildings - myMissilesDamage) -
       (healthOfMyBuildings       - oponentsMissilesDamage)
       where
-        myBuildingsInRow'             = myBuildingsInRow       row midPoint gameMap'
-        oponentsBuildingsInRow'       = oponentsBuildingsInRow row midPoint gameMap'
-        myMissilesInRow'              = myMissilesInRow        row midPoint gameMap'
-        oponentsMissilesInRow'        = oponentsMissilesInRow  row midPoint gameMap'
-        healthOfOponentsBuildings     = sum $ map integrity oponentsBuildingsInRow'
-        healthOfMyBuildings           = sum $ map integrity myBuildingsInRow'
-        myExtraMissilesInNTurns       = myBuildingsInRow'       >>= missilesInNTurns
-        oponentsExtraMissilesInNTurns = oponentsBuildingsInRow' >>= missilesInNTurns
-        myMissilesDamage              = sum $ map damage (myMissilesInRow' ++ myExtraMissilesInNTurns)
-        oponentsMissilesDamage        = sum $ map damage (oponentsMissilesInRow' ++ oponentsExtraMissilesInNTurns)
+        myBuildingsInRow'                   = myBuildingsInRow       row midPoint gameMap'
+        oponentsBuildingsInRow'             = oponentsBuildingsInRow row midPoint gameMap'
+        myMissilesInRow'                    = myMissilesInRow        row midPoint gameMap'
+        oponentsMissilesInRow'              = oponentsMissilesInRow  row midPoint gameMap'
+        healthOfOponentsBuildings           = sum $ map integrity oponentsBuildingsInRow'
+        healthOfMyBuildings                 = sum $ map integrity myBuildingsInRow'
+        myExtraMissilesInNTurnsDamage       = sum $ map missilesInNTurnsDamage myBuildingsInRow'
+        oponentsExtraMissilesInNTurnsDamage = sum $ map missilesInNTurnsDamage oponentsBuildingsInRow'
+        myMissilesDamage                    = myExtraMissilesInNTurnsDamage       + (sum $ map damage (myMissilesInRow'))
+        oponentsMissilesDamage              = oponentsExtraMissilesInNTurnsDamage + (sum $ map damage (oponentsMissilesInRow'))
 
--- TODO This is terrible.  I'm creating missiles to count the damage they can deal...
-missilesInNTurns :: Building -> [Missile]
-missilesInNTurns (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
-                             weaponCooldownPeriod   = weaponCooldownPeriod',
-                             weaponDamage           = weaponDamage',
-                             weaponSpeed            = weaponSpeed',
-                             buildingType           = buildingType' }) =
+missilesInNTurnsDamage :: Building -> Int
+missilesInNTurnsDamage (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
+                                   weaponCooldownPeriod   = weaponCooldownPeriod',
+                                   weaponDamage           = weaponDamage',
+                                   buildingType           = buildingType' }) =
   if turnsIntoFuture < weaponCooldownTimeLeft' || buildingType' /= ATTACK
-  then []
-  else replicate (1 + (divWithZero (turnsIntoFuture - weaponCooldownTimeLeft') weaponCooldownPeriod')) $
-       Missile weaponDamage' -- Doesn't matter for this from here down
-               weaponSpeed'
-               A
-               0
-               0
+  then 0
+  else sum $ replicate (1 + (divWithZero (turnsIntoFuture - weaponCooldownTimeLeft') weaponCooldownPeriod')) weaponDamage'
 
 turnsToTowerMultiplier :: Float
 turnsToTowerMultiplier = 1
