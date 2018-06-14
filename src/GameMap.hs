@@ -4,26 +4,41 @@ module GameMap (mapContents, foldGameMap, mapContentsWithCoords, getAt, adjustAt
 import Interpretor (GameState(..),
                     CellContents(..),
                     SparseMap)
-import Data.Map.Strict as M
+import Data.IntMap as M
+import Prelude     as P
 
+-- TODO Don't use this
 mapContents :: GameState -> [CellContents]
-mapContents = M.elems . gameMap
+mapContents state = ((M.elems . gameMap) state) >>= M.elems
 
+-- TODO Don't use this
 mapContentsWithCoords :: GameState -> [((Int, Int), CellContents)]
-mapContentsWithCoords = M.assocs . gameMap
+mapContentsWithCoords state =
+  (do
+     (y, row)  <- rows
+     (x, cell) <- M.assocs row
+     return ((x, y), cell))
+  where
+    rows = M.assocs $ gameMap state
 
 adjustAt :: (CellContents -> CellContents) -> (Int, Int) -> SparseMap -> SparseMap
-adjustAt = M.adjust
+adjustAt f (x, y) = M.adjust (M.adjust f x) y
 
--- TODO Missiles might not be moving when there is no cell to move to...
 addAt :: (Int, Int) -> CellContents -> SparseMap -> SparseMap
-addAt = M.insert
+addAt (x, y) cell = M.adjust (M.insert x cell) y
 
+-- TODO improve the performance of consumers and hopefully drop this
 foldGameMap :: ((Int, Int) -> CellContents -> a -> a) -> a -> GameState -> a
-foldGameMap f initial = M.foldrWithKey f initial . gameMap
+foldGameMap f initial = P.foldr f' initial . mapContentsWithCoords
+  where f' = \ (coord, cell) z -> f coord cell z
 
+-- TODO make callers not give out of bounds input to this!
 getAt :: (Int, Int) -> SparseMap -> Maybe CellContents
-getAt = M.lookup
+getAt (x, y) map' =
+  if definedAt (x, y) map'
+  then M.lookup x (map' M.! y)
+  else Nothing
 
 definedAt :: (Int, Int) -> SparseMap -> Bool
-definedAt = M.member
+definedAt (x, y) map' =
+  M.member y map' && M.member x (map' M.! y)

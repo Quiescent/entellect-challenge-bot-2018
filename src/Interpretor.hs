@@ -32,7 +32,7 @@ import Data.Aeson (decode,
 import Data.Vector as V
 import GHC.Generics (Generic)
 import Data.ByteString.Lazy as B
-import Data.Map.Strict as M
+import Data.IntMap as M
 
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
@@ -286,22 +286,31 @@ data CellContents = CellContents { buildingInCell :: Maybe Building,
                                    missilesInCell :: V.Vector Missile }
           deriving (Show, Generic, Eq)
 
-type SparseMap = M.Map (Int, Int) CellContents
+type Row = M.IntMap CellContents
+
+type SparseMap = M.IntMap Row
 
 type DenseMap = V.Vector (V.Vector CellStateContainer) 
 
+convertCell :: CellStateContainer -> CellContents
+convertCell (CellStateContainer _ _ _ buildings' missiles') =
+  let building' = if V.null buildings' then Nothing else Just (buildings' V.! 0)
+  in CellContents building' missiles'
+
+makeRow :: DenseMap -> Int -> Int -> Row
+makeRow map' row len =
+  M.fromList [(x, convertCell cell) |
+              x <- [0..len],
+              let cell = ((map' V.! row) V.! x),
+              not ((V.null $ buildings cell) &&
+                    (V.null $ missiles cell))]
+
 toSparseMap :: DenseMap -> SparseMap
 toSparseMap denseMap =
-  V.foldr insertCol M.empty $ V.zip (V.fromList [0..(V.length denseMap)]) denseMap
+  M.fromList [(y, makeRow denseMap y (rowLength - 1)) | y <- [0..rowCount - 1]]
   where
-    colIndices = (V.fromList [0..(V.length (denseMap V.! 0))])
-    insertCol (row, column) sparseMap =
-      V.foldr (insertCell row) sparseMap $ V.zip colIndices column
-    insertCell row (col, (CellStateContainer _ _ _ buildings' missiles')) sparseMap =
-      let building' = if V.null buildings' then Nothing else Just (buildings' V.! 0)
-      in if (V.null buildings' && V.null missiles')
-         then sparseMap
-         else M.insert (col, row) (CellContents building' missiles') sparseMap
+    rowCount  = V.length denseMap
+    rowLength = V.length (denseMap V.! 0)
 
 -- TODO Implement
 toDenseMap :: SparseMap -> Int -> Int -> DenseMap
