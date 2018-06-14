@@ -44,6 +44,7 @@ hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime state@(GameState { gameDetails = gameDetails' }) =
   fromIntegral $ sum $ map count rows
   where
+    -- TODO Work with an actual row here...
     rows      = [0..(mapHeight gameDetails') - 1]
     midPoint  = mapWidth gameDetails'
     gameMap'  = gameMap state
