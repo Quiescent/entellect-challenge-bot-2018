@@ -70,7 +70,7 @@ missilesInNTurnsDamage (Building { weaponCooldownTimeLeft = weaponCooldownTimeLe
                                    buildingType           = buildingType' }) =
   if turnsIntoFuture < weaponCooldownTimeLeft' || buildingType' /= ATTACK
   then 0
-  else sum $ replicate (1 + (divWithZero (turnsIntoFuture - weaponCooldownTimeLeft') weaponCooldownPeriod')) weaponDamage'
+  else (1 + (divWithZero (turnsIntoFuture - weaponCooldownTimeLeft') weaponCooldownPeriod')) * weaponDamage'
 
 turnsToTowerMultiplier :: Float
 turnsToTowerMultiplier = 1
