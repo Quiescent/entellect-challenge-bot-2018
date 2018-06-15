@@ -3,6 +3,8 @@ module Player (updateEnergy,
                oponentsPlayer,
                myEnergy,
                oponentsEnergy,
+               myHealth,
+               oponentsHealth,
                incrementMyHitsTaken,
                incrementOponentsHitsTaken,
                incrementMyPoints,
@@ -33,6 +35,15 @@ myEnergy = playerEnergy myPlayer
 
 oponentsEnergy :: GameState -> Int
 oponentsEnergy = playerEnergy oponentsPlayer
+
+playerHealth :: (GameState -> Player) -> GameState -> Int
+playerHealth player' = health . player'
+
+myHealth :: GameState -> Int
+myHealth = playerHealth myPlayer
+
+oponentsHealth :: GameState -> Int
+oponentsHealth = playerHealth oponentsPlayer
 
 updateEnergy :: GameState -> (Int, Int) -> GameState
 updateEnergy state (myEnergy', oponentsEnergy') =

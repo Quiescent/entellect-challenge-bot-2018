@@ -47,11 +47,16 @@ hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime state =
   fromIntegral $ sum $ map count rows'
   where
-    rows'     = rows $ gameMap state
-    count row =
-      (healthOfOponentsBuildings - myMissilesDamage) -
-      (healthOfMyBuildings       - oponentsMissilesDamage)
+    myHealth'       = myHealth state
+    oponentsHealth' = oponentsHealth state
+    rows'           = rows $ gameMap state
+    count row       =
+      damageDealtToOponent - damageDealtToMe + myWinModifier - myLossModifier
       where
+        myLossModifier                      = if myHealth' <= damageDealtToMe then 1000 else 0
+        myWinModifier                       = if oponentsHealth' <= damageDealtToOponent then 1000 else 0
+        damageDealtToOponent                = (healthOfOponentsBuildings - myMissilesDamage)
+        damageDealtToMe                     = (healthOfMyBuildings       - oponentsMissilesDamage)
         myBuildingsInRow'                   = myBuildingsInRow            row
         oponentsBuildingsInRow'             = oponentsBuildingsInRow      row
         myMissilesInRowDamage'              = myMissilesInRowDamage       row
