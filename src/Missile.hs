@@ -1,4 +1,11 @@
-module Missile (tickMissiles, mapMissiles, missilesEmpty, missilesFoldr)
+module Missile (tickMissiles,
+                mapMissiles,
+                missilesEmpty,
+                missilesFoldr,
+                oponentsMissile,
+                myMissile,
+                missilesToList,
+                missilesFilter)
   where
 
 import Interpretor (PlayerType(..), GameState(..), Missile(..), CellContents(..), SparseMap)
@@ -28,11 +35,26 @@ moveMissile (x, y) missile@(Missile { speed = speed', owner = owner' }) gameMap'
      then adjustAt (addMissile missile) newCoord gameMap'
      else addAt newCoord (addMissile missile emptyCell) gameMap'
 
-mapMissiles :: (a -> b) -> V.Vector a -> V.Vector b
+mapMissiles :: (Missile -> b) -> V.Vector Missile -> V.Vector b
 mapMissiles = V.map
 
 missilesEmpty :: V.Vector Missile -> Bool
 missilesEmpty = V.null
 
-missilesFoldr :: (a -> b -> b) -> b -> V.Vector a -> b
+missilesFoldr :: (Missile -> b -> b) -> b -> V.Vector Missile -> b
 missilesFoldr = V.foldr
+
+missilesFilter :: (Missile -> Bool) -> V.Vector Missile -> V.Vector Missile
+missilesFilter = V.filter
+
+missilesToList :: V.Vector Missile -> [Missile]
+missilesToList = V.toList
+
+missileOwnedBy :: (PlayerType -> Bool) -> Missile -> Bool
+missileOwnedBy p = p . owner
+
+myMissile :: Missile -> Bool
+myMissile = missileOwnedBy (== A)
+
+oponentsMissile :: Missile -> Bool
+oponentsMissile = missileOwnedBy (== B)

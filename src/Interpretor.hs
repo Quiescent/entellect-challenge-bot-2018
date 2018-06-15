@@ -17,6 +17,7 @@ module Interpretor (repl,
                     BuildingStats(..),
                     TowerStats(..),
                     SparseMap,
+                    Row,
                     DenseMap)
   where
 

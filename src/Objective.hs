@@ -10,9 +10,13 @@ import Interpretor (GameState(..),
                     BuildingType(..),
                     BuildingPriceIndex(..),
                     Player(..),
-                    SparseMap)
+                    SparseMap,
+                    Row)
 import GameMap
+import Row
 import Player
+import Missile
+import Building
 import Data.Maybe
 import qualified Data.Vector as V
 
@@ -40,22 +44,24 @@ hitsTakenByMe = (*hitsMultiplier) . fromIntegral . hitsTaken . myPlayer
 turnsIntoFuture :: Int
 turnsIntoFuture = 10
 
+-- TODO take into account damage dealt to buildings as part of the heuristic at a significant amount less than damage to player
+-- TODO take into account the players health (i.e. a win should be very highly weighted)
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime state@(GameState { gameDetails = gameDetails' }) =
-  fromIntegral $ sum $ map count rows
+  fromIntegral $ sum $ map count rows'
   where
     -- TODO Work with an actual row here...
-    rows      = [0..(mapHeight gameDetails') - 1]
+    rows'     = rows $ gameMap state
     midPoint  = mapWidth gameDetails'
     gameMap'  = gameMap state
     count row =
       (healthOfOponentsBuildings - myMissilesDamage) -
       (healthOfMyBuildings       - oponentsMissilesDamage)
       where
-        myBuildingsInRow'                   = myBuildingsInRow       row midPoint gameMap'
-        oponentsBuildingsInRow'             = oponentsBuildingsInRow row midPoint gameMap'
-        myMissilesInRow'                    = myMissilesInRow        row midPoint gameMap'
-        oponentsMissilesInRow'              = oponentsMissilesInRow  row midPoint gameMap'
+        myBuildingsInRow'                   = myBuildingsInRow       row gameMap'
+        oponentsBuildingsInRow'             = oponentsBuildingsInRow row gameMap'
+        myMissilesInRow'                    = myMissilesInRow        row gameMap'
+        oponentsMissilesInRow'              = oponentsMissilesInRow  row gameMap'
         healthOfOponentsBuildings           = sum $ map integrity oponentsBuildingsInRow'
         healthOfMyBuildings                 = sum $ map integrity myBuildingsInRow'
         myExtraMissilesInNTurnsDamage       = sum $ map missilesInNTurnsDamage myBuildingsInRow'
@@ -86,47 +92,39 @@ infinity = 10000000
 
 myTurnsToNextTowerByTurnByMultiplier :: GameState -> Float
 myTurnsToNextTowerByTurnByMultiplier state@(GameState { gameMap = gameMap', gameDetails = gameDetails' }) =
-  (turnsToTowerMultiplier *) $ fromIntegral $ divWithZero (mostExpensiveTower - myEnergy') energyPerTurn
+  (turnsToTowerMultiplier *) $
+  fromIntegral $
+  divWithZero (mostExpensiveTower - myEnergy') energyPerTurn
   where
+    rows'              = rows $ gameMap state
     priceIndex         = buildingPrices gameDetails'
     mostExpensiveTower = maximum $ map ($ priceIndex) [attackTowerCost, defenseTowerCost, energyTowerCost]
     myEnergy'          = myEnergy state
     energyPerTurn      = (+ (roundIncomeEnergy gameDetails')) $ sum $ map energyGeneratedPerTurn myBuildings
-    myBuildings        = [0..(mapHeight gameDetails') - 1] >>= ( \ row -> myBuildingsInRow row midPoint gameMap')
-    midPoint           = mapWidth gameDetails'
+    myBuildings        = rows' >>= ((flip myBuildingsInRow) gameMap')
 
--- Just don't look down here.... ok...?
-----------------------------------------------------------------------------------------------------
+oponentsMissilesInRow :: Row -> SparseMap -> [Missile]
+oponentsMissilesInRow row gameMap' =
+  rowFoldr (accMissiles oponentsMissile) [] row
 
-cellHasBuilding :: (Int, Int) -> SparseMap -> Bool
-cellHasBuilding coord gameMap' =
-  (definedAt coord gameMap') &&
-  (isJust $ buildingInCell $ fromJust $ getAt coord gameMap')
+myMissilesInRow :: Row -> SparseMap -> [Missile]
+myMissilesInRow row gameMap' =
+  rowFoldr (accMissiles myMissile) [] row
 
-cellHasMissile :: (Int, Int) -> SparseMap -> Bool
-cellHasMissile coord gameMap' =
-  (definedAt coord gameMap') &&
-  (not $ V.null $ missilesInCell $ fromJust $ getAt coord gameMap')
+accMissiles :: (Missile -> Bool) -> CellContents -> [Missile] -> [Missile]
+accMissiles owned (CellContents _ missilesInCell') missiles =
+  missiles ++ (missilesToList $ missilesFilter owned missilesInCell')
 
-myMissilesInRow :: Int -> Int -> SparseMap -> [Missile]
-myMissilesInRow row midPoint gameMap' = do
-  x       <- filter (\ x' -> cellHasMissile (x', row) gameMap') [0..(midPoint - 1)]
-  missile <- V.toList $ missilesInCell $ fromJust $ getAt (x, row) gameMap'
-  return missile
+oponentsBuildingsInRow :: Row -> SparseMap -> [Building]
+oponentsBuildingsInRow row gameMap' =
+  rowFoldr (accBuildings oponentsBuilding) [] row
 
-oponentsMissilesInRow :: Int -> Int -> SparseMap -> [Missile]
-oponentsMissilesInRow row midPoint gameMap' = do
-  x       <- filter (\ x' -> cellHasMissile (x', row) gameMap') [midPoint..(2 * midPoint - 1)]
-  missile <- V.toList $ missilesInCell $ fromJust $ getAt (x, row) gameMap'
-  return missile
+myBuildingsInRow :: Row -> SparseMap -> [Building]
+myBuildingsInRow row gameMap' =
+  rowFoldr (accBuildings myBuilding) [] row
 
-oponentsBuildingsInRow :: Int -> Int -> SparseMap -> [Building]
-oponentsBuildingsInRow row midPoint gameMap' = do
-  x <- filter (\ x' -> cellHasBuilding (x', row) gameMap') [midPoint..(2 * midPoint - 1)]
-  return $ fromJust $ buildingInCell $ fromJust $ getAt (x, row) gameMap'
-
--- TODO DRY!
-myBuildingsInRow :: Int -> Int -> SparseMap -> [Building]
-myBuildingsInRow row midPoint gameMap' = do
-  x <- filter (\ x' -> cellHasBuilding (x', row) gameMap') [0..(midPoint - 1)]
-  return $ fromJust $ buildingInCell $ fromJust $ getAt (x, row) gameMap'
+accBuildings :: (Building -> Bool) -> CellContents -> [Building] -> [Building]
+accBuildings owned (CellContents (Just building') _) buildings
+  | owned building'        = building' : buildings
+  | otherwise              = buildings
+accBuildings _ _ buildings = buildings

@@ -1,4 +1,6 @@
-module Building (tickBuildings,
+module Building (myBuilding,
+                 oponentsBuilding,
+                 tickBuildings,
                  attackTowerStats',
                  defenseTowerStats',
                  energyTowerStats',
@@ -109,3 +111,12 @@ energyTowerStats' = towerStats energyTowerStats
 
 buildingIsConstructed :: Building -> Bool
 buildingIsConstructed = ((== -1) . constructionTimeLeft)
+
+buildingOwnedBy :: (PlayerType -> Bool) -> Building -> Bool
+buildingOwnedBy p = p . buildingOwner
+
+myBuilding :: Building -> Bool
+myBuilding = buildingOwnedBy (==A)
+
+oponentsBuilding :: Building -> Bool
+oponentsBuilding = buildingOwnedBy (==B)

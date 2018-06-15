@@ -1,8 +1,16 @@
-module GameMap (mapContents, foldGameMap, mapContentsWithCoords, getAt, adjustAt, definedAt, addAt)
+module GameMap (mapContents,
+                foldGameMap,
+                mapContentsWithCoords,
+                getAt,
+                adjustAt,
+                definedAt,
+                addAt,
+                rows)
   where
 
 import Interpretor (GameState(..),
                     CellContents(..),
+                    Row,
                     SparseMap)
 import Data.IntMap as M
 import Prelude     as P
@@ -15,11 +23,14 @@ mapContents state = ((M.elems . gameMap) state) >>= M.elems
 mapContentsWithCoords :: GameState -> [((Int, Int), CellContents)]
 mapContentsWithCoords state =
   (do
-     (y, row)  <- rows
+     (y, row)  <- rows'
      (x, cell) <- M.assocs row
      return ((x, y), cell))
   where
-    rows = M.assocs $ gameMap state
+    rows' = M.assocs $ gameMap state
+
+rows :: SparseMap -> [Row]
+rows = M.elems
 
 adjustAt :: (CellContents -> CellContents) -> (Int, Int) -> SparseMap -> SparseMap
 adjustAt f (x, y) = M.adjust (M.adjust f x) y
