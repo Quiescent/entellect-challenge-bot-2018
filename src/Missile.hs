@@ -5,7 +5,8 @@ module Missile (tickMissiles,
                 oponentsMissile,
                 myMissile,
                 missilesToList,
-                missilesFilter)
+                missilesFilter,
+                missilesFoldl')
   where
 
 import Interpretor (PlayerType(..), GameState(..), Missile(..), CellContents(..), SparseMap)
@@ -41,8 +42,11 @@ mapMissiles = V.map
 missilesEmpty :: V.Vector Missile -> Bool
 missilesEmpty = V.null
 
-missilesFoldr :: (Missile -> b -> b) -> b -> V.Vector Missile -> b
+missilesFoldr :: (Missile -> a -> a) -> a -> V.Vector Missile -> a
 missilesFoldr = V.foldr
+
+missilesFoldl' :: (a -> Missile -> a) -> a -> V.Vector Missile -> a
+missilesFoldl' = V.foldl'
 
 missilesFilter :: (Missile -> Bool) -> V.Vector Missile -> V.Vector Missile
 missilesFilter = V.filter
