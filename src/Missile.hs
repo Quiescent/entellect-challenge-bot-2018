@@ -32,9 +32,10 @@ moveMissile :: (Int, Int) -> Missile -> SparseMap -> SparseMap
 moveMissile (x, y) missile@(Missile { speed = speed', owner = owner' }) gameMap' =
   let adjustment = if owner' == A then speed' else (-speed')
       newCoord   = (x, y + adjustment)
+      gameMap''  = adjustAt (removeMissile missile) (x, y) gameMap'
   in if definedAt newCoord gameMap'
-     then adjustAt (addMissile missile) newCoord gameMap'
-     else addAt newCoord (addMissile missile emptyCell) gameMap'
+     then adjustAt (addMissile missile) newCoord gameMap''
+     else addAt newCoord (addMissile missile emptyCell) gameMap''
 
 mapMissiles :: (Missile -> b) -> V.Vector Missile -> V.Vector b
 mapMissiles = V.map
