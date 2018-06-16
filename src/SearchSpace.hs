@@ -52,8 +52,11 @@ search g state =
   where
     (initialChoices, g') = advanceState g state
 
+maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
+maximumByScore = maximumBy ( \ (x, _) (y, _) -> compare x y )
+
 searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
-searchDeeper g 0         states = (myMove $ snd $ head states, g)
+searchDeeper g 0         states = (myMove $ snd $ snd $ maximumByScore $ map myBoardScore states, g)
 searchDeeper g remaining states =
   searchDeeper g'' (remaining - 1) selected
   where
