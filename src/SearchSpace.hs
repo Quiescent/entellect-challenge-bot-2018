@@ -55,6 +55,8 @@ search g state =
 maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
 maximumByScore = maximumBy ( \ (x, _) (y, _) -> compare x y )
 
+-- TODO Remove finished ones from the search as we go
+-- TODO Time box this
 searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
 searchDeeper g 0         states = (myMove $ snd $ snd $ maximumByScore $ map myBoardScore states, g)
 searchDeeper g remaining states =
