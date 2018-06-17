@@ -55,18 +55,20 @@ hitsSubtractTakenAfterTime state =
     count row       =
       damageDealtToOponent - damageDealtToMe + myWinModifier - myLossModifier
       where
-        myLossModifier                      = if myHealth' <= damageDealtToMe then 1000 else 0
+        myLossModifier                      = if myHealth'       <= damageDealtToMe then 1000 else 0
         myWinModifier                       = if oponentsHealth' <= damageDealtToOponent then 1000 else 0
         damageDealtToOponent                = (healthOfOponentsBuildings - myMissilesDamage)
         damageDealtToMe                     = (healthOfMyBuildings       - oponentsMissilesDamage)
-        myMissilesInRowDamage'              = myMissilesInRowDamage       row
+        -- Oponent
         oponentsMissilesInRowDamage'        = oponentsMissilesInRowDamage row
         healthOfOponentsBuildings           = foldlRowBuildings' oponentsBuilding integrity row
-        healthOfMyBuildings                 = foldlRowBuildings' myBuilding       integrity row
-        myExtraMissilesInNTurnsDamage       = foldlRowBuildings' oponentsBuilding missilesInNTurnsDamage row
-        oponentsExtraMissilesInNTurnsDamage = foldlRowBuildings' myBuilding       missilesInNTurnsDamage row
-        myMissilesDamage                    = myExtraMissilesInNTurnsDamage       + myMissilesInRowDamage'
+        oponentsExtraMissilesInNTurnsDamage = foldlRowBuildings' oponentsBuilding missilesInNTurnsDamage row
         oponentsMissilesDamage              = oponentsExtraMissilesInNTurnsDamage + oponentsMissilesInRowDamage'
+        -- Me
+        myMissilesInRowDamage'              = myMissilesInRowDamage       row
+        healthOfMyBuildings                 = foldlRowBuildings' myBuilding       integrity row
+        myExtraMissilesInNTurnsDamage       = foldlRowBuildings' myBuilding       missilesInNTurnsDamage row
+        myMissilesDamage                    = myExtraMissilesInNTurnsDamage       + myMissilesInRowDamage'
 
 foldlRowBuildings' :: (Building -> Bool) -> (Building -> Int) -> Row -> Int
 foldlRowBuildings' owned f xs =
