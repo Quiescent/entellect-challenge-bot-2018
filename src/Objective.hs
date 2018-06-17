@@ -73,7 +73,7 @@ foldlRowBuildings' owned f xs =
   rowFoldl' (accBuilding owned f) 0 xs
 
 accBuilding :: (Building -> Bool) -> (Building -> Int) -> Int -> CellContents -> Int
-accBuilding owned f summed (CellContents (Just building') _)
+accBuilding owned f !summed (CellContents (Just building') _)
   | owned building'        = f building' + summed
   | otherwise              = summed
 accBuilding _ _ summed _   = summed
