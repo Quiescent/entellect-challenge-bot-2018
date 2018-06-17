@@ -73,7 +73,7 @@ breadthToSearch :: Int
 breadthToSearch = 20
 
 depthToSearch :: Int
-depthToSearch = 100
+depthToSearch = 30
 
 splay :: Int
 splay = 5
