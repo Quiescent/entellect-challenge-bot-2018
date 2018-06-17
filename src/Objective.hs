@@ -41,7 +41,7 @@ hitsTakenByMe :: GameState -> Float
 hitsTakenByMe = (*hitsMultiplier) . fromIntegral . hitsTaken . myPlayer
 
 turnsIntoFuture :: Int
-turnsIntoFuture = 10
+turnsIntoFuture = 40
 
 -- TODO take into account damage dealt to buildings as part of the heuristic at a significant amount less than damage to player
 -- TODO take into account the players health (i.e. a win should be very highly weighted)
