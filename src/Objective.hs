@@ -63,12 +63,16 @@ hitsSubtractTakenAfterTime state =
         oponentsBuildingsInRow'             = oponentsBuildingsInRow      row
         myMissilesInRowDamage'              = myMissilesInRowDamage       row
         oponentsMissilesInRowDamage'        = oponentsMissilesInRowDamage row
-        healthOfOponentsBuildings           = sum $ map integrity oponentsBuildingsInRow'
-        healthOfMyBuildings                 = sum $ map integrity myBuildingsInRow'
-        myExtraMissilesInNTurnsDamage       = sum $ map missilesInNTurnsDamage myBuildingsInRow'
-        oponentsExtraMissilesInNTurnsDamage = sum $ map missilesInNTurnsDamage oponentsBuildingsInRow'
+        healthOfOponentsBuildings           = foldrSum integrity oponentsBuildingsInRow'
+        healthOfMyBuildings                 = foldrSum integrity myBuildingsInRow'
+        myExtraMissilesInNTurnsDamage       = foldrSum missilesInNTurnsDamage myBuildingsInRow'
+        oponentsExtraMissilesInNTurnsDamage = foldrSum missilesInNTurnsDamage oponentsBuildingsInRow'
         myMissilesDamage                    = myExtraMissilesInNTurnsDamage       + myMissilesInRowDamage'
         oponentsMissilesDamage              = oponentsExtraMissilesInNTurnsDamage + oponentsMissilesInRowDamage'
+
+foldrSum :: (z -> Int) -> [z] -> Int
+foldrSum f xs =
+  foldr ( \ x accumulated -> f x + accumulated) 0 xs
 
 missilesInNTurnsDamage :: Building -> Int
 missilesInNTurnsDamage (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
