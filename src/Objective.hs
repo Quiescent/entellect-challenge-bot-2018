@@ -112,7 +112,14 @@ myMissilesInRowDamage row =
 
 accMissilesDamage :: (Missile -> Bool) -> CellContents -> Int -> Int
 accMissilesDamage owned (CellContents _ missilesInCell') damage' =
-  missilesFoldl' ( \ damageAcc missile -> damageAcc + if (owned missile) then damage missile else 0) damage' missilesInCell'
+  missilesFoldl' (accDamage owned) damage' missilesInCell'
+
+accDamage :: (Missile -> Bool) -> Int -> Missile -> Int
+accDamage owned damageAcc missile =
+  damageAcc +
+  if (owned missile)
+  then damage missile
+  else 0
 
 oponentsBuildingsInRow :: Row -> [Building]
 oponentsBuildingsInRow row =
