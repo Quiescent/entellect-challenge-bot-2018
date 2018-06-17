@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Objective (myBoardScore, Move(..))
   where
 
@@ -111,7 +113,7 @@ myMissilesInRowDamage row =
   rowFoldr (accMissilesDamage myMissile) 0 row
 
 accMissilesDamage :: (Missile -> Bool) -> CellContents -> Int -> Int
-accMissilesDamage owned (CellContents _ missilesInCell') damage' =
+accMissilesDamage owned (CellContents _ missilesInCell') !damage' =
   missilesFoldl' (accDamage owned) damage' missilesInCell'
 
 accDamage :: (Missile -> Bool) -> Int -> Missile -> Int
