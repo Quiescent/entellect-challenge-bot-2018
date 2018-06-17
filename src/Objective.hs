@@ -61,22 +61,22 @@ hitsSubtractTakenAfterTime state =
         damageDealtToMe                     = (healthOfMyBuildings       - oponentsMissilesDamage)
         myMissilesInRowDamage'              = myMissilesInRowDamage       row
         oponentsMissilesInRowDamage'        = oponentsMissilesInRowDamage row
-        healthOfOponentsBuildings           = foldrRowBuildings oponentsBuilding integrity row
-        healthOfMyBuildings                 = foldrRowBuildings myBuilding       integrity row
-        myExtraMissilesInNTurnsDamage       = foldrRowBuildings oponentsBuilding missilesInNTurnsDamage row
-        oponentsExtraMissilesInNTurnsDamage = foldrRowBuildings myBuilding       missilesInNTurnsDamage row
+        healthOfOponentsBuildings           = foldlRowBuildings' oponentsBuilding integrity row
+        healthOfMyBuildings                 = foldlRowBuildings' myBuilding       integrity row
+        myExtraMissilesInNTurnsDamage       = foldlRowBuildings' oponentsBuilding missilesInNTurnsDamage row
+        oponentsExtraMissilesInNTurnsDamage = foldlRowBuildings' myBuilding       missilesInNTurnsDamage row
         myMissilesDamage                    = myExtraMissilesInNTurnsDamage       + myMissilesInRowDamage'
         oponentsMissilesDamage              = oponentsExtraMissilesInNTurnsDamage + oponentsMissilesInRowDamage'
 
-foldrRowBuildings :: (Building -> Bool) -> (Building -> Int) -> Row -> Int
-foldrRowBuildings owned f xs =
-  rowFoldr (accBuilding owned f) 0 xs
+foldlRowBuildings' :: (Building -> Bool) -> (Building -> Int) -> Row -> Int
+foldlRowBuildings' owned f xs =
+  rowFoldl' (accBuilding owned f) 0 xs
 
-accBuilding :: (Building -> Bool) -> (Building -> Int) -> CellContents -> Int -> Int
-accBuilding owned f (CellContents (Just building') _) summed
+accBuilding :: (Building -> Bool) -> (Building -> Int) -> Int -> CellContents -> Int
+accBuilding owned f summed (CellContents (Just building') _)
   | owned building'        = f building' + summed
   | otherwise              = summed
-accBuilding _ _ _ summed   = summed
+accBuilding _ _ summed _   = summed
 
 missilesInNTurnsDamage :: Building -> Int
 missilesInNTurnsDamage (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
@@ -109,7 +109,7 @@ myTurnsToNextTowerByTurnByMultiplier state@(GameState { gameDetails = gameDetail
     priceIndex         = buildingPrices gameDetails'
     mostExpensiveTower = maximum $ map ($ priceIndex) [attackTowerCost, defenseTowerCost, energyTowerCost]
     myEnergy'          = myEnergy state
-    rowsEnergyPerTurn  = foldrRowBuildings myBuilding energyGeneratedPerTurn
+    rowsEnergyPerTurn  = foldlRowBuildings' myBuilding energyGeneratedPerTurn
     energyPerTurn      =
       (+ (roundIncomeEnergy gameDetails')) $
       foldr (\ row acc -> acc + rowsEnergyPerTurn row) 0 rows'
