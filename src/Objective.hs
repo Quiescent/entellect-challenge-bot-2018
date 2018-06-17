@@ -123,7 +123,7 @@ accMissilesDamage accDamage' !damage' (CellContents _ missilesInCell') =
   missilesFoldl' accDamage' damage' missilesInCell'
 
 accDamage :: (Missile -> Bool) -> Int -> Missile -> Int
-accDamage owned damageAcc missile =
+accDamage owned !damageAcc missile =
   damageAcc +
   if (owned missile)
   then damage missile
