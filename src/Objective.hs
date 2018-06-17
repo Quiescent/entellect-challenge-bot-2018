@@ -105,22 +105,22 @@ myTurnsToNextTowerByTurnByMultiplier state@(GameState { gameDetails = gameDetail
     myBuildings        = rows' >>= myBuildingsInRow
 
 myMissilesInRowDamage :: Row -> Int
-myMissilesInRowDamage =
-  rowFoldl' accMyMissilesDamage 0
+myMissilesInRowDamage row =
+  rowFoldl' accMyMissilesDamage 0 row
 
 accMyMissilesDamage :: Int -> CellContents -> Int
-accMyMissilesDamage damage' = accMissilesDamage damage' (accDamage myMissile)
+accMyMissilesDamage = accMissilesDamage (accDamage myMissile)
 
 oponentsMissilesInRowDamage :: Row -> Int
-oponentsMissilesInRowDamage =
-  rowFoldl' accOponentsMissilesDamage 0
+oponentsMissilesInRowDamage row =
+  rowFoldl' accOponentsMissilesDamage 0 row
 
 accOponentsMissilesDamage :: Int -> CellContents -> Int
-accOponentsMissilesDamage damage' = accMissilesDamage damage' (accDamage oponentsMissile)
+accOponentsMissilesDamage = accMissilesDamage (accDamage oponentsMissile)
 
-accMissilesDamage :: Int -> (Int -> Missile -> Int) -> CellContents -> Int
-accMissilesDamage !damage' accDamage' =
-  missilesFoldl' accDamage' damage' . missilesInCell
+accMissilesDamage :: (Int -> Missile -> Int) -> Int -> CellContents -> Int
+accMissilesDamage accDamage' !damage' (CellContents _ missilesInCell') =
+  missilesFoldl' accDamage' damage' missilesInCell'
 
 accDamage :: (Missile -> Bool) -> Int -> Missile -> Int
 accDamage owned !damageAcc missile =
