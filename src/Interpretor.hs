@@ -284,7 +284,7 @@ instance ToJSON   GameState where
             "buildingPrices" .= gameDetails']
 
 data CellContents = CellContents { buildingInCell :: Maybe Building,
-                                   missilesInCell :: V.Vector Missile }
+                                   missilesInCell :: [Missile] }
           deriving (Show, Generic, Eq)
 
 type Row = M.IntMap CellContents
@@ -296,7 +296,7 @@ type DenseMap = V.Vector (V.Vector CellStateContainer)
 convertCell :: CellStateContainer -> CellContents
 convertCell (CellStateContainer _ _ _ buildings' missiles') =
   let building' = if V.null buildings' then Nothing else Just (buildings' V.! 0)
-  in CellContents building' missiles'
+  in CellContents building' $ V.toList missiles'
 
 makeRow :: DenseMap -> Int -> Int -> Row
 makeRow map' row len =

@@ -23,6 +23,7 @@ import Interpretor (CellContents(..),
 import GameMap
 import Data.Vector     as V
 import Prelude         as P
+import Missile         as M
 
 allCells :: GameState -> [(Int, Int)]
 allCells (GameState {gameDetails = details}) =
@@ -39,7 +40,7 @@ cellBelongsToMe (GameState {gameDetails = details}) =
   (< (div (mapWidth details) 2)) . fst
 
 emptyCell :: CellContents
-emptyCell = CellContents Nothing V.empty
+emptyCell = CellContents Nothing emptyMissiles
 
 cellBelongsToOponent :: GameState -> (Int, Int) -> Bool
 cellBelongsToOponent state = not . (cellBelongsToMe state)
@@ -53,12 +54,12 @@ cellContainsBuildingType typeOfBuilding =
   isJust . fmap (((==typeOfBuilding) . buildingType)) . buildingInCell
 
 removeMissiles :: CellContents -> CellContents
-removeMissiles (CellContents building _) = CellContents building V.empty
+removeMissiles (CellContents building _) = CellContents building emptyMissiles
 
 removeMissile :: Missile -> CellContents -> CellContents
 removeMissile missile cellContents =
-  let missiles    = V.toList $ missilesInCell cellContents
-      newMissiles = V.fromList $ fst $ P.foldr maybeRemove (missiles, False) missiles
+  let missiles    = missilesInCell cellContents
+      newMissiles = fst $ P.foldr maybeRemove (missiles, False) missiles
   in cellContents { missilesInCell = newMissiles }
   where
     maybeRemove :: Missile -> ([Missile], Bool) -> ([Missile], Bool)
@@ -69,7 +70,7 @@ removeMissile missile cellContents =
 
 addMissile :: Missile -> CellContents -> CellContents
 addMissile missile cellContents@(CellContents _ missiles') =
-  cellContents { missilesInCell = V.cons missile missiles' }
+  cellContents { missilesInCell = consMissile missile missiles' }
 
 resetCooldownAndCreateMissile :: PlayerType -> Int -> Int -> Int -> CellContents -> CellContents
 resetCooldownAndCreateMissile owner' cooldown damage' speed' =

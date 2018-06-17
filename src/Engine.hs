@@ -20,6 +20,27 @@ import Collision (CollisionType(..), Collision(..))
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
 
+tickMissiles :: GameState -> GameState
+tickMissiles state@(GameState { gameMap = gameMap' }) =
+  state { gameMap = foldr moveMissiles gameMap' (mapContentsWithCoords state) }
+
+moveMissiles :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
+moveMissiles (coordinate, (CellContents _ missiles')) gameMap'
+  | missilesEmpty missiles' = gameMap'
+  | otherwise               =
+    let withMissilesRemoved = adjustAt removeMissiles coordinate gameMap'
+    in missilesFoldr (moveMissile coordinate) withMissilesRemoved missiles'
+
+-- TODO: Clean up empty cells so that the map remains sparse
+moveMissile :: (Int, Int) -> Missile -> SparseMap -> SparseMap
+moveMissile (x, y) missile@(Missile { speed = speed', owner = owner' }) gameMap' =
+  let adjustment = if owner' == A then speed' else (-speed')
+      newCoord   = (x, y + adjustment)
+      gameMap''  = adjustAt (removeMissile missile) (x, y) gameMap'
+  in if definedAt newCoord gameMap'
+     then adjustAt (addMissile missile) newCoord gameMap''
+     else addAt newCoord (addMissile missile emptyCell) gameMap''
+
 gainEnergy :: GameState -> GameState
 gainEnergy state =
   updatePointsForEnergy mineAndOponentsEnergy $ updateEnergy state mineAndOponentsEnergy
