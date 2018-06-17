@@ -104,16 +104,22 @@ myTurnsToNextTowerByTurnByMultiplier state@(GameState { gameDetails = gameDetail
     energyPerTurn      = (+ (roundIncomeEnergy gameDetails')) $ sum $ map energyGeneratedPerTurn myBuildings
     myBuildings        = rows' >>= myBuildingsInRow
 
-oponentsMissilesInRowDamage :: Row -> Int
-oponentsMissilesInRowDamage row =
-  rowFoldr (accMissilesDamage oponentsMissile) 0 row
-
 myMissilesInRowDamage :: Row -> Int
 myMissilesInRowDamage row =
-  rowFoldr (accMissilesDamage myMissile) 0 row
+  rowFoldl' accMyMissilesDamage 0 row
 
-accMissilesDamage :: (Missile -> Bool) -> CellContents -> Int -> Int
-accMissilesDamage owned (CellContents _ missilesInCell') !damage' =
+accMyMissilesDamage :: Int -> CellContents -> Int
+accMyMissilesDamage = accMissilesDamage myMissile
+
+oponentsMissilesInRowDamage :: Row -> Int
+oponentsMissilesInRowDamage row =
+  rowFoldl' accOponentsMissilesDamage 0 row
+
+accOponentsMissilesDamage :: Int -> CellContents -> Int
+accOponentsMissilesDamage = accMissilesDamage oponentsMissile
+
+accMissilesDamage :: (Missile -> Bool) -> Int -> CellContents -> Int
+accMissilesDamage owned !damage' (CellContents _ missilesInCell') =
   missilesFoldl' (accDamage owned) damage' missilesInCell'
 
 accDamage :: (Missile -> Bool) -> Int -> Missile -> Int
