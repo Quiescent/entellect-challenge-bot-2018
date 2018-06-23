@@ -1,55 +1,70 @@
-module GameMap (mapContents,
-                foldGameMap,
-                mapContentsWithCoords,
-                getAt,
+module GameMap (mapFold,
+                removeAt,
+                mapFoldIndexed,
                 adjustAt,
+                replaceAt,
                 definedAt,
                 addAt,
-                rows)
+                findRightOf,
+                findLeftOf,
+                CollisionDetector,
+                Collision(..))
   where
 
-import Interpretor (GameState(..),
-                    CellContents(..),
+import Interpretor (Building(..),
                     Row,
-                    SparseMap)
-import Data.IntMap as M
-import Prelude     as P
+                    TowerMap)
+import Magic
+import qualified Data.IntMap as M
 
--- TODO Don't use this
-mapContents :: GameState -> [CellContents]
-mapContents state = ((M.elems . gameMap) state) >>= M.elems
+mapFold :: (Row -> a -> a) -> a -> TowerMap -> a
+mapFold = M.foldr
 
--- TODO Don't use this
-mapContentsWithCoords :: GameState -> [((Int, Int), CellContents)]
-mapContentsWithCoords state =
-  (do
-     (y, row)  <- rows'
-     (x, cell) <- M.assocs row
-     return ((x, y), cell))
-  where
-    rows' = M.assocs $ gameMap state
+mapFoldIndexed :: (Int -> Row -> a -> a) -> a -> TowerMap -> a
+mapFoldIndexed = M.foldrWithKey
 
-rows :: SparseMap -> [Row]
-rows = M.elems
-
-adjustAt :: (CellContents -> CellContents) -> (Int, Int) -> SparseMap -> SparseMap
+adjustAt :: (Building -> Building) -> (Int, Int) -> TowerMap -> TowerMap
 adjustAt f (x, y) = M.adjust (M.adjust f x) y
 
-addAt :: (Int, Int) -> CellContents -> SparseMap -> SparseMap
+replaceAt :: Building -> (Int, Int) -> TowerMap -> TowerMap
+replaceAt building' = adjustAt (\ _ -> building')
+
+addAt :: (Int, Int) -> Building -> TowerMap -> TowerMap
 addAt (x, y) cell = M.adjust (M.insert x cell) y
 
--- TODO improve the performance of consumers and hopefully drop this
-foldGameMap :: ((Int, Int) -> CellContents -> a -> a) -> a -> GameState -> a
-foldGameMap f initial = P.foldr f' initial . mapContentsWithCoords
-  where f' = \ (coord, cell) z -> f coord cell z
+type CollisionDetector = (Int, Int) -> TowerMap -> Collision
 
--- TODO make callers not give out of bounds input to this!
-getAt :: (Int, Int) -> SparseMap -> Maybe CellContents
-getAt (x, y) map' =
-  if definedAt (x, y) map'
-  then M.lookup x (map' M.! y)
-  else Nothing
+data Collision = HitNothing
+               | HitPlayer
+               | HitBuilding Int Building
 
-definedAt :: (Int, Int) -> SparseMap -> Bool
-definedAt (x, y) map' =
-  M.member y map' && M.member x (map' M.! y)
+findRightOf :: CollisionDetector
+findRightOf (x', y') towerMap' =
+  case towerMap' M.!? y' >>= (M.lookupLE (x' + 2)) of
+    Nothing                ->
+      if x' == -1
+      then HitPlayer
+      else HitNothing
+    Just (xHit, building') ->
+      if xHit > x'
+      then HitBuilding xHit building'
+      else HitNothing
+
+findLeftOf :: CollisionDetector
+findLeftOf (x', y') towerMap' =
+  case towerMap' M.!? y' >>= (M.lookupGE (x' - 2)) of
+    Nothing                ->
+      if x' == width
+      then HitPlayer
+      else HitNothing
+    Just (xHit, building') ->
+      if xHit < x'
+      then HitBuilding xHit building'
+      else HitNothing
+
+definedAt :: (Int, Int) -> TowerMap -> Bool
+definedAt (x', y') towerMap' =
+  M.member y' towerMap' && M.member x' (towerMap' M.! y')
+
+removeAt :: (Int, Int) -> TowerMap -> TowerMap
+removeAt (x', y') = M.adjust (M.delete x') y'

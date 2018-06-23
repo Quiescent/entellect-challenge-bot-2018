@@ -1,9 +1,8 @@
-{-# LANGUAGE BangPatterns #-}
-
 module Objective (myBoardScore, Move(..))
   where
 
 import Interpretor (GameState(..),
+                    GameDetails(..),
                     Command(..))
 import Player
 import Engine
@@ -12,8 +11,8 @@ data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
           deriving (Show)
 
-myBoardScore :: (GameState, a) -> (Float, (GameState, a))
-myBoardScore withMove@(state, _) =
+myBoardScore :: GameDetails -> (GameState, a) -> (Float, (GameState, a))
+myBoardScore details withMove@(state, _) =
   (fromIntegral $ damageToOponent - damageToMe, withMove)
   where
     myInitialHealth       = myHealth state
@@ -22,7 +21,7 @@ myBoardScore withMove@(state, _) =
     oponentsFinalHealth   = oponentsHealth state'
     oponentsInitialHealth = oponentsHealth state
     damageToOponent       = oponentsInitialHealth - oponentsFinalHealth
-    state' = (!! turnsIntoFuture) $ iterate tickEngine state
+    state' = (!! turnsIntoFuture) $ iterate (tickEngine details) state
 
 turnsIntoFuture :: Int
 turnsIntoFuture = 5

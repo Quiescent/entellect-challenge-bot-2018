@@ -1,16 +1,19 @@
-module Row (rowAt, rowFoldr, rowFoldl')
+module Row (rowAt, rowFoldr, rowFoldl', rowFoldrIndexed)
   where
 
 import Interpretor (Row,
-                    CellContents(..))
+                    Building(..))
 
 import Data.IntMap as M
 
-rowAt :: Int -> Row -> Maybe CellContents
+rowAt :: Int -> Row -> Maybe Building
 rowAt = M.lookup
 
-rowFoldr :: (CellContents -> b -> b) -> b -> Row -> b
+rowFoldr :: (Building -> b -> b) -> b -> Row -> b
 rowFoldr = M.foldr
 
-rowFoldl' :: (b -> CellContents -> b) -> b -> Row -> b
+rowFoldrIndexed :: (Int -> Building -> b -> b) -> b -> Row -> b
+rowFoldrIndexed = M.foldrWithKey
+
+rowFoldl' :: (b -> Building -> b) -> b -> Row -> b
 rowFoldl' = M.foldl'

@@ -1,68 +1,94 @@
-module GameState (update)
+module GameState (runCommand,
+                  mapMyPlayer,
+                  mapOponentsPlayer,
+                  UpdateMissiles,
+                  updateMyMissiles,
+                  updateOponentsMissiles,
+                  UpdatePlayer,
+                  mapMyMap,
+                  mapOponentsMap,
+                  updateMe,
+                  updateOponent,
+                  incrementMyHitsTaken,
+                  incrementOponentsHitsTaken,
+                  buildForMe,
+                  buildForOponent,
+                  Command(..),
+                  updateMyMove,
+                  updateOponentsMove)
   where
 
 import Interpretor (GameState(..),
-                    CellContents(..),
                     Building(..),
-                    PlayerType(..),
+                    Missile(..),
                     TowerStats(..),
-                    BuildingType(..),
-                    Command(..))
-import Cell
-import Building
+                    Command(..),
+                    Player(..),
+                    TowerMap,
+                    GameDetails(..))
+import Player
+import GameDetails
 import GameMap
+import BuildingsUnderConstruction
 
-update :: PlayerType -> GameState -> Command -> GameState
-update _      state NothingCommand                                                   = state
-update player state@(GameState { gameMap = gameMap' }) (Command x' y' buildingType') =
-  case (getAt (x', y') gameMap') of
-    Nothing                          ->
-      state { gameMap = addAt (x', y') (addBuilding player state buildingType' emptyCell) gameMap'}
-    (Just (CellContents (Just _) _)) -> state
-    (Just (CellContents Nothing  _)) ->
-      state { gameMap = adjustAt (addBuilding player state buildingType')
-                                 (x', y')
-                                 gameMap' }
+type MapPlayer = (Player -> Player) -> GameState -> GameState
 
-buildingFromStats :: PlayerType -> BuildingType -> TowerStats -> Building
-buildingFromStats owner buildingType' (TowerStats initialIntegrity'
-                                                  constructionTime'
-                                                  towerPrice'
-                                                  towerWeaponDamage'
-                                                  towerWeaponSpeed'
-                                                  towerWeaponCooldownPeriod'
-                                                  towerEnergyGeneratedPerTurn'
-                                                  towerDestroyMultiplier'
-                                                  towerConstructionScore')
+incrementMyHitsTaken :: GameState -> GameState
+incrementMyHitsTaken = mapMyPlayer incrementHitsTaken
 
-  = Building  { integrity              = initialIntegrity',
-                constructionTimeLeft   = constructionTime',
-                price                  = towerPrice',
-                weaponDamage           = towerWeaponDamage',
-                weaponSpeed            = towerWeaponSpeed',
-                weaponCooldownTimeLeft = 0,
-                weaponCooldownPeriod   = towerWeaponCooldownPeriod',
-                destroyMultiplier      = towerDestroyMultiplier',
-                constructionScore      = towerConstructionScore',
-                energyGeneratedPerTurn = towerEnergyGeneratedPerTurn',
-                buildingType           = buildingType',
-                buildingX              = 0,
-                buildingY              = 0,
-                buildingOwner          = owner }
+incrementOponentsHitsTaken :: GameState -> GameState
+incrementOponentsHitsTaken = mapOponentsPlayer incrementHitsTaken
 
-addBuilding :: PlayerType -> GameState -> BuildingType -> CellContents -> CellContents
-addBuilding player state ATTACK  contents =
-  contents { buildingInCell = Just building' }
+mapMyPlayer :: MapPlayer
+mapMyPlayer f state@(GameState { me = me' }) =
+  state { me = f me' }
+
+mapOponentsPlayer :: MapPlayer
+mapOponentsPlayer f state@(GameState { oponent = oponent' }) =
+  state { oponent = f oponent' }
+
+runCommand :: GameDetails -> Player -> Command -> Player
+runCommand _       player NothingCommand              = player
+runCommand _       player (Deconstruct x' y')         =
+  mapMap (removeAt (x', y')) player
+runCommand details player (Build x' y' buildingType') = 
+  player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' x' y' building')
+                                           (constructionQueue player) }
   where
-    stats = attackTowerStats' state
-    building' = buildingFromStats player ATTACK stats
-addBuilding player state DEFENSE contents =
-  contents { buildingInCell = Just building' }
-  where
-    stats = defenseTowerStats' state
-    building' = buildingFromStats player DEFENSE stats
-addBuilding player state ENERGY  contents =
-  contents { buildingInCell = Just building' }
-  where
-    stats = energyTowerStats' state
-    building' = buildingFromStats player ENERGY stats
+    constructionTime' = constructionTime buildingStats'
+    building'         = buildingFromStats buildingType' buildingStats'
+    buildingStats'    = towerStats buildingType' details
+
+type UpdateMissiles = [Missile] -> GameState -> GameState
+
+updateMyMissiles :: UpdateMissiles
+updateMyMissiles missiles = mapMyPlayer (updateMissiles missiles)
+
+updateOponentsMissiles :: UpdateMissiles
+updateOponentsMissiles missiles = mapOponentsPlayer (updateMissiles missiles)
+
+type UpdatePlayer = Player -> GameState -> GameState
+
+updateMe :: UpdatePlayer
+updateMe player' = mapMyPlayer (\ _ -> player')
+
+updateOponent :: UpdatePlayer
+updateOponent player' = mapOponentsPlayer (\ _ -> player')
+
+mapMyMap :: (TowerMap -> TowerMap) -> GameState -> GameState
+mapMyMap f = mapMyPlayer (mapMap f)
+
+mapOponentsMap :: (TowerMap -> TowerMap) -> GameState -> GameState
+mapOponentsMap f = mapOponentsPlayer (mapMap f)
+
+updateMyMove :: GameDetails -> Command -> GameState -> GameState
+updateMyMove details command = mapMyPlayer (updateMove details command)
+
+updateOponentsMove :: GameDetails -> Command -> GameState -> GameState
+updateOponentsMove details command = mapOponentsPlayer (updateMove details command)
+
+buildForMe :: Int -> Int -> Int -> Building -> GameState -> GameState
+buildForMe timeLeft x' y' building' = mapMyPlayer (build timeLeft x' y' building')
+
+buildForOponent :: Int -> Int -> Int -> Building -> GameState -> GameState
+buildForOponent timeLeft x' y' building' = mapMyPlayer (build timeLeft x' y' building')

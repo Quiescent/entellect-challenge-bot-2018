@@ -1,132 +1,75 @@
 module Engine (tickEngine)
   where
 
-import Interpretor (PlayerType(..),
-                    GameState(..),
+import Interpretor (GameState(..),
                     GameDetails(..),
-                    SparseMap,
-                    CellContents(..),
+                    TowerStats(..),
+                    Row,
+                    Player(..),
                     Building(..),
-                    Missile(..),
-                    CellContents(..))
-import Cell
+                    Missile(..))
 import Player
 import Missile
 import Building
 import GameMap
 import GameDetails
-import Collision (CollisionType(..), Collision(..))
+import GameState
+import Row
 
-tickEngine :: GameState -> GameState
-tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
+tickEngine :: GameDetails -> GameState -> GameState
+tickEngine details = gainEnergy details . collideMissiles . tickMissiles . tickBuildings details
 
 tickMissiles :: GameState -> GameState
-tickMissiles state@(GameState { gameMap = gameMap' }) =
-  state { gameMap = foldr moveMissiles gameMap' (mapContentsWithCoords state) }
+tickMissiles = mapMyPlayer (moveMissiles MoveRight) . mapOponentsPlayer (moveMissiles MoveLeft)
 
-moveMissiles :: ((Int, Int), CellContents) -> SparseMap -> SparseMap
-moveMissiles (coordinate, (CellContents _ missiles')) gameMap'
-  | missilesEmpty missiles' = gameMap'
-  | otherwise               =
-    let withMissilesRemoved = adjustAt removeMissiles coordinate gameMap'
-    in missilesFoldr (moveMissile coordinate) withMissilesRemoved missiles'
+moveMissiles :: Direction -> Player -> Player
+moveMissiles direction player = mapMissiles (moveMissile direction) player
 
--- TODO: Clean up empty cells so that the map remains sparse
-moveMissile :: (Int, Int) -> Missile -> SparseMap -> SparseMap
-moveMissile (x, y) missile@(Missile { speed = speed', owner = owner' }) gameMap' =
-  let adjustment = if owner' == A then speed' else (-speed')
-      newCoord   = (x, y + adjustment)
-      gameMap''  = adjustAt (removeMissile missile) (x, y) gameMap'
-  in if definedAt newCoord gameMap'
-     then adjustAt (addMissile missile) newCoord gameMap''
-     else addAt newCoord (addMissile missile emptyCell) gameMap''
+gainEnergy :: GameDetails -> GameState -> GameState
+gainEnergy details =
+  mapMyPlayer (incrementEnergy details) . mapOponentsPlayer (incrementEnergy details)
 
-gainEnergy :: GameState -> GameState
-gainEnergy state =
-  updatePointsForEnergy mineAndOponentsEnergy $ updateEnergy state mineAndOponentsEnergy
+incrementEnergy :: GameDetails -> Player -> Player
+incrementEnergy details@(GameDetails { roundIncomeEnergy = roundIncomeEnergy' }) player' =
+  updateEnergy (roundIncomeEnergy' + energyFromTowers) player'
   where
-    mineAndOponentsEnergy = foldGameMap (incrementEnergy state)
-                                        (myEnergy state, oponentsEnergy state)
-                                        state
+    energyFromTowers = mapFold (incrementEnergyRow details) 0 $ towerMap player'
 
-updatePointsForEnergy :: (Int, Int) -> GameState -> GameState
-updatePointsForEnergy (myEnergy', oponentsEnergy') =
-  updatePlayerPointsForEnergy A myEnergy' . updatePlayerPointsForEnergy B oponentsEnergy'
+incrementEnergyRow :: GameDetails -> Row -> Int -> Int
+incrementEnergyRow details row' energyAcc =
+  rowFoldr (incrementEnergyAcc details) energyAcc row'
 
-incrementEnergy :: GameState -> (Int, Int) -> CellContents -> (Int, Int) -> (Int, Int)
-incrementEnergy state
-                coordinate
-                (CellContents { buildingInCell = building' })
-                (myEnergy', oponentsEnergy') =
-  let energyPerTurn = roundIncomeEnergy $ gameDetails state
-  in case building'
-     of Just (Building {energyGeneratedPerTurn = energyGeneratedPerTurn'}) ->
-          if cellBelongsToMe state coordinate
-          then (energyPerTurn + myEnergy' + energyGeneratedPerTurn',
-                energyPerTurn + oponentsEnergy')
-          else (energyPerTurn + myEnergy',
-                energyPerTurn + oponentsEnergy' + energyGeneratedPerTurn')
-        Nothing -> (energyPerTurn + myEnergy', energyPerTurn + oponentsEnergy')
+incrementEnergyAcc :: GameDetails -> Building -> Int -> Int
+incrementEnergyAcc details (Building { buildingType = buildingType' }) energyAcc =
+  (energyGeneratedPerTurn $ towerStats buildingType' details) + energyAcc
 
 collideMissiles :: GameState -> GameState
-collideMissiles state@(GameState { gameDetails = gameDetails' }) =
-  accountForCollisions (state { gameMap = gameMap' }) collisions
+collideMissiles state =
+  state''
   where
-    (gameMap', collisions) = foldr (collide (mapWidth gameDetails')) ((gameMap state), []) contentsWithCoords
-    contentsWithCoords = mapContentsWithCoords state
+    state'           = collideMissiles' oponentsMissiles me'      findRightOf updateOponentsMissiles updateMe      state
+    state''          = collideMissiles' myMissiles       oponent' findLeftOf  updateMyMissiles       updateOponent state'
+    me'              = me      state
+    oponent'         = oponent state
+    oponentsMissiles = ownedMissiles oponent'
+    myMissiles       = ownedMissiles me'
 
-accountForCollisions :: GameState -> [Collision] -> GameState
-accountForCollisions state collissions =
-  foldr accountForCollision state collissions
+collideMissiles' :: [Missile] -> Player -> CollisionDetector -> UpdateMissiles -> UpdatePlayer -> GameState -> GameState
+collideMissiles' missiles player' collisionDetector updateMissiles' updatePlayer =
+  updateMissiles' missilesRemaining . updatePlayer updatedPlayer
   where
-    accountForCollision (Collision hitType _ playerHit damage') =
-      incrementPlayerHits playerHit . updatePointsForHits playerHit hitType damage'
+    (missilesRemaining, updatedPlayer) = foldr (collideMissile collisionDetector) ([], player') missiles
 
-buildingInCellIsConstructed :: CellContents -> Bool
-buildingInCellIsConstructed = buildingPredicate buildingIsConstructed
-
-collide :: Int -> ((Int, Int), CellContents) -> (SparseMap, [Collision]) -> (SparseMap, [Collision])
-collide width ((x, y), (CellContents _ missiles)) (gameMap', collisions)
-  | missilesEmpty missiles = (gameMap', collisions)
-  | otherwise              = missilesFoldr (checkCollision x y) (gameMap', collisions) missiles
-    where
-      checkCollision x' y' missile@(Missile damage' speed' owner' _ _) (gameMap'', collisions') =
-        let collisionResult = iterCollide (y' - speed') speed' gameMap''
-        in case collisionResult of
-          Just collision@(Collision _ newMap _ _) -> (adjustAt (removeMissile missile)
-                                                    (x', y')
-                                                    newMap,
-                                                    collision : collisions')
-          Nothing       -> (gameMap'', collisions')
-        where
-          missileDisp = if owner' == A then 1 else (-1)
-          iterCollide :: Int -> Int -> SparseMap -> Maybe Collision
-          iterCollide _   0         _          = Nothing
-          iterCollide y'' remaining gameMap''' =
-            case getAt (x', y'') gameMap''' of
-              Just contents@(CellContents (Just building') _) ->
-                let adjustedMap = adjustAt (damageBuilding damage')
-                                           (x, y'')
-                                           gameMap'''
-                in if buildingInCellIsConstructed contents
-                   then Just (Collision HitBuilding adjustedMap (buildingOwner building') damage')
-                   else continue
-              _                                               ->
-                let playerCollidedWith = if x' == -1
-                                         then Just A
-                                         else if x' == width
-                                              then Just B
-                                              else Nothing
-                in case playerCollidedWith of
-                  (Just player) -> Just (Collision HitPlayer gameMap'' player damage')
-                  _             -> continue
-            where
-              continue = iterCollide (y'' + missileDisp) (remaining - 1) gameMap'''
-
-damageBuilding :: Int -> CellContents -> CellContents
-damageBuilding damage' cellContents =
-  let (Just building') = buildingInCell cellContents
-      integrity'       = integrity building'
-  in if integrity' <= damage'
-     then cellContents { buildingInCell = Nothing }
-     else cellContents { buildingInCell = Just (building' { integrity = integrity' - damage' }) }
+collideMissile :: CollisionDetector -> Missile -> ([Missile], Player) -> ([Missile], Player)
+collideMissile collisionDetector missile@(Missile { xDisp = x', yDisp = y' }) (didntCollide, player') =
+  case collisionDetector (x', y') towerMap' of
+    HitNothing                 -> (missile : didntCollide, player')
+    HitPlayer                  -> (didntCollide,           takeDamage missileDamage player')
+    HitBuilding xHit building' ->
+      let damaged = damageBuilding missileDamage building'
+      in case damaged of
+           Nothing         -> (didntCollide, updateTowerMap (removeAt  (xHit, y')            towerMap') player')
+           Just building'' -> (didntCollide, updateTowerMap (replaceAt building'' (xHit, y') towerMap') player')
+  where
+    missileDamage = (damage missile)
+    towerMap'     = towerMap player'

@@ -4,150 +4,249 @@
 
 module Interpretor (repl,
                     Player(..),
-                    PlayerType(..),
                     Missile(..),
-                    CellContents(..),
                     BuildingType(..),
                     Building(..),
-                    CellStateContainer(..),
                     BuildingPriceIndex(..),
                     GameDetails(..),
-                    GameState(..),
                     Command(..),
+                    GameState(..),
                     BuildingStats(..),
                     TowerStats(..),
-                    SparseMap,
+                    GameStateContainer(..),
+                    TowerMap,
                     Row,
-                    DenseMap)
+                    BuildingUnderConstruction,
+                    ConstructionQueue)
   where
 
 import Data.Aeson (decode,
                    FromJSON,
                    parseJSON,
                    withObject,
-                   (.:),
-                   ToJSON,
-                   toJSON,
-                   object,
-                   (.=))
-import Data.Vector as V
-import GHC.Generics (Generic)
-import Data.ByteString.Lazy as B
-import Data.IntMap as M
+                   (.:))
+import qualified Data.PQueue.Min as PQ
+import qualified Data.Vector as V
+import qualified Data.ByteString.Lazy as B
+import qualified Data.IntMap as M
+import GHC.Generics (Generic(..))
 
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
 
 instance FromJSON PlayerType
-instance ToJSON   PlayerType
 
-data Player = Player { playerType :: PlayerType,
-                       energy     :: Int,
-                       health     :: Int,
-                       hitsTaken  :: Int,
-                       score      :: Int }
-              deriving (Show, Generic, Eq)
-
-instance FromJSON Player
-instance ToJSON   Player
-
--- Remove the silly x and y disp
 data Missile = Missile { damage :: Int,
                          speed  :: Int,
-                         owner  :: PlayerType,
                          xDisp  :: Int,
                          yDisp  :: Int }
   deriving (Show, Generic, Eq)
 
-instance FromJSON Missile where
-  parseJSON = withObject "Missile" $ \ v ->
-    Missile <$> v.: "damage"
-            <*> v.: "speed"
-            <*> v.: "playerType"
-            <*> v.: "x"
-            <*> v.: "y"
-instance ToJSON Missile where
-  toJSON (Missile damage' speed' owner' xDisp' yDisp') =
-    object ["damage"     .= damage',
-            "speed"      .= speed',
-            "playerType" .= owner',
-            "x"          .= xDisp',
-            "y"          .= yDisp']
-    
+data ScratchMissile = ScratchMissile Int
+                                     Int
+                                     PlayerType
+                                     Int
+                                     Int
+  deriving (Show, Generic, Eq)
 
-data BuildingType = DEFENSE | ATTACK | ENERGY
+instance FromJSON ScratchMissile where
+  parseJSON = withObject "Missile" $ \ v ->
+    ScratchMissile <$> v.: "damage"
+                   <*> v.: "speed"
+                   <*> v.: "playerType"
+                   <*> v.: "x"
+                   <*> v.: "y"
+
+data BuildingType = DEFENSE | ATTACK | ENERGY | TESLA
   deriving (Show, Generic, Eq)
 
 instance FromJSON BuildingType
-instance ToJSON   BuildingType
 
 data Building = Building { integrity              :: Int,
-                           constructionTimeLeft   :: Int,
-                           price                  :: Int,
-                           weaponDamage           :: Int,
-                           weaponSpeed            :: Int,
                            weaponCooldownTimeLeft :: Int,
-                           weaponCooldownPeriod   :: Int,
-                           destroyMultiplier      :: Int,
-                           constructionScore      :: Int,
-                           energyGeneratedPerTurn :: Int,
-                           buildingType           :: BuildingType,
-                           buildingX              :: Int,
-                           buildingY              :: Int,
-                           buildingOwner          :: PlayerType }
+                           buildingType           :: BuildingType }
+              deriving (Show, Eq)
+
+data ScratchBuilding = ScratchBuilding Int
+                                       Int
+                                       Int
+                                       BuildingType
+                                       PlayerType
                 deriving (Show, Generic, Eq)
 
-instance FromJSON Building where
+instance FromJSON ScratchBuilding where
   parseJSON = withObject "Building" $ \ v -> 
-    Building <$> v .: "health"
-             <*> v .: "constructionTimeLeft"
-             <*> v .: "price"
-             <*> v .: "weaponDamage"
-             <*> v .: "weaponSpeed"
-             <*> v .: "weaponCooldownTimeLeft"
-             <*> v .: "weaponCooldownPeriod"
-             <*> v .: "destroyMultiplier"
-             <*> v .: "constructionScore"
-             <*> v .: "energyGeneratedPerTurn"
-             <*> v .: "buildingType"
-             <*> v .: "x"
-             <*> v .: "y"
-             <*> v .: "playerType"
-instance ToJSON Building where
-  toJSON (Building integrity'
-                   constructionTimeLeft'
-                   price'
-                   weaponDamage'
-                   weaponSpeed'
-                   weaponCooldownTimeLeft'
-                   weaponCooldownPeriod'
-                   destroyMultiplier'
-                   constructionScore'
-                   energyGeneratedPerTurn'
-                   buildingType'
-                   buildingX'
-                   buildingY'
-                   buildingOwner') =
-    object ["health"                 .= integrity',
-            "constructionTimeLeft"   .= constructionTimeLeft',
-            "price"                  .= price',
-            "weaponDamage"           .= weaponDamage',
-            "weaponSpeed"            .= weaponSpeed',
-            "weaponCooldownTimeLeft" .= weaponCooldownTimeLeft',
-            "weaponCooldownPeriod"   .= weaponCooldownPeriod',
-            "destroyMultiplier"      .= destroyMultiplier',
-            "constructionScore"      .= constructionScore',
-            "energyGeneratedPerTurn" .= energyGeneratedPerTurn',
-            "buildingType"           .= buildingType',
-            "x"                      .= buildingX',
-            "y"                      .= buildingY',
-            "playerType"             .= buildingOwner']
+    ScratchBuilding <$> v .: "health"
+                    <*> v .: "constructionTimeLeft"
+                    <*> v .: "weaponCooldownTimeLeft"
+                    <*> v .: "buildingType"
+                    <*> v .: "playerType"
 
-data CellStateContainer = CellStateContainer { xPos      :: Int,
-                                               yPos      :: Int,
-                                               cellOwner :: PlayerType,
-                                               buildings :: V.Vector Building,
-                                               missiles  :: V.Vector Missile }
+data BuildingPriceIndex = BuildingPriceIndex { attackTowerCost  :: Int,
+                                               defenseTowerCost :: Int,
+                                               energyTowerCost  :: Int,
+                                               teslaTowerCost   :: Int }
+                          deriving (Show, Generic, Eq)
+
+instance FromJSON BuildingPriceIndex where
+  parseJSON = withObject "BuildingPriceIndex" $ \ v -> 
+    BuildingPriceIndex <$> v .: "ATTACK"
+                       <*> v .: "DEFENSE"
+                       <*> v .: "ENERGY"
+                       <*> v .: "TESLA"
+
+data GameDetails = GameDetails { roundIncomeEnergy :: Int,
+                                 buildingPrices    :: BuildingPriceIndex,
+                                 buildingsStats    :: BuildingStats }
+                   deriving (Show, Generic, Eq)
+
+instance FromJSON GameDetails where
+  parseJSON = withObject "GameDetails" $ \ v -> 
+    GameDetails <$> v .: "roundIncomeEnergy"
+                <*> v .: "buildingPrices"
+                <*> v .: "buildingsStats"
+
+data BuildingStats = BuildingStats { attackTowerStats  :: TowerStats,
+                                     defenseTowerStats :: TowerStats,
+                                     energyTowerStats  :: TowerStats,
+                                     teslaTowerStats   :: TowerStats }
+                   deriving (Show, Generic, Eq)
+
+instance FromJSON BuildingStats where
+  parseJSON = withObject "BuildingStats" $ \ v ->
+    BuildingStats <$> v.: "ATTACK"
+                  <*> v.: "DEFENSE"
+                  <*> v.: "ENERGY"
+                  <*> v.: "TESLA"
+
+data TowerStats = TowerStats { initialIntegrity       :: Int,
+                               constructionTime       :: Int,
+                               towerPrice             :: Int,
+                               weaponDamage           :: Int,
+                               weaponSpeed            :: Int,
+                               weaponCooldownPeriod   :: Int,
+                               energyGeneratedPerTurn :: Int,
+                               destroyMultiplier      :: Int,
+                               constructionScore      :: Int }
+                  deriving (Show, Generic, Eq)
+
+instance FromJSON TowerStats where
+  parseJSON = withObject "TowerStats" $ \ v ->
+    TowerStats <$> v.: "health"
+               <*> v.: "constructionTime"
+               <*> v.: "price"
+               <*> v.: "weaponDamage"
+               <*> v.: "weaponSpeed"
+               <*> v.: "weaponCooldownPeriod"
+               <*> v.: "energyGeneratedPerTurn"
+               <*> v.: "destroyMultiplier"
+               <*> v.: "constructionScore"
+
+-- TODO consider making this data to showup errors in how I've done this
+type BuildingUnderConstruction = (Int, (Int, Int), Building)
+
+instance {-# OVERLAPPING #-} Ord BuildingUnderConstruction where 
+  (<) (x, _, _) (y, _, _) = x < y
+  (<=) (x, _, _) (y, _, _) = x < y
+  (>) (x, _, _) (y, _, _) = x > y
+  (>=) (x, _, _) (y, _, _) = x >= y
+  min a@(x, _, _) b@(y, _, _) = if x < y then a else b
+  max a@(x, _, _) b@(y, _, _) = if x > y then a else b
+
+type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
+
+data Player = Player { energy            :: Int,
+                       health            :: Int,
+                       hitsTaken         :: Int,
+                       score             :: Int,
+                       towerMap          :: TowerMap,
+                       constructionQueue :: ConstructionQueue,
+                       ownedMissiles     :: [Missile] }
+              deriving (Show, Eq)
+
+data ScratchPlayer = ScratchPlayer { playerType :: PlayerType,
+                                     energy'    :: Int,
+                                     health'    :: Int,
+                                     hitsTaken' :: Int,
+                                     score'     :: Int }
+                   deriving (Show, Generic, Eq)
+
+instance FromJSON ScratchPlayer where
+  parseJSON = withObject "ScratchPlayer" $ \ v -> do
+    playerType' <- v .: "playerType"
+    energy''    <- v .: "energy"
+    health''    <- v .: "health"
+    hitsTaken'' <- v .: "hitsTaken"
+    score''     <- v .: "score"
+    return $ ScratchPlayer playerType'
+                           energy''
+                           health''
+                           hitsTaken''
+                           score''
+
+data GameState = GameState { me       :: Player,
+                             oponent  :: Player }
+  deriving (Show, Eq)
+
+data GameStateContainer = GameStateContainer GameState
+                                             GameDetails
+                 deriving (Show, Generic, Eq)
+
+instance FromJSON GameStateContainer where
+  parseJSON = withObject "GameStateContainer" $ \ v -> do
+    players'      <- v .: "players"
+    denseGameMap  <- v .: "gameMap"
+    gameDetails'  <- v .: "gameDetails"
+    let (myTowerMap,
+         oponentsTowerMap,
+         myQueue,
+         oponentsQueue,
+         myMissiles,
+         oponentsMissiles) = convertDenseMap denseGameMap
+    let (((ScratchPlayer _
+                         aEnergy
+                         aHealth
+                         aHitsTaken
+                         aScore),
+           (ScratchPlayer _
+                          bEnergy
+                          bHealth
+                          bHitsTaken
+                          bScore))) = extractPlayers players'
+    return (GameStateContainer
+            (GameState (Player aEnergy
+                               aHealth
+                               aHitsTaken
+                               aScore
+                               myTowerMap
+                               myQueue
+                               myMissiles)
+                       (Player bEnergy
+                               bHealth
+                               bHitsTaken
+                               bScore
+                               oponentsTowerMap
+                               oponentsQueue
+                               oponentsMissiles))
+            gameDetails')
+
+extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
+extractPlayers players =
+  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _ _)  = players V.! 0
+      secondPlayer = players V.! 1
+  in if firstPlayerType == A
+     then (firstPlayer,  secondPlayer)
+     else (secondPlayer, firstPlayer)
+
+type Row = M.IntMap Building
+
+type TowerMap = M.IntMap Row
+
+data CellStateContainer = CellStateContainer Int
+                                             Int
+                                             PlayerType
+                                             (V.Vector ScratchBuilding)
+                                             (V.Vector ScratchMissile)
                           deriving (Show, Generic, Eq)
 
 instance FromJSON CellStateContainer where
@@ -163,159 +262,70 @@ instance FromJSON CellStateContainer where
                                 buildings'
                                 missiles'
 
-instance ToJSON CellStateContainer where
-  toJSON (CellStateContainer xPos'
-                             yPos'
-                             cellOwner'
-                             buildings'
-                             missiles') =
-    object ["x"         .= xPos',
-            "y"         .= yPos',
-            "cellOwner" .= cellOwner',
-            "buildings" .= buildings',
-            "missiles"  .= missiles']
+type DenseMap = V.Vector DenseRow
 
-data BuildingPriceIndex = BuildingPriceIndex { attackTowerCost  :: Int,
-                                               defenseTowerCost :: Int,
-                                               energyTowerCost  :: Int }
-                          deriving (Show, Generic, Eq)
+type DenseRow = V.Vector CellStateContainer
 
-instance FromJSON BuildingPriceIndex where
-  parseJSON = withObject "BuildingPriceIndex" $ \ v -> 
-    BuildingPriceIndex <$> v .: "ATTACK"
-                       <*> v .: "DEFENSE"
-                       <*> v .: "ENERGY"
-instance ToJSON BuildingPriceIndex where
-  toJSON (BuildingPriceIndex attackCost defenseCost energyCost) =
-    object ["ATTACK"  .= attackCost,
-            "DEFENSE" .= defenseCost,
-            "ENERGY"  .= energyCost]
+type RowAccumulator = (Row, Row, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
 
-data GameDetails = GameDetails { round             :: Int,
-                                 mapWidth          :: Int,
-                                 mapHeight         :: Int,
-                                 roundIncomeEnergy :: Int,
-                                 buildingPrices    :: BuildingPriceIndex,
-                                 buildingsStats    :: BuildingStats }
-                   deriving (Show, Generic, Eq)
+makeRow :: DenseRow -> RowAccumulator
+makeRow =
+  V.foldr accCell (M.empty, M.empty, PQ.empty, PQ.empty, [], []) 
 
-instance FromJSON GameDetails
-instance ToJSON   GameDetails
-
-data BuildingStats = BuildingStats { attackTowerStats  :: TowerStats,
-                                     defenseTowerStats :: TowerStats,
-                                     energyTowerStats  :: TowerStats }
-                   deriving (Show, Generic, Eq)
-
-instance FromJSON BuildingStats where
-  parseJSON = withObject "BuildingStats" $ \ v ->
-    BuildingStats <$> v.: "ATTACK"
-                  <*> v.: "DEFENSE"
-                  <*> v.: "ENERGY"
-instance ToJSON BuildingStats where
-  toJSON (BuildingStats attackTowerStats' defenseTowerStats' energyTowerStats') =
-    object ["ATTACK"  .= attackTowerStats',
-            "DEFENSE" .= defenseTowerStats',
-            "ENERGY"  .= energyTowerStats']
-
-data TowerStats = TowerStats { initialIntegrity            :: Int,
-                               constructionTime            :: Int,
-                               towerPrice                  :: Int,
-                               towerWeaponDamage           :: Int,
-                               towerWeaponSpeed            :: Int,
-                               towerWeaponCooldownPeriod   :: Int,
-                               towerEnergyGeneratedPerTurn :: Int,
-                               towerDestroyMultiplier      :: Int,
-                               towerConstructionScore      :: Int }
-                  deriving (Show, Generic, Eq)
-
-instance FromJSON TowerStats where
-  parseJSON = withObject "TowerStats" $ \ v ->
-    TowerStats <$> v.: "health"
-               <*> v.: "constructionTime"
-               <*> v.: "price"
-               <*> v.: "weaponDamage"
-               <*> v.: "weaponSpeed"
-               <*> v.: "weaponCooldownPeriod"
-               <*> v.: "energyGeneratedPerTurn"
-               <*> v.: "destroyMultiplier"
-               <*> v.: "constructionScore"
-instance ToJSON TowerStats where
-  toJSON (TowerStats health'
-                     constructionTime'
-                     price'
-                     weaponDamage'
-                     weaponSpeed'
-                     weaponCooldownPeriod'
-                     energyGeneratedPerTurn'
-                     destroyMultiplier'
-                     constructionScore') =
-    object ["health"                 .= health',
-            "constructionTime"       .= constructionTime',
-            "price"                  .= price',
-            "weaponDamage"           .= weaponDamage',
-            "weaponSpeed"            .= weaponSpeed',
-            "weaponCooldownPeriod"   .= weaponCooldownPeriod',
-            "energyGeneratedPerTurn" .= energyGeneratedPerTurn',
-            "destroyMultiplier"      .= destroyMultiplier',
-            "constructionScore"      .= constructionScore']
-
--- TODO change to playerA and playerB
-data GameState = GameState { players     :: V.Vector Player,
-                             gameMap     :: SparseMap,
-                             gameDetails :: GameDetails }
-                 deriving (Show, Generic, Eq)
-
-instance FromJSON GameState where
-  parseJSON = withObject "GameState" $ \ v -> do
-    players'      <- v.: "players"
-    denseGameMap  <- v.: "gameMap"
-    gameDetails'  <- v.: "gameDetails"
-    return $ GameState players'
-      (toSparseMap denseGameMap)
-      gameDetails'
--- TODO: check whether this works (in particular the sparse to dense
--- map part)
-instance ToJSON   GameState where
-  toJSON (GameState players' gameMap' gameDetails') =
-    object ["players"        .= players',
-            "gameMap"        .= toDenseMap gameMap' (mapWidth gameDetails')
-                                                    (mapHeight gameDetails'),
-            "buildingPrices" .= gameDetails']
-
-data CellContents = CellContents { buildingInCell :: Maybe Building,
-                                   missilesInCell :: [Missile] }
-          deriving (Show, Generic, Eq)
-
-type Row = M.IntMap CellContents
-
-type SparseMap = M.IntMap Row
-
-type DenseMap = V.Vector (V.Vector CellStateContainer) 
-
-convertCell :: CellStateContainer -> CellContents
-convertCell (CellStateContainer _ _ _ buildings' missiles') =
-  let building' = if V.null buildings' then Nothing else Just (buildings' V.! 0)
-  in CellContents building' $ V.toList missiles'
-
-makeRow :: DenseMap -> Int -> Int -> Row
-makeRow map' row len =
-  M.fromList [(x, convertCell cell) |
-              x <- [0..len],
-              let cell = ((map' V.! row) V.! x),
-              not ((V.null $ buildings cell) &&
-                    (V.null $ missiles cell))]
-
-toSparseMap :: DenseMap -> SparseMap
-toSparseMap denseMap =
-  M.fromList [(y, makeRow denseMap y (rowLength - 1)) | y <- [0..rowCount - 1]]
+accCell :: CellStateContainer -> RowAccumulator -> RowAccumulator
+accCell (CellStateContainer x' y' _ buildings' missiles') row@(_, _, _, _, myMissiles, oponentsMissiles) =
+  (myRow', oponentsRow', myQueue', oponentsQueue', myMissiles ++ myMissiles', oponentsMissiles ++ oponentsMissiles')
   where
-    rowCount  = V.length denseMap
-    rowLength = V.length (denseMap V.! 0)
+    (myMissiles', oponentsMissiles') = splitMissiles missiles'
+    (myRow', oponentsRow', myQueue', oponentsQueue', _, _) =
+      if not $ V.null buildings'
+      then accBuilding x' y' (buildings' V.! 0) row
+      else row
 
--- TODO Implement
-toDenseMap :: SparseMap -> Int -> Int -> DenseMap
-toDenseMap sparseMap maxX maxY = V.empty
+accBuilding :: Int -> Int -> ScratchBuilding -> RowAccumulator -> RowAccumulator
+accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (row, b, queue, d, e, f) =
+  let building' = (Building int wctl bt)
+  in if ctl == -1
+     then (M.insert y' building' row, b, queue,                                      d, e, f)
+     else (row,                       b, PQ.insert (ctl, (x', y'), building') queue, d, e, f)
+accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, row, c, queue, e, f) =
+  let building' = (Building int wctl bt)
+  in if ctl == -1
+     then (a, M.insert y' building' row, c, queue,                                      e, f)
+     else (a, row,                       c, PQ.insert (ctl, (x', y'), building') queue, e, f)
+
+splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
+splitMissiles =
+  V.foldr splitMissilesAcc ([], [])
+
+splitMissilesAcc :: ScratchMissile -> ([Missile], [Missile]) -> ([Missile], [Missile])
+splitMissilesAcc (ScratchMissile damage' speed' owner' x' y') (myMissiles, oponentsMissiles) =
+  let missile = (Missile damage' speed' x' y')
+  in if owner' == A
+     then (missile : myMissiles, oponentsMissiles)
+     else (myMissiles,           missile : oponentsMissiles)
+
+type MapAccumulator = (TowerMap, TowerMap, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
+
+convertDenseMap :: DenseMap -> MapAccumulator
+convertDenseMap denseMap =
+  V.ifoldr accRow (M.empty, M.empty, PQ.empty, PQ.empty, [], []) denseMap
+
+accRow :: Int -> DenseRow -> MapAccumulator -> MapAccumulator
+accRow y' row (myMap, oponentsMap, myQueue, oponentsQueue, myMissiles, oponentsMissiles) =
+  let (myRow, oponentsRow, myQueue', oponentsQueue', myMissiles', oponentsMissiles') = makeRow row
+  in  (insertIfNotEmpty y' myRow       myMap,
+       insertIfNotEmpty y' oponentsRow oponentsMap,
+       PQ.union myQueue' myQueue,
+       PQ.union oponentsQueue' oponentsQueue,
+       myMissiles ++ myMissiles',
+       oponentsMissiles ++ oponentsMissiles')
+
+insertIfNotEmpty :: Int -> Row -> TowerMap -> TowerMap
+insertIfNotEmpty key row towerMap' =
+  if M.null row
+  then towerMap'
+  else M.insert key row towerMap'
 
 stateFilePath :: String
 stateFilePath = "state.json"
@@ -323,27 +333,32 @@ stateFilePath = "state.json"
 commandFilePath :: String
 commandFilePath = "command.txt"
 
-readGameState :: IO GameState
+readGameState :: IO GameStateContainer
 readGameState = do
   stateString <- B.readFile stateFilePath
   let Just state = decode stateString
   return state
 
-data Command = Command { xCoord   :: Int,
-                         yCoord   :: Int,
-                         building :: BuildingType }
+data Command = Build { xCoord   :: Int,
+                       yCoord   :: Int,
+                       building :: BuildingType }
+               | Deconstruct { xCoord :: Int,
+                               yCoord :: Int }
                | NothingCommand
 
 instance Show Command where
-  show (Command x' y' building') =
-    show x' Prelude.++ "," Prelude.++ show y' Prelude.++ ","  Prelude.++ case building' of
+  show (Build x' y' building') =
+    show x' ++ "," ++ show y' ++ ","  ++ case building' of
     DEFENSE -> "0"
     ATTACK  -> "1"
     ENERGY  -> "2"
+    TESLA   -> "4"
+  show (Deconstruct x' y') =
+    show x' ++ "," ++ show y' ++ ","  ++ "3"
   show NothingCommand = ""
 
 printCommand :: Command ->  IO ()
-printCommand = Prelude.writeFile commandFilePath . show
+printCommand = writeFile commandFilePath . show
 
-repl :: (GameState -> Command) -> IO ()
+repl :: (GameStateContainer -> Command) -> IO ()
 repl evaluate = fmap evaluate readGameState >>= printCommand

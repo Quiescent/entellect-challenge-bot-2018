@@ -1,108 +1,112 @@
-module SearchSpace (myAvailableMoves,
-                    oponentsAvailableMoves,
-                    advanceState,
-                    allCells,
-                    cellContainsNoBuildings,
+module SearchSpace (advanceState,
                     search)
   where
 
 import Interpretor (GameState(..),
+                    Player(..),
                     Command(..),
-                    PlayerType(..))
-import System.Random
+                    GameDetails(..))
 import Engine
+import GameMap
 import Cell
-import Logic
-import GameState as G
-import Data.List as L
-import Player
+import GameState
 import Towers
 import Objective
+
 import Data.Maybe
+import System.Random
+import qualified Data.List as L
 
-availableMoves :: ((Int, Int) -> Bool) -> (GameState -> Int) -> GameState -> [Command]
-availableMoves constrainCellsTo playerEnergy state@(GameState {gameMap = mapGrid}) = do
-  (x, y)    <- L.filter (cellContainsNoBuildings mapGrid &&& constrainCellsTo) $ allCells state
-  building' <- buildingsWhichICanAfford
-  return $ Command x y building'
+availableMoves :: GameDetails -> ((Int, Int) -> Bool) -> Player -> [Command]
+availableMoves details constrainCellsTo player@(Player { towerMap = towerMap' }) = do
+  (x, y) <- filter constrainCellsTo allCells
+  if definedAt (x, y) towerMap'
+    then
+    do
+      buildingType' <- buildingsWhichICanAfford
+      return $ Build x y buildingType'
+    else return $ Deconstruct x y
   where
-    buildingsWhichICanAfford = L.map snd $ L.filter ((<= energy') . fst) prices
-    energy'                  = playerEnergy state
-    prices                   = towerPrices $ gameDetails state
+    buildingsWhichICanAfford = map snd $ filter ((<= energy') . fst) prices
+    energy'                  = energy player
+    prices                   = towerPrices details
 
-myAvailableMoves :: GameState -> [Command]
-myAvailableMoves state = availableMoves (cellBelongsToMe state) myEnergy state
+myAvailableMoves :: GameDetails -> GameState -> [Command]
+myAvailableMoves details state =
+  NothingCommand : (availableMoves details cellBelongsToMe $ me state)
 
-oponentsAvailableMoves :: GameState -> [Command]
-oponentsAvailableMoves state = availableMoves (cellBelongsToOponent state) oponentsEnergy state
-
-updateMyMove :: GameState -> Command -> GameState
-updateMyMove = G.update A
-
-updateOponentsMove :: GameState -> Command -> GameState
-updateOponentsMove = G.update B
+oponentsAvailableMoves :: GameDetails -> GameState -> [Command]
+oponentsAvailableMoves details state =
+  NothingCommand : (availableMoves details cellBelongsToOponent $ oponent state)
 
 doNothingIfNoMoves :: [Command] -> [Command]
 doNothingIfNoMoves [] = [NothingCommand]
 doNothingIfNoMoves xs = xs
 
-search :: RandomGen g => g -> GameState -> Maybe (Command, g)
-search g state =
-  Just (searchDeeper g' depthToSearch initialChoices)
+search :: RandomGen g => g -> GameDetails -> GameState -> Maybe (Command, g)
+search g details state =
+  Just (searchDeeper g' details depthToSearch initialChoices)
   where
-    (initialChoices, g') = advanceState g state
+    (initialChoices, g') = advanceState g details state
 
 maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
-maximumByScore = maximumBy ( \ (x, _) (y, _) -> compare x y )
+maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
 -- TODO Time box this
-searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
-searchDeeper g 0         states = (myMove $ snd $ snd $ maximumByScore $ map myBoardScore states, g)
-searchDeeper g remaining states =
-  searchDeeper g'' (remaining - 1) selected
+searchDeeper :: RandomGen g => g -> GameDetails -> Int -> [(GameState, Move)] -> (Command, g)
+searchDeeper g details 0         states = (myMove $ snd $ snd $ maximumByScore $ map (myBoardScore details) states, g)
+searchDeeper g details remaining states =
+  searchDeeper g'' details (remaining - 1) selected
   where
     (nextStates, g') = foldr ( \ (state, move) (statesAcc, g''') ->
-                                 let (newStates, g'''') = advanceState g''' state
+                                 let (newStates, g'''') = advanceState g''' details state
                                  in  (map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc, g''''))
                              ([], g)
                              states
-    (selected, g'')  = chooseN breadthToSearch g' $ zipCDF $ map myBoardScore nextStates
+    (selected, g'')  = chooseN breadthToSearch g' $ zipCDF $ map (myBoardScore details) nextStates
 
 breadthToSearch :: Int
 breadthToSearch = 12
 
 depthToSearch :: Int
-depthToSearch = 100
+depthToSearch = 40
 
 splay :: Int
 splay = 5
 
-advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
-advanceState g gameState =
+advanceState :: RandomGen g => g -> GameDetails -> GameState -> ([(GameState, Move)], g)
+advanceState g details gameState =
   (do
       myCommand       <- map snd myStates
       oponentsCommand <- map snd oponentsStates
-      return ((tickEngine gameState) `updateMyMove` myCommand `updateOponentsMove` oponentsCommand,
+      return (updateMyMove details myCommand $ updateOponentsMove details oponentsCommand $ tickEngine details gameState,
               Move myCommand oponentsCommand),
     g'')
   where
     chooseCandidates g''' = chooseN splay g''' . zipCDF
-    (myStates, g')        = chooseCandidates g  $ map myBoardScore $ myMoves       gameState
-    (oponentsStates, g'') = chooseCandidates g' $ invertScores $ map myBoardScore $ oponentsMoves gameState
+    (myStates, g')        =
+      chooseCandidates g $
+      map (myBoardScore details) $
+      myMoves details gameState
+    (oponentsStates, g'') =
+      chooseCandidates g' $
+      invertScores $
+      map (myBoardScore details) $
+      oponentsMoves details gameState
 
 invertScores :: [(Float, (GameState, Command))] -> [(Float, (GameState, Command))]
-invertScores = map ( \ (score, x) -> (1.0 / score, x))
+invertScores = map ( \ (score', x) -> (1.0 / score', x))
 
-myMoves :: GameState -> [(GameState, Command)]
-myMoves state = do
-  myMove'       <- doNothingIfNoMoves $ myAvailableMoves state
-  return $ (state `updateMyMove` myMove', myMove')
+myMoves :: GameDetails -> GameState -> [(GameState, Command)]
+myMoves details state = do
+  myMove'       <- doNothingIfNoMoves $ myAvailableMoves details state
+  return $ (updateMyMove details myMove' state, myMove')
 
-oponentsMoves :: GameState -> [(GameState, Command)]
-oponentsMoves state = do
-  oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
-  return $ (state `updateOponentsMove` oponentsMove', oponentsMove')
+oponentsMoves :: GameDetails -> GameState -> [(GameState, Command)]
+oponentsMoves details state = do
+  oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves details state
+  return $ (updateOponentsMove details oponentsMove' state, oponentsMove')
 
 zipCDF :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 zipCDF xs =
@@ -110,7 +114,7 @@ zipCDF xs =
   where
     normalised = map (/ (head summed)) summed
     summed     = (reverse . scanl1 (+) . map fst) sorted
-    sorted     = sortOn fst xs
+    sorted     = L.sortOn fst xs
 
 eliteChoices :: Int
 eliteChoices = 3
@@ -127,7 +131,7 @@ chooseN n g xs =
     choose _ (choices, g') =
       let (value, g'') = next g'
           normalised   = normalise value
-          scanForValue = (snd . fromJust . lastIfNothing xs . find ((<= normalised) . fst))
+          scanForValue = (snd . fromJust . lastIfNothing xs . L.find ((<= normalised) . fst))
       in (scanForValue xs : choices, g'')
 
 lastIfNothing :: [(Float, (GameState, a))] -> Maybe (Float, (GameState, a)) -> Maybe (Float, (GameState, a))

@@ -5,27 +5,37 @@ module Player (updateEnergy,
                oponentsEnergy,
                myHealth,
                oponentsHealth,
-               incrementMyHitsTaken,
-               incrementOponentsHitsTaken,
-               incrementMyPoints,
-               incrementOponentsPoints)
+               resetCooldownAndCreateMissile,
+               mapMissiles,
+               incrementHitsTaken,
+               updateTowerMap,
+               takeDamage,
+               buildingFromStats,
+               updateMissiles,
+               mapMap,
+               build,
+               updateMove,
+               deconstructAt)
   where
 
 import Interpretor (GameState(..),
+                    BuildingType(..),
+                    Command(..),
+                    TowerStats(..),
+                    GameDetails(..),
                     Player(..),
-                    PlayerType(..))
-import Data.Vector as V
-import Data.Maybe
-import Prelude as P
-
-player :: PlayerType -> GameState -> Player
-player playerType' = (fromJust . V.find ((==playerType') . playerType) . players)
+                    Missile(..),
+                    Building(..),
+                    TowerMap)
+import GameMap
+import BuildingsUnderConstruction
+import GameDetails
 
 myPlayer :: GameState -> Player
-myPlayer = player A
+myPlayer = me
 
 oponentsPlayer :: GameState -> Player
-oponentsPlayer = player B
+oponentsPlayer = oponent
 
 playerEnergy :: (GameState -> Player) -> GameState -> Int
 playerEnergy player' = energy . player'
@@ -45,43 +55,67 @@ myHealth = playerHealth myPlayer
 oponentsHealth :: GameState -> Int
 oponentsHealth = playerHealth oponentsPlayer
 
-updateEnergy :: GameState -> (Int, Int) -> GameState
-updateEnergy state (myEnergy', oponentsEnergy') =
-  let myPlayer'     = myPlayer state
-      oponentPlayer = oponentsPlayer state
-  in state { players = V.fromList [myPlayer'     { energy = myEnergy' },
-                                   oponentPlayer { energy = oponentsEnergy' }] }
+updateEnergy :: Int -> Player -> Player
+updateEnergy energyToAdd player@(Player { energy = energy' }) =
+  player { energy = energy' + energyToAdd }
 
-type MapPlayer = (Player -> Player) -> GameState -> GameState
+incrementHitsTaken :: Player -> Player
+incrementHitsTaken player'@(Player { hitsTaken = hitsTaken' }) =
+  player' { hitsTaken = hitsTaken' + 1 }
 
-mapPlayer :: (GameState -> Player) -> MapPlayer
-mapPlayer player' f state =
-  let players' = players state
-      player'' = player' state
-  in state { players = V.filter (/= player'') players' `V.snoc` (f player'') }
+resetCooldownAndCreateMissile :: Player -> Int -> Int -> Int -> Int -> Int -> Player
+resetCooldownAndCreateMissile owner' x' y' cooldown damage' speed' =
+  addMissile (Missile damage' speed' x' y') ownerWithResetBuilding
+  where
+    ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
+    mapWithResetBuilding = adjustAt (resetBuildingCooldown cooldown) (x', y') (towerMap owner')
 
-mapMyPlayer :: MapPlayer
-mapMyPlayer = mapPlayer myPlayer
+resetBuildingCooldown :: Int -> Building -> Building
+resetBuildingCooldown cooldown building' =
+  (building' { weaponCooldownTimeLeft = cooldown })
 
-mapOponentsPlayer :: MapPlayer
-mapOponentsPlayer = mapPlayer oponentsPlayer
+addMissile :: Missile -> Player -> Player
+addMissile missile player@(Player { ownedMissiles = missiles' }) =
+  player { ownedMissiles = missile : missiles' }
 
-incrementHitsTaken :: MapPlayer -> GameState -> GameState
-incrementHitsTaken mapPlayer' =
-  mapPlayer' ( \ player'@(Player { hitsTaken = hitsTaken' }) -> player' { hitsTaken = hitsTaken' + 1 })
+mapMap :: (TowerMap -> TowerMap) -> Player -> Player
+mapMap f player@(Player { towerMap = towerMap' }) =
+  player { towerMap = f towerMap' }
 
-incrementMyHitsTaken :: GameState -> GameState
-incrementMyHitsTaken = incrementHitsTaken mapMyPlayer
+mapMissiles :: (Missile -> Missile) -> Player -> Player
+mapMissiles f player@(Player { ownedMissiles = ownedMissiles' }) =
+  player { ownedMissiles = map f ownedMissiles' }
 
-incrementOponentsHitsTaken :: GameState -> GameState
-incrementOponentsHitsTaken = incrementHitsTaken mapOponentsPlayer
+updateMissiles :: [Missile] -> Player -> Player
+updateMissiles missiles player = player { ownedMissiles = missiles }
 
-incrementPoints :: MapPlayer -> Int -> GameState -> GameState
-incrementPoints mapPlayer' points =
-  mapPlayer' ( \ player'@(Player { score = score' }) -> player' { score = score' + points })
+updateTowerMap :: TowerMap -> Player -> Player
+updateTowerMap towerMap' player' = player' { towerMap = towerMap' }
 
-incrementMyPoints :: Int -> GameState -> GameState
-incrementMyPoints = incrementPoints mapMyPlayer
+takeDamage :: Int -> Player -> Player
+takeDamage damage' player'@(Player { health = health' }) =
+  player' { health = health' - damage' }
 
-incrementOponentsPoints :: Int -> GameState -> GameState
-incrementOponentsPoints = incrementPoints mapOponentsPlayer
+buildingFromStats :: BuildingType -> TowerStats -> Building
+buildingFromStats buildingType' (TowerStats { initialIntegrity     = initialIntegrity' })
+  = Building  { integrity              = initialIntegrity',
+                weaponCooldownTimeLeft = 0,
+                buildingType           = buildingType' }
+
+updateMove :: GameDetails -> Command -> Player -> Player
+updateMove _       (Deconstruct x' y')         = deconstructAt x' y'
+updateMove _       NothingCommand              = id
+updateMove details (Build x' y' buildingType') = build timeLeft x' y' building'
+  where
+    timeLeft    = constructionTime towerStats'
+    towerStats' = towerStats buildingType' details
+    building'   = buildingFromStats buildingType' towerStats'
+
+build :: Int -> Int -> Int -> Building -> Player -> Player
+build timeLeft x' y' building' player@(Player { constructionQueue = constructionQueue' }) =
+  player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue' }
+  where
+    buildingUnderConstruction = createBuildingUnderConstruction timeLeft x' y' building'
+
+deconstructAt :: Int -> Int -> Player -> Player
+deconstructAt x' y' = mapMap (removeAt (x', y'))
