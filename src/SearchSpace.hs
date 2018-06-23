@@ -70,13 +70,13 @@ searchDeeper g remaining states =
     (selected, g'')  = chooseN breadthToSearch g' $ zipCDF $ map myBoardScore nextStates
 
 breadthToSearch :: Int
-breadthToSearch = 30
+breadthToSearch = 12
 
 depthToSearch :: Int
-depthToSearch = 10
+depthToSearch = 100
 
 splay :: Int
-splay = 10
+splay = 5
 
 advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
 advanceState g gameState =

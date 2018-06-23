@@ -21,7 +21,6 @@ import Interpretor (CellContents(..),
                     PlayerType(..),
                     SparseMap)
 import GameMap
-import Data.Vector     as V
 import Prelude         as P
 import Missile         as M
 

@@ -57,8 +57,8 @@ hitsSubtractTakenAfterTime state =
       where
         myLossModifier                      = if myHealth'       <= damageDealtToMe then 1000 else 0
         myWinModifier                       = if oponentsHealth' <= damageDealtToOponent then 1000 else 0
-        damageDealtToOponent                = (healthOfOponentsBuildings - myMissilesDamage)
-        damageDealtToMe                     = (healthOfMyBuildings       - oponentsMissilesDamage)
+        damageDealtToOponent                = (myMissilesDamage       - healthOfOponentsBuildings)
+        damageDealtToMe                     = (oponentsMissilesDamage - healthOfMyBuildings)
         -- Oponent
         oponentsMissilesInRowDamage'        = oponentsMissilesInRowDamage row
         healthOfOponentsBuildings           = foldlRowBuildings' oponentsBuilding integrity row
@@ -101,11 +101,14 @@ divWithZero x y =
 infinity :: Int
 infinity = 10000000
 
+zeroIfBelow :: Int -> Int
+zeroIfBelow x = if x < 0 then 0 else x
+
 myTurnsToNextTowerByTurnByMultiplier :: GameState -> Float
 myTurnsToNextTowerByTurnByMultiplier state@(GameState { gameDetails = gameDetails' }) =
   (turnsToTowerMultiplier *) $
   fromIntegral $
-  divWithZero (mostExpensiveTower - myEnergy') energyPerTurn
+  divWithZero (zeroIfBelow (mostExpensiveTower - myEnergy')) energyPerTurn
   where
     rows'              = rows $ gameMap state
     priceIndex         = buildingPrices gameDetails'
