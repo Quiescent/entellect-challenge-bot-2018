@@ -20,7 +20,7 @@ import qualified Data.List as L
 availableMoves :: GameDetails -> ((Int, Int) -> Bool) -> Player -> [Command]
 availableMoves details constrainCellsTo player@(Player { towerMap = towerMap' }) = do
   (x, y) <- filter constrainCellsTo allCells
-  if definedAt (x, y) towerMap'
+  if not $ definedAt (x, y) towerMap'
     then
     do
       buildingType' <- buildingsWhichICanAfford
