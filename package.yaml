@@ -45,13 +45,9 @@ executables:
     - EntelectChallenge2018
 
 tests:
-  EntelectChallenge2018-test:
+  spec:
     main:                Spec.hs
     source-dirs:         test
-    buildable: false
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     dependencies:
     - EntelectChallenge2018
+    - hspec >= 2.5.3

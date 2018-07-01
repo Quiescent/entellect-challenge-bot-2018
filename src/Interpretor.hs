@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Interpretor (repl,
+                    parseStateString,
                     Player(..),
                     Missile(..),
                     BuildingType(..),
@@ -333,11 +334,13 @@ stateFilePath = "state.json"
 commandFilePath :: String
 commandFilePath = "command.txt"
 
-readGameState :: IO GameStateContainer
-readGameState = do
-  stateString <- B.readFile stateFilePath
+parseStateString :: B.ByteString -> GameStateContainer
+parseStateString stateString =
   let Just state = decode stateString
-  return state
+  in state
+
+readGameState :: IO GameStateContainer
+readGameState = fmap parseStateString $ B.readFile stateFilePath
 
 data Command = Build { xCoord   :: Int,
                        yCoord   :: Int,
