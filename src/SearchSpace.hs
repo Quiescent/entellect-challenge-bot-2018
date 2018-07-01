@@ -1,4 +1,6 @@
 module SearchSpace (advanceState,
+                    myAvailableMoves,
+                    oponentsAvailableMoves,
                     search)
   where
 
@@ -21,11 +23,10 @@ availableMoves :: GameDetails -> ((Int, Int) -> Bool) -> Player -> [Command]
 availableMoves details constrainCellsTo player@(Player { towerMap = towerMap' }) = do
   (x, y) <- filter constrainCellsTo allCells
   if not $ definedAt (x, y) towerMap'
-    then
-    do
+    then do
       buildingType' <- buildingsWhichICanAfford
       return $ Build x y buildingType'
-    else return $ Deconstruct x y
+  else return $ Deconstruct x y
   where
     buildingsWhichICanAfford = map snd $ filter ((<= energy') . fst) prices
     energy'                  = energy player

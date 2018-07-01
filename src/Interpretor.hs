@@ -32,8 +32,6 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap as M
 import GHC.Generics (Generic(..))
 
-import Debug.Trace
-
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
 
@@ -350,6 +348,7 @@ data Command = Build { xCoord   :: Int,
                | Deconstruct { xCoord :: Int,
                                yCoord :: Int }
                | NothingCommand
+             deriving (Eq)
 
 instance Show Command where
   show (Build x' y' building') =
