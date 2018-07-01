@@ -32,6 +32,8 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap as M
 import GHC.Generics (Generic(..))
 
+import Debug.Trace
+
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
 
@@ -271,7 +273,7 @@ type RowAccumulator = (Row, Row, ConstructionQueue, ConstructionQueue, [Missile]
 
 makeRow :: DenseRow -> RowAccumulator
 makeRow =
-  V.foldr accCell (M.empty, M.empty, PQ.empty, PQ.empty, [], []) 
+  V.foldr accCell (M.empty, M.empty, PQ.empty, PQ.empty, [], [])
 
 accCell :: CellStateContainer -> RowAccumulator -> RowAccumulator
 accCell (CellStateContainer x' y' _ buildings' missiles') row@(_, _, _, _, myMissiles, oponentsMissiles) =
@@ -287,12 +289,12 @@ accBuilding :: Int -> Int -> ScratchBuilding -> RowAccumulator -> RowAccumulator
 accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (row, b, queue, d, e, f) =
   let building' = (Building int wctl bt)
   in if ctl == -1
-     then (M.insert y' building' row, b, queue,                                      d, e, f)
+     then (M.insert x' building' row, b, queue,                                      d, e, f)
      else (row,                       b, PQ.insert (ctl, (x', y'), building') queue, d, e, f)
 accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, row, c, queue, e, f) =
   let building' = (Building int wctl bt)
   in if ctl == -1
-     then (a, M.insert y' building' row, c, queue,                                      e, f)
+     then (a, M.insert x' building' row, c, queue,                                      e, f)
      else (a, row,                       c, PQ.insert (ctl, (x', y'), building') queue, e, f)
 
 splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
