@@ -16,6 +16,10 @@ spec = do
       (S.fromList $ myAvailableMoves genericDetails fullBoard) `shouldBe` S.fromList (NothingCommand : myDeconstructs)
     it "should produce only build commands and NothingCommand when the map is empty" $
       (S.fromList $ myAvailableMoves genericDetails emptyBoard) `shouldBe` S.fromList (NothingCommand : myBuilds)
+    it "should not produce a build command on an occupied square when there's only one square" $
+      (S.fromList $ myAvailableMoves genericDetails emptyBoardWithBuildingAtSevenSeven)
+       `shouldBe`
+       S.fromList (NothingCommand : myBuildsWithoutSevenSeven)
 
 toTuple :: Command -> (Int, Int, Int)
 toTuple (Build x y z)     = (x, y, buildingToInt z)
@@ -522,15 +526,23 @@ fullBoard =
                                   constructionQueue = PQ.empty,
                                   ownedMissiles     = [] })}
 
+aDefenseBuilding :: Building
+aDefenseBuilding = (Building { integrity              = 10,
+                               weaponCooldownTimeLeft = 0,
+                               buildingType           = DEFENSE })
+
+emptyMe :: Player
+emptyMe = (Player { energy            = 400,
+                    health            = 30,
+                    hitsTaken         = 14,
+                    score             = 451,
+                    towerMap          = M.empty,
+                    constructionQueue = PQ.empty,
+                    ownedMissiles     =  []})
+
 emptyBoard :: GameState
 emptyBoard =
-  GameState { me      = (Player { energy            = 400,
-                                  health            = 30,
-                                  hitsTaken         = 14,
-                                  score             = 451,
-                                  towerMap          = M.empty,
-                                  constructionQueue = PQ.empty,
-                                  ownedMissiles     =  []}),
+  GameState { me      = emptyMe,
               oponent = (Player { energy            = 400,
                                   health            = 100,
                                   hitsTaken         = 0,
@@ -538,3 +550,19 @@ emptyBoard =
                                   towerMap          = M.empty,
                                   constructionQueue = PQ.empty,
                                   ownedMissiles     = [] })}
+
+emptyBoardWithBuildingAtSevenSeven :: GameState
+emptyBoardWithBuildingAtSevenSeven = emptyBoard { me = ( emptyMe { towerMap = M.fromList [
+
+                                                                     (7, (M.fromList [(7, aDefenseBuilding)]))] } ) }
+
+isAt :: Int -> Int -> Command -> Bool
+isAt x y (Build x' y' _)     = x == x' && y == y'
+isAt x y (Deconstruct x' y') = x == x' && y == y'
+isAt _ _ NothingCommand      = False
+
+isntAt :: Int -> Int -> Command -> Bool
+isntAt x y = not . isAt x y
+
+myBuildsWithoutSevenSeven :: [Command]
+myBuildsWithoutSevenSeven = (Deconstruct 7 7) : filter (isntAt 7 7) myBuilds
