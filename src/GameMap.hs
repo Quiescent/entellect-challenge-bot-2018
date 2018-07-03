@@ -66,5 +66,14 @@ definedAt :: (Int, Int) -> TowerMap -> Bool
 definedAt (x', y') towerMap' =
   M.member y' towerMap' && M.member x' (towerMap' M.! y')
 
+removeIfEmpty :: Int -> TowerMap -> TowerMap
+removeIfEmpty y' towerMap' =
+  case M.lookup y' towerMap' of
+    Just x ->
+      if x == M.empty
+      then M.delete y' towerMap'
+      else towerMap'
+    _      -> towerMap'
+
 removeAt :: (Int, Int) -> TowerMap -> TowerMap
-removeAt (x', y') = M.adjust (M.delete x') y'
+removeAt (x', y') = removeIfEmpty y' . M.adjust (M.delete x') y'

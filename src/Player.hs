@@ -112,8 +112,11 @@ updateMove details (Build x' y' buildingType') = build timeLeft x' y' building'
     building'   = buildingFromStats buildingType' towerStats'
 
 build :: Int -> Int -> Int -> Building -> Player -> Player
-build timeLeft x' y' building' player@(Player { constructionQueue = constructionQueue' }) =
-  player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue' }
+build timeLeft x' y' building' player@(Player { constructionQueue = constructionQueue',
+                                                towerMap          = towerMap' }) =
+  if definedAt (x', y') towerMap'
+  then player
+  else player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue' }
   where
     buildingUnderConstruction = createBuildingUnderConstruction timeLeft x' y' building'
 
