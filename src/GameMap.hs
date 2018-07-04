@@ -30,7 +30,10 @@ replaceAt :: Building -> (Int, Int) -> TowerMap -> TowerMap
 replaceAt building' = adjustAt (\ _ -> building')
 
 addAt :: (Int, Int) -> Building -> TowerMap -> TowerMap
-addAt (x, y) cell = M.adjust (M.insert x cell) y
+addAt (x, y) building' towerMap' =
+  if not $ M.member y towerMap'
+  then M.insert y (M.fromList [(x, building')]) towerMap'
+  else M.adjust (M.insert x building') y towerMap'
 
 type CollisionDetector = (Int, Int) -> TowerMap -> Collision
 

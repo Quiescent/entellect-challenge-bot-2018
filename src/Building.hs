@@ -31,7 +31,7 @@ generateMissilesOnRow y' row player =
   rowFoldrIndexed (generateMissilesForBuilding y') player row
 
 generateMissilesForBuilding :: Int -> Int -> Building -> Player -> Player
-generateMissilesForBuilding x' y'
+generateMissilesForBuilding y' x'
                             (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
                                         buildingType           = buildingType' })
                             player =
