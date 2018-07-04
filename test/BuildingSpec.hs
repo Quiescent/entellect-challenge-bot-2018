@@ -49,6 +49,13 @@ tickBuildingSpec = do
       emptyBoard { me = emptyPlayer { towerMap = M.fromList [(0, M.fromList [(0, anAttackTowerWithResetCooldown)]),
                                                              (5, M.fromList [(2, anAttackTowerWithResetCooldown)])],
                                       ownedMissiles = [(Missile 0 0), (Missile 2 5)]} }
+    it "should update the cooldown of attack towers" $
+      tickBuildings boardWithBuildingsOnIt
+      `shouldBe`
+      GameState { me      = emptyPlayer { towerMap = M.fromList [(1, M.fromList [(2,  anAttackTowerWithUpdatedCooldown),
+                                                                                 (5,  anAttackTowerWithUpdatedCooldown)])] },
+                  oponent = emptyPlayer { towerMap = M.fromList [(3, M.fromList [(8,  anAttackTowerWithUpdatedCooldown),
+                                                                                 (14, anAttackTowerWithUpdatedCooldown)])] }}
 
 emptyPlayer :: Player
 emptyPlayer =
@@ -84,3 +91,19 @@ boardWithBuildingsAboutToFinish :: GameState
 boardWithBuildingsAboutToFinish =
   GameState { me      = playerWithBuildingsAboutToFinish,
               oponent = emptyPlayer }
+
+boardWithBuildingsOnIt :: GameState
+boardWithBuildingsOnIt =
+  GameState { me      = emptyPlayer { towerMap = M.fromList [(1, M.fromList [(2, anAttackTowerWithCooldown),
+                                                                             (5, anAttackTowerWithCooldown)])] },
+              oponent = emptyPlayer { towerMap = M.fromList [(3, M.fromList [(8, anAttackTowerWithCooldown),
+                                                                             (14, anAttackTowerWithCooldown)])] }}
+anAttackTowerWithCooldown :: Building
+anAttackTowerWithCooldown = (Building { integrity              = 5,
+                                        weaponCooldownTimeLeft = 3,
+                                        buildingType           = ATTACK })
+
+anAttackTowerWithUpdatedCooldown :: Building
+anAttackTowerWithUpdatedCooldown = (Building { integrity              = 5,
+                                               weaponCooldownTimeLeft = 2,
+                                               buildingType           = ATTACK })

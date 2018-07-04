@@ -16,7 +16,8 @@ module Player (updateEnergy,
                mapMap,
                build,
                updateMove,
-               deconstructAt)
+               deconstructAt,
+               decrementCooldown)
   where
 
 import Interpretor (GameState(..),
@@ -138,3 +139,10 @@ build timeLeft x' y' building' player@(Player { constructionQueue = construction
 
 deconstructAt :: Int -> Int -> Player -> Player
 deconstructAt x' y' = mapMap (removeAt (x', y'))
+
+decrementCooldown :: Int -> Int -> Player -> Player
+decrementCooldown x' y' = mapMap (adjustAt decrementCooldownOfBuilding (x', y'))
+
+decrementCooldownOfBuilding :: Building -> Building
+decrementCooldownOfBuilding building@(Building { weaponCooldownTimeLeft = cooldown }) =
+  building { weaponCooldownTimeLeft = cooldown - 1 }

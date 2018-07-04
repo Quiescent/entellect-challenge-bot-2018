@@ -14,29 +14,29 @@ import BuildingsUnderConstruction
 import Magic
 
 tickBuildings :: GameState -> GameState
-tickBuildings = (generateMissiles) . updateBuildingProgress
+tickBuildings = (generateMissilesAndUpdateCooldown) . updateBuildingProgress
 
-generateMissiles :: GameState -> GameState
-generateMissiles =
-  mapMyPlayer (generateMissilesOnPlayer) . mapOponentsPlayer (generateMissilesOnPlayer)
+generateMissilesAndUpdateCooldown :: GameState -> GameState
+generateMissilesAndUpdateCooldown =
+  mapMyPlayer generateAndUpdateCooldownMissilesOnPlayer . mapOponentsPlayer generateAndUpdateCooldownMissilesOnPlayer
 
-generateMissilesOnPlayer ::  Player -> Player
-generateMissilesOnPlayer player =
-  mapFoldIndexed (generateMissilesOnRow) player playerMap
+generateAndUpdateCooldownMissilesOnPlayer ::  Player -> Player
+generateAndUpdateCooldownMissilesOnPlayer player =
+  mapFoldIndexed (generateMissilesAndUpdateCooldownOnRow) player playerMap
   where
     playerMap = towerMap player
 
-generateMissilesOnRow :: Int -> Row -> Player -> Player
-generateMissilesOnRow y' row player =
-  rowFoldrIndexed (generateMissilesForBuilding y') player row
+generateMissilesAndUpdateCooldownOnRow :: Int -> Row -> Player -> Player
+generateMissilesAndUpdateCooldownOnRow y' row player =
+  rowFoldrIndexed (generateMissilesAndUpdateCooldownForBuilding y') player row
 
-generateMissilesForBuilding :: Int -> Int -> Building -> Player -> Player
-generateMissilesForBuilding y' x'
-                            (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
-                                        buildingType           = buildingType' })
-                            player =
+generateMissilesAndUpdateCooldownForBuilding :: Int -> Int -> Building -> Player -> Player
+generateMissilesAndUpdateCooldownForBuilding y' x'
+                                             (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
+                                                         buildingType           = buildingType' })
+                                             player =
   if (buildingType' /= ATTACK || weaponCooldownTimeLeft' /= 0)
-  then player
+  then decrementCooldown x' y' player
   else resetCooldownAndCreateMissile player x' y' attackTowerCooldownTime
 
 updateBuildingProgress :: GameState -> GameState

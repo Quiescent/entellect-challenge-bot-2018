@@ -28,11 +28,12 @@ spec =
   mapMapSpec                        >>
   buildSpec                         >>
   updateMoveSpec                    >>
-  deconstructAtSpec
+  deconstructAtSpec                 >>
+  decrementCooldownSpec
 
 anAttackTower :: Building
 anAttackTower = (Building { integrity              = 5,
-                            weaponCooldownTimeLeft = 0,
+                            weaponCooldownTimeLeft = 2,
                             buildingType           = ATTACK })
 
 anEnergyTower :: Building
@@ -199,8 +200,18 @@ updateMoveSpec = do
     it "should deconstruct a tower at the given non-origin coordinates when given that command" $
       (updateMove (Deconstruct 6 2) aPlayerWithNonZeroEnergy) `shouldBe` aPlayerWithNonZeroEnergy { towerMap = M.empty }
     it "should build an attack tower at the given coordinates when given that command" $
-      updateMove (Build 6 2 ATTACK) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (1, (6, 2), anAttackTower) }
+      updateMove (Build 6 2 ATTACK) aPlayer
+      `shouldBe`
+      aPlayer { constructionQueue = PQ.singleton (1, (6, 2), anAttackTower { weaponCooldownTimeLeft = 0 } ) }
     it "should build a defense tower at the given coordinates when given that command" $
       updateMove (Build 6 2 DEFENSE) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (3, (6, 2), aDefenseTower) }
     it "should build a energy tower at the given coordinates when given that command" $
       updateMove (Build 6 2 ENERGY) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (1, (6, 2), anEnergyTower) }
+
+decrementCooldownSpec :: Spec
+decrementCooldownSpec = do
+  describe "decrementCooldown" $ do
+    it "should decrement the cooldown of the building at the given coordinates" $
+      decrementCooldown 0 0 aPlayer `shouldBe` aPlayer { towerMap =
+                                                         M.fromList [(0, M.fromList
+                                                                       [(0, anAttackTower { weaponCooldownTimeLeft = 1 })])] }
