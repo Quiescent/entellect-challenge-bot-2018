@@ -1,4 +1,7 @@
-module Row (rowAt, rowFoldr, rowFoldl', rowFoldrIndexed)
+module Row (rowAt,
+            rowFoldr,
+            rowFoldl',
+            rowFoldrIndexed)
   where
 
 import Interpretor (Row,

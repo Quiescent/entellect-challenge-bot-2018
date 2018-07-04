@@ -1,5 +1,5 @@
 module Missile (Direction(..),
-               moveMissile)
+                moveMissile)
   where
 
 import Interpretor (Missile(..))
