@@ -33,7 +33,7 @@ queueWithAnElement :: ConstructionQueue
 queueWithAnElement = PQ.fromList [(3, (2, 4), anAttackTower)]
 
 queueWithTwoElements :: ConstructionQueue
-queueWithTwoElements = PQ.fromList [(1, (2, 4), anAttackTower), (3, (2, 4), anAttackTower)]
+queueWithTwoElements = PQ.fromList [(0, (2, 4), anAttackTower), (3, (2, 4), anAttackTower)]
 
 addBuildingSpec :: Spec
 addBuildingSpec = do
@@ -41,7 +41,7 @@ addBuildingSpec = do
     it "should add a building to an empty queue" $
       addBuilding (3, (2, 4), anAttackTower) PQ.empty `shouldBe` queueWithAnElement
     it "should add a building to a queue with elements in it" $
-      addBuilding (1, (2, 4), anAttackTower) queueWithAnElement `shouldBe` queueWithTwoElements
+      addBuilding (0, (2, 4), anAttackTower) queueWithAnElement `shouldBe` queueWithTwoElements
 
 tickConstructionSpec :: Spec
 tickConstructionSpec = do
@@ -55,7 +55,7 @@ tickConstructionSpec = do
     it "should produce a tuple containing the buildings which did finish and the queue with updated buildings" $
       tickConstruction queueWithTwoElements
       `shouldBe`
-      ([(0, (2, 4), anAttackTower)], PQ.fromList [(0, (2, 4), anAttackTower)])
+      ([(-1, (2, 4), anAttackTower)], PQ.fromList [(2, (2, 4), anAttackTower)])
 
 placeBuildingSpec :: Spec
 placeBuildingSpec = do
