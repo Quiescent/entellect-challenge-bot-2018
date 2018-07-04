@@ -40,12 +40,13 @@ type CollisionDetector = (Int, Int) -> TowerMap -> Collision
 data Collision = HitNothing
                | HitPlayer
                | HitBuilding Int Building
+  deriving (Show, Eq)
 
 findRightOf :: CollisionDetector
 findRightOf (x', y') towerMap' =
   case towerMap' M.!? y' >>= (M.lookupLE (x' + 2)) of
     Nothing                ->
-      if x' == -1
+      if x' <= -1
       then HitPlayer
       else HitNothing
     Just (xHit, building') ->
@@ -57,7 +58,7 @@ findLeftOf :: CollisionDetector
 findLeftOf (x', y') towerMap' =
   case towerMap' M.!? y' >>= (M.lookupGE (x' - 2)) of
     Nothing                ->
-      if x' == width
+      if x' >= width
       then HitPlayer
       else HitNothing
     Just (xHit, building') ->
