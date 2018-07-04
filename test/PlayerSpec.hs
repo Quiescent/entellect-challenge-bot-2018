@@ -4,8 +4,8 @@ import Player
 import Interpretor
 import GameMap
 
-import qualified Data.IntMap          as M
-import qualified Data.PQueue.Min      as PQ
+import qualified Data.IntMap     as M
+import qualified Data.PQueue.Min as PQ
 
 import Test.Hspec
 
