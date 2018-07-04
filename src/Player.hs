@@ -3,6 +3,7 @@ module Player (updateEnergy,
                oponentsPlayer,
                myEnergy,
                oponentsEnergy,
+               constructionTime,
                myHealth,
                oponentsHealth,
                resetCooldownAndCreateMissile,
@@ -21,15 +22,13 @@ module Player (updateEnergy,
 import Interpretor (GameState(..),
                     BuildingType(..),
                     Command(..),
-                    TowerStats(..),
-                    GameDetails(..),
                     Player(..),
                     Missile(..),
                     Building(..),
                     TowerMap)
 import GameMap
 import BuildingsUnderConstruction
-import GameDetails
+import Magic
 
 myPlayer :: GameState -> Player
 myPlayer = me
@@ -63,9 +62,9 @@ incrementHitsTaken :: Player -> Player
 incrementHitsTaken player'@(Player { hitsTaken = hitsTaken' }) =
   player' { hitsTaken = hitsTaken' + 1 }
 
-resetCooldownAndCreateMissile :: Player -> Int -> Int -> Int -> Int -> Int -> Player
-resetCooldownAndCreateMissile owner' x' y' cooldown damage' speed' =
-  addMissile (Missile damage' speed' x' y') ownerWithResetBuilding
+resetCooldownAndCreateMissile :: Player -> Int -> Int -> Int -> Player
+resetCooldownAndCreateMissile owner' x' y' cooldown =
+  addMissile (Missile x' y') ownerWithResetBuilding
   where
     ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
     mapWithResetBuilding = adjustAt (resetBuildingCooldown cooldown) (x', y') (towerMap owner')
@@ -96,20 +95,37 @@ takeDamage :: Int -> Player -> Player
 takeDamage damage' player'@(Player { health = health' }) =
   player' { health = health' - damage' }
 
-buildingFromStats :: BuildingType -> TowerStats -> Building
-buildingFromStats buildingType' (TowerStats { initialIntegrity     = initialIntegrity' })
-  = Building  { integrity              = initialIntegrity',
-                weaponCooldownTimeLeft = 0,
-                buildingType           = buildingType' }
+buildingFromStats :: BuildingType -> Building
+buildingFromStats TESLA   = teslaTower
+buildingFromStats ATTACK  = attackTower
+buildingFromStats ENERGY  = energyTower
+buildingFromStats DEFENSE = defenseTower
 
-updateMove :: GameDetails -> Command -> Player -> Player
-updateMove _       (Deconstruct x' y')         = deconstructAt x' y'
-updateMove _       NothingCommand              = id
-updateMove details (Build x' y' buildingType') = build timeLeft x' y' building'
+teslaTower :: Building
+teslaTower = (Building teslaTowerHealth 0 TESLA)
+
+attackTower :: Building
+attackTower = (Building attackTowerHealth 0 ATTACK)
+
+defenseTower :: Building
+defenseTower = (Building defenseTowerHealth 0 DEFENSE)
+
+energyTower :: Building
+energyTower = (Building energyTowerHealth 0 ENERGY)
+
+updateMove :: Command -> Player -> Player
+updateMove (Deconstruct x' y')         = deconstructAt x' y'
+updateMove NothingCommand              = id
+updateMove (Build x' y' buildingType') = build timeLeft x' y' building'
   where
-    timeLeft    = constructionTime towerStats'
-    towerStats' = towerStats buildingType' details
-    building'   = buildingFromStats buildingType' towerStats'
+    timeLeft  = constructionTime buildingType'
+    building' = buildingFromStats buildingType'
+
+constructionTime :: BuildingType -> Int
+constructionTime TESLA   = teslaTowerConstructionTime
+constructionTime ENERGY  = energyTowerConstructionTime
+constructionTime DEFENSE = defenseTowerConstructionTime
+constructionTime ATTACK  = attackTowerConstructionTime
 
 build :: Int -> Int -> Int -> Building -> Player -> Player
 build timeLeft x' y' building' player@(Player { constructionQueue = constructionQueue',

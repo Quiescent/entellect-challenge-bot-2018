@@ -2,17 +2,17 @@ module Objective (myBoardScore, Move(..))
   where
 
 import Interpretor (GameState(..),
-                    GameDetails(..),
                     Command(..))
 import Player
 import Engine
+import Magic
 
 data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
           deriving (Show)
 
-myBoardScore :: GameDetails -> (GameState, a) -> (Float, (GameState, a))
-myBoardScore details withMove@(state, _) =
+myBoardScore :: (GameState, a) -> (Float, (GameState, a))
+myBoardScore withMove@(state, _) =
   (fromIntegral $ damageToOponent - damageToMe, withMove)
   where
     myInitialHealth       = myHealth state
@@ -21,7 +21,7 @@ myBoardScore details withMove@(state, _) =
     oponentsFinalHealth   = oponentsHealth state'
     oponentsInitialHealth = oponentsHealth state
     damageToOponent       = oponentsInitialHealth - oponentsFinalHealth
-    state' = (!! turnsIntoFuture) $ iterate (tickEngine details) state
+    state' = (!! turnsIntoFuture) $ iterate tickEngine state
 
 turnsIntoFuture :: Int
 turnsIntoFuture = 5

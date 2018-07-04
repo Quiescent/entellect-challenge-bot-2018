@@ -3,12 +3,13 @@ module Missile (Direction(..),
   where
 
 import Interpretor (Missile(..))
+import Magic
 
 data Direction = MoveLeft | MoveRight
   deriving (Eq)
 
 moveMissile :: Direction -> Missile -> Missile
-moveMissile direction missile@(Missile { speed = speed', xDisp = xDisp' }) =
-  let adjustment = if direction == MoveRight then speed' else (-speed')
+moveMissile direction missile@(Missile { xDisp = xDisp' }) =
+  let adjustment = if direction == MoveRight then missileSpeed else (-missileSpeed)
       newX       = xDisp' + adjustment
   in missile { xDisp = newX }

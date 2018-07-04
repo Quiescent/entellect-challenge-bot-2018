@@ -2,9 +2,8 @@ module Engine (tickEngine)
   where
 
 import Interpretor (GameState(..),
-                    GameDetails(..),
-                    TowerStats(..),
                     Row,
+                    BuildingType(..),
                     Player(..),
                     Building(..),
                     Missile(..))
@@ -12,12 +11,12 @@ import Player
 import Missile
 import Building
 import GameMap
-import GameDetails
 import GameState
 import Row
+import Magic
 
-tickEngine :: GameDetails -> GameState -> GameState
-tickEngine details = gainEnergy details . collideMissiles . tickMissiles . tickBuildings details
+tickEngine :: GameState -> GameState
+tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
 
 tickMissiles :: GameState -> GameState
 tickMissiles = mapMyPlayer (moveMissiles MoveRight) . mapOponentsPlayer (moveMissiles MoveLeft)
@@ -25,23 +24,25 @@ tickMissiles = mapMyPlayer (moveMissiles MoveRight) . mapOponentsPlayer (moveMis
 moveMissiles :: Direction -> Player -> Player
 moveMissiles direction player = mapMissiles (moveMissile direction) player
 
-gainEnergy :: GameDetails -> GameState -> GameState
-gainEnergy details =
-  mapMyPlayer (incrementEnergy details) . mapOponentsPlayer (incrementEnergy details)
+gainEnergy :: GameState -> GameState
+gainEnergy =
+  mapMyPlayer (incrementEnergy) . mapOponentsPlayer (incrementEnergy)
 
-incrementEnergy :: GameDetails -> Player -> Player
-incrementEnergy details@(GameDetails { roundIncomeEnergy = roundIncomeEnergy' }) player' =
-  updateEnergy (roundIncomeEnergy' + energyFromTowers) player'
+incrementEnergy :: Player -> Player
+incrementEnergy player' =
+  updateEnergy (energyPerTurn + energyFromTowers) player'
   where
-    energyFromTowers = mapFold (incrementEnergyRow details) 0 $ towerMap player'
+    energyFromTowers = mapFold (incrementEnergyRow) 0 $ towerMap player'
 
-incrementEnergyRow :: GameDetails -> Row -> Int -> Int
-incrementEnergyRow details row' energyAcc =
-  rowFoldr (incrementEnergyAcc details) energyAcc row'
+incrementEnergyRow :: Row -> Int -> Int
+incrementEnergyRow row' energyAcc =
+  rowFoldr (incrementEnergyAcc) energyAcc row'
 
-incrementEnergyAcc :: GameDetails -> Building -> Int -> Int
-incrementEnergyAcc details (Building { buildingType = buildingType' }) energyAcc =
-  (energyGeneratedPerTurn $ towerStats buildingType' details) + energyAcc
+incrementEnergyAcc :: Building -> Int -> Int
+incrementEnergyAcc (Building { buildingType = buildingType' }) energyAcc =
+  if buildingType' == ENERGY
+  then energyTowerEnergyGeneratedPerTurn + energyAcc
+  else energyAcc
 
 collideMissiles :: GameState -> GameState
 collideMissiles state =
@@ -71,5 +72,4 @@ collideMissile collisionDetector missile@(Missile { xDisp = x', yDisp = y' }) (d
            Nothing         -> (didntCollide, updateTowerMap (removeAt  (xHit, y')            towerMap') player')
            Just building'' -> (didntCollide, updateTowerMap (replaceAt building'' (xHit, y') towerMap') player')
   where
-    missileDamage = (damage missile)
-    towerMap'     = towerMap player'
+    towerMap' = towerMap player'

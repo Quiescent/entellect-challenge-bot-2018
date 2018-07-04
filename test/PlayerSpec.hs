@@ -115,10 +115,10 @@ resetCooldownAndCreateMissileSpec :: Spec
 resetCooldownAndCreateMissileSpec = do
   describe "resetCooldown" $ do
     it "should reset the cooldown of the tower at 0, 0 and create a missile there" $
-      (resetCooldownAndCreateMissile aPlayer 0 0 10 20 30)
+      (resetCooldownAndCreateMissile aPlayer 0 0 10)
       `shouldBe`
       (aPlayer { towerMap      = M.fromList [(0, M.fromList [(0, anAttackTower { weaponCooldownTimeLeft = 10 })])],
-                 ownedMissiles = [(Missile 20 30 0 0)] })
+                 ownedMissiles = [(Missile 0 0)] })
 
 mapMissilesSpec :: Spec
 mapMissilesSpec = do
@@ -157,13 +157,13 @@ buildingFromStatsSpec :: Spec
 buildingFromStatsSpec = do
   describe "buildingFromStats" $ do
     it "should produce a building with the given building statistics" $
-      (buildingFromStats ATTACK (TowerStats 0 1 2 3 4 5 6 7 8)) `shouldBe` (Building 0 0 ATTACK)
+      (buildingFromStats ATTACK) `shouldBe` (Building 5 0 ATTACK)
 
 updateMissilesSpec :: Spec
 updateMissilesSpec = do
   describe "updateMissiles" $ do
     it "should swap in the given list of missiles" $
-      (updateMissiles [(Missile 10 20 0 2)] aPlayer) `shouldBe` (aPlayer { ownedMissiles = [(Missile 10 20 0 2)] })
+      (updateMissiles [(Missile 0 2)] aPlayer) `shouldBe` (aPlayer { ownedMissiles = [(Missile 0 2)] })
 
 mapMapSpec :: Spec
 mapMapSpec = do
@@ -189,65 +189,18 @@ deconstructAtSpec = do
     it "should remove a tower at the given non-origin coordinates" $
       (deconstructAt 6 2 aPlayerWithNonZeroEnergy) `shouldBe` (aPlayerWithNonZeroEnergy { towerMap = M.empty })
 
-genericDetails :: GameDetails
-genericDetails = (GameDetails { roundIncomeEnergy = 5,
-                                buildingPrices    = (BuildingPriceIndex { attackTowerCost  = 30,
-                                                                          defenseTowerCost = 30,
-                                                                          energyTowerCost  = 20,
-                                                                          teslaTowerCost   = 300 }),
-                                buildingsStats = (BuildingStats { attackTowerStats  =
-                                                                  (TowerStats { initialIntegrity       = 5,
-                                                                                constructionTime       = 2,
-                                                                                towerPrice             = 30,
-                                                                                weaponDamage           = 5,
-                                                                                weaponSpeed            = 1,
-                                                                                weaponCooldownPeriod   = 3,
-                                                                                energyGeneratedPerTurn = 0,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 }),
-                                                                  defenseTowerStats =
-                                                                  (TowerStats { initialIntegrity       = 20,
-                                                                                constructionTime       = 4,
-                                                                                towerPrice             = 30,
-                                                                                weaponDamage           = 0,
-                                                                                weaponSpeed            = 0,
-                                                                                weaponCooldownPeriod   = 0,
-                                                                                energyGeneratedPerTurn = 0,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 }),
-                                                                  energyTowerStats  =
-                                                                  (TowerStats { initialIntegrity       = 5,
-                                                                                constructionTime       = 2,
-                                                                                towerPrice             = 20,
-                                                                                weaponDamage           = 0,
-                                                                                weaponSpeed            = 0,
-                                                                                weaponCooldownPeriod   = 0,
-                                                                                energyGeneratedPerTurn = 3,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 }),
-                                                                  teslaTowerStats   =
-                                                                  (TowerStats { initialIntegrity       = 5,
-                                                                                constructionTime       = 11,
-                                                                                towerPrice             = 300,
-                                                                                weaponDamage           = 20,
-                                                                                weaponSpeed            = 0,
-                                                                                weaponCooldownPeriod   = 10,
-                                                                                energyGeneratedPerTurn = 0,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 })}) })
-
 updateMoveSpec :: Spec
 updateMoveSpec = do
   describe "updateMove" $ do
     it "should do nothing when given the nothing command" $
-      (updateMove genericDetails NothingCommand aPlayer) `shouldBe` aPlayer
+      (updateMove NothingCommand aPlayer) `shouldBe` aPlayer
     it "should deconstruct a tower at the given coordinates when given that command" $
-      (updateMove genericDetails (Deconstruct 0 0) aPlayer) `shouldBe` aPlayer { towerMap = M.empty }
+      (updateMove (Deconstruct 0 0) aPlayer) `shouldBe` aPlayer { towerMap = M.empty }
     it "should deconstruct a tower at the given non-origin coordinates when given that command" $
-      (updateMove genericDetails (Deconstruct 6 2) aPlayerWithNonZeroEnergy) `shouldBe` aPlayerWithNonZeroEnergy { towerMap = M.empty }
+      (updateMove (Deconstruct 6 2) aPlayerWithNonZeroEnergy) `shouldBe` aPlayerWithNonZeroEnergy { towerMap = M.empty }
     it "should build an attack tower at the given coordinates when given that command" $
-      updateMove genericDetails (Build 6 2 ATTACK) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (2, (6, 2), anAttackTower) }
+      updateMove (Build 6 2 ATTACK) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (1, (6, 2), anAttackTower) }
     it "should build a defense tower at the given coordinates when given that command" $
-      updateMove genericDetails (Build 6 2 DEFENSE) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (4, (6, 2), aDefenseTower) }
+      updateMove (Build 6 2 DEFENSE) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (3, (6, 2), aDefenseTower) }
     it "should build a energy tower at the given coordinates when given that command" $
-      updateMove genericDetails (Build 6 2 ENERGY) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (2, (6, 2), anEnergyTower) }
+      updateMove (Build 6 2 ENERGY) aPlayer `shouldBe` aPlayer { constructionQueue = PQ.singleton (1, (6, 2), anEnergyTower) }

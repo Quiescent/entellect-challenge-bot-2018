@@ -1,25 +1,24 @@
 module Towers (towerPrices)
   where
 
-import Interpretor (GameDetails(..),
-                    BuildingPriceIndex(..),
-                    BuildingType(..))
+import Interpretor (BuildingType(..))
+import Magic
 
-attackTowerCostWithType :: BuildingPriceIndex -> (Int, BuildingType)
-attackTowerCostWithType index = (attackTowerCost index, ATTACK)
+attackTowerCostWithType :: (Int, BuildingType)
+attackTowerCostWithType = (attackTowerCost, ATTACK)
 
-defenseTowerCostWithType :: BuildingPriceIndex -> (Int, BuildingType)
-defenseTowerCostWithType index = (defenseTowerCost index, DEFENSE)
+defenseTowerCostWithType :: (Int, BuildingType)
+defenseTowerCostWithType = (defenseTowerCost, DEFENSE)
 
-energyTowerCostWithType :: BuildingPriceIndex -> (Int, BuildingType)
-energyTowerCostWithType index = (energyTowerCost index, ENERGY)
+energyTowerCostWithType :: (Int, BuildingType)
+energyTowerCostWithType = (energyTowerCost, ENERGY)
 
-teslaTowerCostWithType :: BuildingPriceIndex -> (Int, BuildingType)
-teslaTowerCostWithType index = (teslaTowerCost index, TESLA)
+teslaTowerCostWithType :: (Int, BuildingType)
+teslaTowerCostWithType = (teslaTowerCost, TESLA)
 
-towerPrices :: GameDetails -> [(Int, BuildingType)]
-towerPrices (GameDetails { buildingPrices = prices }) =
-  fmap ($ prices) [attackTowerCostWithType,
-                   defenseTowerCostWithType,
-                   energyTowerCostWithType,
-                   teslaTowerCostWithType]
+towerPrices :: [(Int, BuildingType)]
+towerPrices =
+  [attackTowerCostWithType,
+   defenseTowerCostWithType,
+   energyTowerCostWithType,
+   teslaTowerCostWithType]

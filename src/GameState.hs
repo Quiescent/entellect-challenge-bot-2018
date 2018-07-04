@@ -21,13 +21,10 @@ module GameState (runCommand,
 import Interpretor (GameState(..),
                     Building(..),
                     Missile(..),
-                    TowerStats(..),
                     Command(..),
                     Player(..),
-                    TowerMap,
-                    GameDetails(..))
+                    TowerMap)
 import Player
-import GameDetails
 import GameMap
 import BuildingsUnderConstruction
 
@@ -47,17 +44,16 @@ mapOponentsPlayer :: MapPlayer
 mapOponentsPlayer f state@(GameState { oponent = oponent' }) =
   state { oponent = f oponent' }
 
-runCommand :: GameDetails -> Player -> Command -> Player
-runCommand _       player NothingCommand              = player
-runCommand _       player (Deconstruct x' y')         =
+runCommand :: Player -> Command -> Player
+runCommand player NothingCommand              = player
+runCommand player (Deconstruct x' y')         =
   mapMap (removeAt (x', y')) player
-runCommand details player (Build x' y' buildingType') = 
+runCommand player (Build x' y' buildingType') = 
   player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' x' y' building')
                                            (constructionQueue player) }
   where
-    constructionTime' = constructionTime buildingStats'
-    building'         = buildingFromStats buildingType' buildingStats'
-    buildingStats'    = towerStats buildingType' details
+    constructionTime' = constructionTime  buildingType'
+    building'         = buildingFromStats buildingType'
 
 type UpdateMissiles = [Missile] -> GameState -> GameState
 
@@ -81,11 +77,11 @@ mapMyMap f = mapMyPlayer (mapMap f)
 mapOponentsMap :: (TowerMap -> TowerMap) -> GameState -> GameState
 mapOponentsMap f = mapOponentsPlayer (mapMap f)
 
-updateMyMove :: GameDetails -> Command -> GameState -> GameState
-updateMyMove details command = mapMyPlayer (updateMove details command)
+updateMyMove :: Command -> GameState -> GameState
+updateMyMove command = mapMyPlayer (updateMove command)
 
-updateOponentsMove :: GameDetails -> Command -> GameState -> GameState
-updateOponentsMove details command = mapOponentsPlayer (updateMove details command)
+updateOponentsMove :: Command -> GameState -> GameState
+updateOponentsMove command = mapOponentsPlayer (updateMove command)
 
 buildForMe :: Int -> Int -> Int -> Building -> GameState -> GameState
 buildForMe timeLeft x' y' building' = mapMyPlayer (build timeLeft x' y' building')

@@ -16,11 +16,11 @@ myAvailableMovesSpec :: Spec
 myAvailableMovesSpec = do
   describe "myAvailableMoves" $ do
     it "should produce only the NothingCommand move and all possible Deconstructs when the map is full" $
-      (S.fromList $ myAvailableMoves genericDetails fullBoard) `shouldBe` S.fromList (NothingCommand : myDeconstructs)
+      (S.fromList $ myAvailableMoves fullBoard) `shouldBe` S.fromList (NothingCommand : myDeconstructs)
     it "should produce only build commands and NothingCommand when the map is empty" $
-      (S.fromList $ myAvailableMoves genericDetails emptyBoard) `shouldBe` S.fromList (NothingCommand : myBuilds)
+      (S.fromList $ myAvailableMoves emptyBoard) `shouldBe` S.fromList (NothingCommand : myBuilds)
     it "should not produce a build command on an occupied square when there's only one square" $
-      (S.fromList $ myAvailableMoves genericDetails emptyBoardWithBuildingAtSevenSeven)
+      (S.fromList $ myAvailableMoves emptyBoardWithBuildingAtSevenSeven)
        `shouldBe`
        S.fromList (NothingCommand : myBuildsWithoutSevenSeven)
 
@@ -28,11 +28,11 @@ oponentsAvailableMovesSpec :: Spec
 oponentsAvailableMovesSpec = do
   describe "oponentsAvailableMoves" $ do
     it "should produce only the NothingCommand move and all possible Deconstructs when the map is full" $
-      (S.fromList $ oponentsAvailableMoves genericDetails fullBoard) `shouldBe` S.fromList (NothingCommand : oponentsDeconstructs)
+      (S.fromList $ oponentsAvailableMoves fullBoard) `shouldBe` S.fromList (NothingCommand : oponentsDeconstructs)
     it "should produce only build commands and NothingCommand when the map is empty" $
-      (S.fromList $ oponentsAvailableMoves genericDetails emptyBoard) `shouldBe` S.fromList (NothingCommand : oponentsBuilds)
+      (S.fromList $ oponentsAvailableMoves emptyBoard) `shouldBe` S.fromList (NothingCommand : oponentsBuilds)
     it "should not produce a build command on an occupied square when there's only one square" $
-      (S.fromList $ oponentsAvailableMoves genericDetails emptyBoardWithBuildingAtSevenSeven)
+      (S.fromList $ oponentsAvailableMoves emptyBoardWithBuildingAtSevenSeven)
        `shouldBe`
        S.fromList (NothingCommand : oponentsBuildsWithoutFifteenFifteen)
 
@@ -51,53 +51,6 @@ buildingToInt DEFENSE = 0
 buildingToInt ATTACK = 1
 buildingToInt ENERGY = 2
 buildingToInt TESLA = 4
-
-genericDetails :: GameDetails
-genericDetails = (GameDetails { roundIncomeEnergy = 5,
-                                buildingPrices    = (BuildingPriceIndex { attackTowerCost  = 30,
-                                                                          defenseTowerCost = 30,
-                                                                          energyTowerCost  = 20,
-                                                                          teslaTowerCost   = 300 }),
-                                buildingsStats = (BuildingStats { attackTowerStats  =
-                                                                  (TowerStats { initialIntegrity       = 5,
-                                                                                constructionTime       = 2,
-                                                                                towerPrice             = 30,
-                                                                                weaponDamage           = 5,
-                                                                                weaponSpeed            = 1,
-                                                                                weaponCooldownPeriod   = 3,
-                                                                                energyGeneratedPerTurn = 0,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 }),
-                                                                  defenseTowerStats =
-                                                                  (TowerStats { initialIntegrity       = 20,
-                                                                                constructionTime       = 4,
-                                                                                towerPrice             = 30,
-                                                                                weaponDamage           = 0,
-                                                                                weaponSpeed            = 0,
-                                                                                weaponCooldownPeriod   = 0,
-                                                                                energyGeneratedPerTurn = 0,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 }),
-                                                                  energyTowerStats  =
-                                                                  (TowerStats { initialIntegrity       = 5,
-                                                                                constructionTime       = 2,
-                                                                                towerPrice             = 20,
-                                                                                weaponDamage           = 0,
-                                                                                weaponSpeed            = 0,
-                                                                                weaponCooldownPeriod   = 0,
-                                                                                energyGeneratedPerTurn = 3,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 }),
-                                                                  teslaTowerStats   =
-                                                                  (TowerStats { initialIntegrity       = 5,
-                                                                                constructionTime       = 11,
-                                                                                towerPrice             = 300,
-                                                                                weaponDamage           = 20,
-                                                                                weaponSpeed            = 0,
-                                                                                weaponCooldownPeriod   = 10,
-                                                                                energyGeneratedPerTurn = 0,
-                                                                                destroyMultiplier      = 1,
-                                                                                constructionScore      = 1 })}) })
 
 oponentsDeconstructs :: [Command]
 oponentsDeconstructs = [(Deconstruct 8  0),

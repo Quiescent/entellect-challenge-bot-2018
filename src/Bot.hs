@@ -1,14 +1,14 @@
 module Bot
   where
 
-import Interpretor (GameStateContainer(..),
+import Interpretor (GameState(..),
                     Command(..))
 import SearchSpace
 import System.Random
 import Control.Monad
 
-decide :: RandomGen g => g -> GameStateContainer -> Command
-decide gen (GameStateContainer state details) =
-  case msum [fmap fst $ search gen details state] of
+decide :: RandomGen g => g -> GameState -> Command
+decide gen state =
+  case msum [fmap fst $ search gen state] of
     Just x  -> x
     Nothing -> NothingCommand
