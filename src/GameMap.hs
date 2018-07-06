@@ -1,4 +1,5 @@
-module GameMap (mapFold,
+module GameMap (rowAtIndex,
+                mapFold,
                 removeAt,
                 mapFoldIndexed,
                 adjustAt,
@@ -69,6 +70,9 @@ findLeftOf (x', y') towerMap' =
 definedAt :: (Int, Int) -> TowerMap -> Bool
 definedAt (x', y') towerMap' =
   M.member y' towerMap' && M.member x' (towerMap' M.! y')
+
+rowAtIndex :: Int -> TowerMap -> Maybe Row
+rowAtIndex = M.lookup
 
 removeIfEmpty :: Int -> TowerMap -> TowerMap
 removeIfEmpty y' towerMap' =

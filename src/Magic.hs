@@ -2,10 +2,10 @@ module Magic
   where
 
 height :: Int
-height = 8
+height = 2
 
 width :: Int
-width = 16
+width = 4
 
 energyPerTurn :: Int
 energyPerTurn = 5
