@@ -212,12 +212,12 @@ accCell (CellStateContainer x' y' _ buildings' missiles') row@(_, _, _, _, myMis
 accBuilding :: Int -> Int -> ScratchBuilding -> RowAccumulator -> RowAccumulator
 accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (row, b, queue, d, e, f) =
   let building' = (Building int wctl bt)
-  in if ctl == -1
+  in if ctl < 0
      then (M.insert (fromIntegral x') building' row, b, queue,                                      d, e, f)
      else (row,                                      b, PQ.insert (ctl, (x', y'), building') queue, d, e, f)
 accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, row, c, queue, e, f) =
   let building' = (Building int wctl bt)
-  in if ctl == -1
+  in if ctl < 0
      then (a, M.insert (fromIntegral x') building' row, c, queue,                                      e, f)
      else (a, row,                                      c, PQ.insert (ctl, (x', y'), building') queue, e, f)
 
