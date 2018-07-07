@@ -62,8 +62,14 @@ normaliseHitsTakenAfterTime = (/ (2.0 * (fromIntegral height)))
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime (GameState me' oponent') =
   normaliseHitsTakenAfterTime $
-  sum $
-  zipWith matchDefenseToAttack (attackAndDefensePerRow me') (attackAndDefensePerRow oponent')
+  foldr (accDamageAndDefense myTowerMap oponentsTowerMap) 0 [0..height]
+  where
+    myTowerMap       = towerMap me'
+    oponentsTowerMap = towerMap oponent'
+
+accDamageAndDefense :: TowerMap -> TowerMap -> Int -> Float -> Float
+accDamageAndDefense myTowerMap oponentsTowerMap y' acc =
+  acc + matchDefenseToAttack (healthAndDamageOfRow y' myTowerMap) (healthAndDamageOfRow y' oponentsTowerMap)
 
 matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
 matchDefenseToAttack (myAttackPerTurn, myDefense) (oponentsAttackPerTurn, oponentsDefense) =
