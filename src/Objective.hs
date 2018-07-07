@@ -16,6 +16,8 @@ import Player
 import Magic
 import BuildingsUnderConstruction
 
+import qualified Data.List as L
+
 data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
           deriving (Show)
@@ -62,13 +64,13 @@ normaliseHitsTakenAfterTime = (/ (2.0 * (fromIntegral height)))
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime (GameState me' oponent') =
   normaliseHitsTakenAfterTime $
-  foldr (accDamageAndDefense myTowerMap oponentsTowerMap) 0 [0..height]
+  L.foldl' (accDamageAndDefense myTowerMap oponentsTowerMap) 0 [0..height]
   where
     myTowerMap       = towerMap me'
     oponentsTowerMap = towerMap oponent'
 
-accDamageAndDefense :: TowerMap -> TowerMap -> Int -> Float -> Float
-accDamageAndDefense myTowerMap oponentsTowerMap y' acc =
+accDamageAndDefense :: TowerMap -> TowerMap -> Float -> Int -> Float
+accDamageAndDefense myTowerMap oponentsTowerMap acc y' =
   acc + matchDefenseToAttack (healthAndDamageOfRow y' myTowerMap) (healthAndDamageOfRow y' oponentsTowerMap)
 
 matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
