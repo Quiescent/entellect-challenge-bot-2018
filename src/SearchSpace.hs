@@ -22,12 +22,9 @@ import qualified Data.List as L
 availableMoves :: ((Int, Int) -> Bool) -> Player -> [Command]
 availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
                                                  constructionQueue = constructionQueue' }) = do
-  (x, y) <- filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
-  if not $ definedAt (x, y) towerMap'
-    then do
-      buildingType' <- buildingsWhichICanAfford
-      return $ Build x y buildingType'
-  else return $ Deconstruct x y
+  (x, y)        <- filter (not . (flip definedAt) towerMap') $ filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
+  buildingType' <- buildingsWhichICanAfford
+  return $ Build x y buildingType'
   where
     constructionSites        = buildingConstructionSites constructionQueue'
     buildingsWhichICanAfford = map snd $ filter ((<= energy') . fst) prices
