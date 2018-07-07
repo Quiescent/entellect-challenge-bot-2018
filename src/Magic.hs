@@ -1,6 +1,9 @@
 module Magic
   where
 
+startingHealth :: Int
+startingHealth = 100
+
 height :: Int
 height = 2
 
