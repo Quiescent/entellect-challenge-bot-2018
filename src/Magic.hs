@@ -5,10 +5,10 @@ startingHealth :: Int
 startingHealth = 100
 
 height :: Int
-height = 2
+height = 8
 
 width :: Int
-width = 4
+width = 16
 
 energyPerTurn :: Int
 energyPerTurn = 5
