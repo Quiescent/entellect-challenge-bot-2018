@@ -116,7 +116,7 @@ zipCDF xs =
     summed     = (reverse . scanl1 (+) . map fst) sorted
     sorted     = L.sortOn fst adjusted
     adjusted   = map (\ (boardScore, x) -> (minValue + boardScore, x)) xs
-    minValue   = minimum $ map fst xs
+    minValue   = abs $ minimum $ map fst xs
 
 eliteChoices :: Int
 eliteChoices = 3
