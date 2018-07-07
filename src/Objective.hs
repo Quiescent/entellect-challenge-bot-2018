@@ -4,7 +4,6 @@ module Objective (myBoardScore, Move(..))
   where
 
 import Interpretor (GameState(..),
-                    Missile(..),
                     Command(..),
                     Building(..),
                     BuildingType(..),
@@ -65,16 +64,12 @@ oneIfZero x = x
 
 attackAndDefensePerRow :: Player -> [(Float, Float)]
 attackAndDefensePerRow player =
-  map (damageAndDefenseInRow  missiles towerMap') [0..width]
-  where
-    towerMap' = towerMap player
-    missiles  = ownedMissiles player
+  map (damageAndDefenseInRow (towerMap player)) [0..width]
 
-damageAndDefenseInRow :: [Missile] -> TowerMap -> Int -> (Float, Float)
-damageAndDefenseInRow missiles towerMap' y' =
+damageAndDefenseInRow :: TowerMap -> Int -> (Float, Float)
+damageAndDefenseInRow towerMap' y' =
   (damageOfBuildings, healthOfBuildings)
   where
-    -- existingMissileDamage                  = missilesInRowDamage y' missiles
     (healthOfBuildings, damageOfBuildings) = healthAndDamageOfRow y' towerMap'
 
 healthAndDamageOfRow :: Int -> TowerMap -> (Float, Float)
@@ -131,13 +126,3 @@ turnsToNextTowerByTurnByMultiplier player =
     totalEnergyPerTurn =
       (+ energyPerTurn) $
       mapFold (\ row acc -> acc + rowsEnergyPerTurn row) 0 (towerMap player)
-
-missilesInRowDamage :: Int -> [Missile] -> Float
-missilesInRowDamage y' =
-  foldr (accMissilesDamage y') 0
-
-accMissilesDamage :: Int -> Missile -> Float -> Float
-accMissilesDamage row (Missile _ y') acc =
-  if y' == row
-  then acc + (fromIntegral missileDamage)
-  else acc
