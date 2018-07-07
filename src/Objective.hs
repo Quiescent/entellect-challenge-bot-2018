@@ -15,6 +15,7 @@ import GameMap
 import Row
 import Player
 import Magic
+import BuildingsUnderConstruction
 
 data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
@@ -22,11 +23,21 @@ data Move = Move { myMove       :: Command,
 
 myBoardScore :: (GameState, a) -> (Float, (GameState, a))
 myBoardScore withMove@(state, _) =
-  (hitsSubtractTakenAfterTime state +
+  (hitsSubtractTakenAfterTime withPlacedBuildings +
    hitsDealtToOponent state -
    hitsTakenByMe state -
-   turnsToNextTowerByTurnByMultiplier (me state),
+   turnsToNextTowerByTurnByMultiplier meWithPlacedBuildings,
     withMove)
+  where
+    withPlacedBuildings         = (GameState meWithPlacedBuildings oponentWithPlacedBuildings)
+    meWithPlacedBuildings       = (me      state) { towerMap = myWithPlacedBuildings }
+    oponentWithPlacedBuildings  = (oponent state) { towerMap = oponentsWithPlacedBuildings }
+    myConstructionQueue         = constructionQueue $ me state
+    myTowerMap                  = towerMap $ me      state
+    myWithPlacedBuildings       = foldrConstruction placeBuilding myTowerMap myConstructionQueue
+    oponentsConstructionQueue   = constructionQueue $ oponent state
+    oponentsTowerMap            = towerMap $ oponent state
+    oponentsWithPlacedBuildings = foldrConstruction placeBuilding oponentsTowerMap oponentsConstructionQueue
 
 hitsMultiplier :: Float
 hitsMultiplier = 10
@@ -37,7 +48,6 @@ hitsDealtToOponent = (*hitsMultiplier) . fromIntegral . hitsTaken . oponentsPlay
 hitsTakenByMe :: GameState -> Float
 hitsTakenByMe = (*hitsMultiplier) . fromIntegral . hitsTaken . myPlayer
 
--- TODO take into account damage dealt to buildings as part of the heuristic at a significant amount less than damage to player
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime (GameState me' oponent') =
   sum $ zipWith matchDefenseToAttack (attackAndDefensePerRow me') (attackAndDefensePerRow oponent')

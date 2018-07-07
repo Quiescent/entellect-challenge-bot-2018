@@ -13,20 +13,25 @@ import Cell
 import GameState
 import Towers
 import Objective
+import BuildingsUnderConstruction
 
 import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
+import Debug.Trace
+
 availableMoves :: ((Int, Int) -> Bool) -> Player -> [Command]
-availableMoves constrainCellsTo player@(Player { towerMap = towerMap' }) = do
-  (x, y) <- filter constrainCellsTo allCells
+availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
+                                                 constructionQueue = constructionQueue' }) = do
+  (x, y) <- filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
   if not $ definedAt (x, y) towerMap'
     then do
       buildingType' <- buildingsWhichICanAfford
       return $ Build x y buildingType'
   else return $ Deconstruct x y
   where
+    constructionSites        = buildingConstructionSites constructionQueue'
     buildingsWhichICanAfford = map snd $ filter ((<= energy') . fst) prices
     energy'                  = energy player
     prices                   = towerPrices
@@ -54,6 +59,7 @@ maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
 -- TODO Time box this
+-- TODO we recompute the objective on the last step
 searchDeeper :: RandomGen g => g -> Int -> [(GameState, Move)] -> (Command, g)
 searchDeeper g 0         states = (myMove $ snd $ snd $ maximumByScore $ map (myBoardScore) states, g)
 searchDeeper g remaining states =
@@ -85,6 +91,7 @@ advanceState g gameState =
     g'')
   where
     chooseCandidates g''' = chooseN splay g''' . zipCDF
+    -- TODO split random gen here and feed one to each for better compilation
     (myStates, g')        =
       chooseCandidates g $
       map (myBoardScore) $
@@ -108,12 +115,13 @@ oponentsMoves state = do
   oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
   return $ (updateOponentsMove oponentsMove' state, oponentsMove')
 
-zipCDF :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
+zipCDF :: Show a => [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 zipCDF xs =
-  zipWith ( \ x (_, y) -> (x, y)) normalised sorted
+  zipWith ( \ x (_, y) -> (x, y)) normalised (head descending : descending)
   where
+    descending = reverse sorted
     normalised = map (/ (head summed)) summed
-    summed     = (reverse . scanl1 (+) . map fst) sorted
+    summed     = (reverse . scanl (+) 0 . map fst) sorted
     sorted     = L.sortOn fst adjusted
     adjusted   = map (\ (boardScore, x) -> (minValue + boardScore, x)) xs
     minValue   = abs $ minimum $ map fst xs
@@ -129,7 +137,7 @@ chooseN n g xs =
     floatingMax            = fromIntegral max'
     normalise              = (/ floatingMax) . fromIntegral . abs
     elite                  = (map snd $ take eliteChoices xs)
-    (randomChoices, g''')  = foldr choose ([], g) [1..(n - eliteChoices)]
+    (randomChoices, g''')  = foldr choose ([], g) [1..(n - eliteChoices - 1)]
     choose _ (choices, g') =
       let (value, g'') = next g'
           normalised   = normalise value

@@ -10,8 +10,8 @@ import Test.Hspec
 
 spec :: Spec
 spec =
-  addBuildingSpec                     >>
-  tickConstructionSpec                >>
+  addBuildingSpec      >>
+  tickConstructionSpec >>
   placeBuildingSpec
 
 anAttackTower :: Building
