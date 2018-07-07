@@ -67,7 +67,7 @@ breadthToSearch :: Int
 breadthToSearch = 5
 
 depthToSearch :: Int
-depthToSearch = 1
+depthToSearch = 10
 
 advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
 advanceState g gameState =
