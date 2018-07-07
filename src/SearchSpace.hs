@@ -51,7 +51,6 @@ maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
 -- TODO Time box this
--- TODO we recompute the objective on the last step
 searchDeeper :: RandomGen g => g -> Int -> [(Float, (GameState, Move))] -> (Command, g)
 searchDeeper g 0         states = (myMove $ snd $ snd $ maximumByScore states, g)
 searchDeeper g remaining states =
