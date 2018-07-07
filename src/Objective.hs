@@ -46,8 +46,12 @@ matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
 matchDefenseToAttack (myAttackPerTurn, myDefense) (oponentsAttackPerTurn, oponentsDefense) =
   turnsUntilHeBreaksThrough - turnsUntilIBreakThrough
   where
-    turnsUntilIBreakThrough   = oponentsDefense / myAttackPerTurn
-    turnsUntilHeBreaksThrough = myDefense / oponentsAttackPerTurn
+    turnsUntilIBreakThrough   = oponentsDefense / (oneIfZero myAttackPerTurn)
+    turnsUntilHeBreaksThrough = myDefense / (oneIfZero oponentsAttackPerTurn)
+
+oneIfZero :: Float -> Float
+oneIfZero 0 = 1
+oneIfZero x = x
 
 attackAndDefensePerRow :: Player -> [(Float, Float)]
 attackAndDefensePerRow player =
