@@ -25,8 +25,9 @@ myBoardScore withMove@(state, _) =
   (hitsSubtractTakenAfterTime withPlacedBuildings +
    hitsDealtToOponent state -
    hitsTakenByMe state -
-   turnsToNextTowerByTurnByMultiplier meWithPlacedBuildings,
-    withMove)
+   turnsToNextTowerByTurn meWithPlacedBuildings +
+   resultBonus state,
+     withMove)
   where
     withPlacedBuildings         = (GameState meWithPlacedBuildings oponentWithPlacedBuildings)
     meWithPlacedBuildings       = (me      state) { towerMap = myWithPlacedBuildings }
@@ -38,25 +39,45 @@ myBoardScore withMove@(state, _) =
     oponentsTowerMap            = towerMap $ oponent state
     oponentsWithPlacedBuildings = foldrConstruction placeBuilding oponentsTowerMap oponentsConstructionQueue
 
-hitsMultiplier :: Float
-hitsMultiplier = 10
+resultBonus :: GameState -> Float
+resultBonus state =
+  if myHealth state       == 0 then -1 else 0 +
+  if oponentsHealth state == 0 then 1  else 0
+
+maxHitsTaken :: Float
+maxHitsTaken = (fromIntegral startingHealth) / (fromIntegral missileDamage)
+
+normaliseByHitsTaken :: Float -> Float
+normaliseByHitsTaken = (/ maxHitsTaken)
 
 hitsDealtToOponent :: GameState -> Float
-hitsDealtToOponent = (*hitsMultiplier) . fromIntegral . hitsTaken . oponentsPlayer
+hitsDealtToOponent = normaliseByHitsTaken . fromIntegral . hitsTaken . oponentsPlayer
 
 hitsTakenByMe :: GameState -> Float
-hitsTakenByMe = (*hitsMultiplier) . fromIntegral . hitsTaken . myPlayer
+hitsTakenByMe = normaliseByHitsTaken . fromIntegral . hitsTaken . myPlayer
+
+normaliseHitsTakenAfterTime :: Float -> Float
+normaliseHitsTakenAfterTime = (/ (2.0 * (fromIntegral height)))
 
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime (GameState me' oponent') =
-  sum $ zipWith matchDefenseToAttack (attackAndDefensePerRow me') (attackAndDefensePerRow oponent')
+  normaliseHitsTakenAfterTime $
+  sum $
+  zipWith matchDefenseToAttack (attackAndDefensePerRow me') (attackAndDefensePerRow oponent')
 
 matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
 matchDefenseToAttack (myAttackPerTurn, myDefense) (oponentsAttackPerTurn, oponentsDefense) =
-  turnsUntilHeBreaksThrough - turnsUntilIBreakThrough
+  oponentBreakThroughScore + myBreakThroughScore
   where
-    turnsUntilIBreakThrough   = oponentsDefense / (oneIfZero myAttackPerTurn)
-    turnsUntilHeBreaksThrough = myDefense / (oneIfZero oponentsAttackPerTurn)
+    myBreakThroughScore      = 1.0 - (normaliseByMaxTurns $ oponentsDefense / (oneIfZero myAttackPerTurn))
+    oponentBreakThroughScore = normaliseByMaxTurns        $ myDefense       / (oneIfZero oponentsAttackPerTurn)
+
+normaliseByMaxTurns :: Float -> Float
+normaliseByMaxTurns = (/ maxTurnsToBreakThrough)
+
+maxTurnsToBreakThrough :: Float
+maxTurnsToBreakThrough =
+  (fromIntegral (width * defenseTowerHealth)) / (fromIntegral missileDamage)
 
 oneIfZero :: Float -> Float
 oneIfZero 0 = 1
@@ -64,7 +85,7 @@ oneIfZero x = x
 
 attackAndDefensePerRow :: Player -> [(Float, Float)]
 attackAndDefensePerRow player =
-  map (damageAndDefenseInRow (towerMap player)) [0..width]
+  map (damageAndDefenseInRow (towerMap player)) [0..height]
 
 damageAndDefenseInRow :: TowerMap -> Int -> (Float, Float)
 damageAndDefenseInRow towerMap' y' =
@@ -95,9 +116,6 @@ damagePerTurn (Building { buildingType = buildingType' }) =
   then 0
   else missileDamagePerTurn
 
-turnsToTowerMultiplier :: Float
-turnsToTowerMultiplier = 1
-
 zeroIfBelow :: Int -> Int
 zeroIfBelow x = if x < 0 then 0 else x
 
@@ -113,9 +131,12 @@ divWithZero x y =
   then infinity
   else div x y
 
-turnsToNextTowerByTurnByMultiplier :: Player -> Float
-turnsToNextTowerByTurnByMultiplier player =
-  (turnsToTowerMultiplier *) $
+maxTurnsToNextTower :: Float
+maxTurnsToNextTower = (fromIntegral mostExpensiveTower) / (fromIntegral energyPerTurn)
+
+turnsToNextTowerByTurn :: Player -> Float
+turnsToNextTowerByTurn player =
+  (/ maxTurnsToNextTower) $
   fromIntegral $
   divWithZero (zeroIfBelow mostExpensiveTower) totalEnergyPerTurn
   where

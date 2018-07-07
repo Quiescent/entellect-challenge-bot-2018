@@ -19,8 +19,6 @@ import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
-import Debug.Trace
-
 availableMoves :: ((Int, Int) -> Bool) -> Player -> [Command]
 availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
                                                  constructionQueue = constructionQueue' }) = do
