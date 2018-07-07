@@ -41,8 +41,9 @@ oponentsAvailableMoves state =
 
 search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
-  Just (searchDeeper g' depthToSearch initialChoices)
+  Just (searchDeeper g'' depthToSearch selected)
   where
+    (selected, g'')      = chooseN breadthToSearch g' $ zipCDF $ map (myBoardScore) initialChoices
     (initialChoices, g') = advanceState g state
 
 maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
@@ -64,19 +65,19 @@ searchDeeper g remaining states =
     (selected, g'')  = chooseN breadthToSearch g' $ zipCDF $ map (myBoardScore) nextStates
 
 breadthToSearch :: Int
-breadthToSearch = 12
+breadthToSearch = 5
 
 depthToSearch :: Int
-depthToSearch = 30
+depthToSearch = 1
 
 splay :: Int
-splay = 5
+splay = 18
 
 advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
 advanceState g gameState =
   (do
-      myCommand       <- map snd myStates
-      oponentsCommand <- map snd oponentsStates
+      myCommand       <- myAvailableMoves       gameState
+      oponentsCommand <- oponentsAvailableMoves gameState
       return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
               Move myCommand oponentsCommand),
     g'')

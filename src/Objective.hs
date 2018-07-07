@@ -67,9 +67,10 @@ hitsSubtractTakenAfterTime (GameState me' oponent') =
 
 matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
 matchDefenseToAttack (myAttackPerTurn, myDefense) (oponentsAttackPerTurn, oponentsDefense) =
-  oponentBreakThroughScore + myBreakThroughScore
+  (oponentBreakThroughScore / oponentsAttackingMod) + myBreakThroughScore
   where
     myBreakThroughScore      = 1.0 - (normaliseByMaxTurns $ oponentsDefense / (oneIfZero myAttackPerTurn))
+    oponentsAttackingMod     = if oponentsAttackPerTurn == 0 then maxTurnsToBreakThrough else 1
     oponentBreakThroughScore = normaliseByMaxTurns        $ myDefense       / (oneIfZero oponentsAttackPerTurn)
 
 normaliseByMaxTurns :: Float -> Float
