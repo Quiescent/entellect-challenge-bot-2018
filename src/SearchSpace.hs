@@ -100,7 +100,7 @@ invertScores = map ( \ (score', x) -> (1.0 / score', x))
 
 myMoves :: GameState -> [(GameState, Command)]
 myMoves state = do
-  myMove'       <- doNothingIfNoMoves $ myAvailableMoves state
+  myMove' <- doNothingIfNoMoves $ myAvailableMoves state
   return $ (updateMyMove myMove' state, myMove')
 
 oponentsMoves :: GameState -> [(GameState, Command)]
