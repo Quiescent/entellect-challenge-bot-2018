@@ -39,10 +39,6 @@ oponentsAvailableMoves :: GameState -> [Command]
 oponentsAvailableMoves state =
   NothingCommand : (availableMoves cellBelongsToOponent $ oponent state)
 
-doNothingIfNoMoves :: [Command] -> [Command]
-doNothingIfNoMoves [] = [NothingCommand]
-doNothingIfNoMoves xs = xs
-
 search :: RandomGen g => g -> GameState -> Maybe (Command, g)
 search g state =
   Just (searchDeeper g' depthToSearch initialChoices)
@@ -102,12 +98,12 @@ invertScores = map ( \ (score', x) -> (1.0 / score', x))
 
 myMoves :: GameState -> [(GameState, Command)]
 myMoves state = do
-  myMove' <- doNothingIfNoMoves $ myAvailableMoves state
+  myMove' <- myAvailableMoves state
   return $ (updateMyMove myMove' state, myMove')
 
 oponentsMoves :: GameState -> [(GameState, Command)]
 oponentsMoves state = do
-  oponentsMove' <- doNothingIfNoMoves $ oponentsAvailableMoves state
+  oponentsMove' <- oponentsAvailableMoves state
   return $ (updateOponentsMove oponentsMove' state, oponentsMove')
 
 zipCDF :: Show a => [(Float, (GameState, a))] -> [(Float, (GameState, a))]
