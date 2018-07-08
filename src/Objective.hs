@@ -90,29 +90,14 @@ oneIfZero :: Float -> Float
 oneIfZero 0 = 1
 oneIfZero x = x
 
-attackAndDefensePerRow :: Player -> [(Float, Float)]
-attackAndDefensePerRow player =
-  map (damageAndDefenseInRow (towerMap player)) [0..height]
-
-damageAndDefenseInRow :: TowerMap -> Int -> (Float, Float)
-damageAndDefenseInRow towerMap' y' =
-  (damageOfBuildings, healthOfBuildings)
-  where
-    (healthOfBuildings, damageOfBuildings) = healthAndDamageOfRow y' towerMap'
-
 healthAndDamageOfRow :: Int -> TowerMap -> (Float, Float)
 healthAndDamageOfRow y' towerMap' =
-  (foldlRowBuildings' (fromIntegral . integrity) row,
-   foldlRowBuildings' damagePerTurn              row)
+  mapFold (accBuilding (fromIntegral . integrity) damagePerTurn) (0, 0) row
   where
     row = rowAt y' towerMap'
 
-foldlRowBuildings' :: (Building -> Float) -> TowerMap -> Float
-foldlRowBuildings' f xs =
-  mapFold (accBuilding f) 0 xs
-
-accBuilding :: (Building -> Float) -> Building -> Float -> Float
-accBuilding f building' summed = f building' + summed
+accBuilding :: (Building -> Float) -> (Building -> Float) -> Building -> (Float, Float) -> (Float, Float)
+accBuilding f g building' (a, b) = (f building' + a, g building' + b)
 
 missileDamagePerTurn :: Float
 missileDamagePerTurn = (fromIntegral missileDamage) / (fromIntegral attackTowerCooldownTime)
