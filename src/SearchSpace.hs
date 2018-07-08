@@ -14,16 +14,18 @@ import GameState
 import Towers
 import Objective
 import BuildingsUnderConstruction
+import Coord
 
 import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
-availableMoves :: ((Int, Int) -> Bool) -> Player -> [Command]
+availableMoves :: (Coord -> Bool) -> Player -> [Command]
 availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
                                                  constructionQueue = constructionQueue' }) = do
-  (x, y)        <- filter (not . (flip definedAt) towerMap') $ filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
+  coord         <- filter (not . (flip definedAt) towerMap') $ filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
   buildingType' <- buildingsWhichICanAfford
+  let (x, y) = fromCoord coord
   return $ Build x y buildingType'
   where
     constructionSites        = buildingConstructionSites constructionQueue'

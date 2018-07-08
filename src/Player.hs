@@ -27,6 +27,7 @@ import Interpretor (GameState(..),
                     Missile(..),
                     Building(..),
                     TowerMap)
+import Coord
 import GameMap
 import BuildingsUnderConstruction
 import Magic
@@ -63,12 +64,13 @@ incrementHitsTaken :: Player -> Player
 incrementHitsTaken player'@(Player { hitsTaken = hitsTaken' }) =
   player' { hitsTaken = hitsTaken' + 1 }
 
-resetCooldownAndCreateMissile :: Player -> Int -> Int -> Int -> Player
-resetCooldownAndCreateMissile owner' x' y' cooldown =
+resetCooldownAndCreateMissile :: Player -> Coord -> Int -> Player
+resetCooldownAndCreateMissile owner' coord cooldown =
   addMissile (Missile x' y') ownerWithResetBuilding
   where
+    (x', y')               = fromCoord coord
     ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
-    mapWithResetBuilding = adjustAt (resetBuildingCooldown cooldown) (x', y') (towerMap owner')
+    mapWithResetBuilding   = adjustAt (resetBuildingCooldown cooldown) coord (towerMap owner')
 
 resetBuildingCooldown :: Int -> Building -> Building
 resetBuildingCooldown cooldown building' =
@@ -115,9 +117,9 @@ energyTower :: Building
 energyTower = (Building energyTowerHealth 0 ENERGY)
 
 updateMove :: Command -> Player -> Player
-updateMove (Deconstruct x' y')         = deconstructAt x' y'
+updateMove (Deconstruct x' y')         = deconstructAt $ toCoord x' y'
 updateMove NothingCommand              = id
-updateMove (Build x' y' buildingType') = build timeLeft x' y' building'
+updateMove (Build x' y' buildingType') = build timeLeft (toCoord x' y') building'
   where
     timeLeft  = constructionTime buildingType'
     building' = buildingFromStats buildingType'
@@ -128,20 +130,20 @@ constructionTime ENERGY  = energyTowerConstructionTime
 constructionTime DEFENSE = defenseTowerConstructionTime
 constructionTime ATTACK  = attackTowerConstructionTime
 
-build :: Int -> Int -> Int -> Building -> Player -> Player
-build timeLeft x' y' building' player@(Player { constructionQueue = constructionQueue',
+build :: Int -> Coord -> Building -> Player -> Player
+build timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
                                                 towerMap          = towerMap' }) =
-  if definedAt (x', y') towerMap'
+  if definedAt coord towerMap'
   then player
   else player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue' }
   where
-    buildingUnderConstruction = createBuildingUnderConstruction timeLeft x' y' building'
+    buildingUnderConstruction = createBuildingUnderConstruction timeLeft coord building'
 
-deconstructAt :: Int -> Int -> Player -> Player
-deconstructAt x' y' = mapMap (removeAt (x', y'))
+deconstructAt :: Coord -> Player -> Player
+deconstructAt coord = mapMap (removeAt coord)
 
-decrementCooldown :: Int -> Int -> Player -> Player
-decrementCooldown x' y' = mapMap (adjustAt decrementCooldownOfBuilding (x', y'))
+decrementCooldown :: Coord -> Player -> Player
+decrementCooldown coord = mapMap (adjustAt decrementCooldownOfBuilding coord)
 
 decrementCooldownOfBuilding :: Building -> Building
 decrementCooldownOfBuilding building@(Building { weaponCooldownTimeLeft = cooldown }) =

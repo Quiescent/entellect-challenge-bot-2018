@@ -8,10 +8,8 @@ import Interpretor (GameState(..),
                     Building(..),
                     BuildingType(..),
                     Player(..),
-                    Row,
                     TowerMap)
 import GameMap
-import Row
 import Player
 import Magic
 import BuildingsUnderConstruction
@@ -104,17 +102,17 @@ damageAndDefenseInRow towerMap' y' =
 
 healthAndDamageOfRow :: Int -> TowerMap -> (Float, Float)
 healthAndDamageOfRow y' towerMap' =
-  case rowAtIndex y' towerMap' of
-    Just aRow -> (foldlRowBuildings' (fromIntegral . integrity) aRow,
-                  foldlRowBuildings' damagePerTurn              aRow)
-    _         -> (0, 0)
+  (foldlRowBuildings' (fromIntegral . integrity) row,
+   foldlRowBuildings' damagePerTurn              row)
+  where
+    row = rowAt y' towerMap'
 
-foldlRowBuildings' :: (Building -> Float) -> Row -> Float
+foldlRowBuildings' :: (Building -> Float) -> TowerMap -> Float
 foldlRowBuildings' f xs =
-  rowFoldl' (accBuilding f) 0 xs
+  mapFold (accBuilding f) 0 xs
 
-accBuilding :: (Building -> Float) -> Float -> Building -> Float
-accBuilding f !summed building' = f building' + summed
+accBuilding :: (Building -> Float) -> Building -> Float -> Float
+accBuilding f building' summed = f building' + summed
 
 missileDamagePerTurn :: Float
 missileDamagePerTurn = (fromIntegral missileDamage) / (fromIntegral attackTowerCooldownTime)
@@ -125,34 +123,32 @@ damagePerTurn (Building { buildingType = buildingType' }) =
   then 0
   else missileDamagePerTurn
 
-zeroIfBelow :: Int -> Int
+zeroIfBelow :: Float -> Float
 zeroIfBelow x = if x < 0 then 0 else x
 
-mostExpensiveTower :: Int
-mostExpensiveTower = maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
+mostExpensiveTower :: Float
+mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
 
-infinity :: Int
+infinity :: Float
 infinity = 1000000
 
-divWithZero :: Int -> Int -> Int
+divWithZero :: Float -> Float -> Float
 divWithZero x y =
   if y == 0
   then infinity
-  else div x y
+  else x / y
 
 maxTurnsToNextTower :: Float
-maxTurnsToNextTower = (fromIntegral mostExpensiveTower) / (fromIntegral energyPerTurn)
+maxTurnsToNextTower = mostExpensiveTower / (fromIntegral energyPerTurn)
 
 turnsToNextTowerByTurn :: Player -> Float
-turnsToNextTowerByTurn player =
-  (/ maxTurnsToNextTower) $
-  fromIntegral $
-  divWithZero (zeroIfBelow mostExpensiveTower) totalEnergyPerTurn
-  where
-    rowsEnergyPerTurn  = rowFoldl' ( \ acc (Building _ _ buildingType') ->
-                                       if buildingType' == ENERGY
-                                       then acc + energyTowerEnergyGeneratedPerTurn
-                                       else acc) 0
-    totalEnergyPerTurn =
-      (+ energyPerTurn) $
-      mapFold (\ row acc -> acc + rowsEnergyPerTurn row) 0 (towerMap player)
+turnsToNextTowerByTurn =
+  (/ maxTurnsToNextTower) .
+  (+ (fromIntegral energyPerTurn)) .
+  divWithZero (zeroIfBelow mostExpensiveTower) .
+  mapFold accEnergy 0 .
+  towerMap
+
+accEnergy :: Building -> Float -> Float
+accEnergy (Building _ _ ENERGY) acc = acc + (fromIntegral energyTowerEnergyGeneratedPerTurn)
+accEnergy _                     acc = acc

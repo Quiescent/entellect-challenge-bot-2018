@@ -4,15 +4,16 @@ module Cell (allCells,
   where
 
 import Magic
+import Coord
 
-allCells :: [(Int, Int)]
-allCells = [(x, y) | x <- [0..width - 1], y <- [0..height - 1]]
+allCells :: [Coord]
+allCells = [toCoord x y | x <- [0..width - 1], y <- [0..height - 1]]
 
 halfway :: Int
-halfway = div width 2
+halfway = toCoord (div width 2) 0
 
-cellBelongsToMe :: (Int, Int) -> Bool
-cellBelongsToMe (x', _) = x' < halfway
+cellBelongsToMe :: Coord -> Bool
+cellBelongsToMe = (< halfway)
 
-cellBelongsToOponent :: (Int, Int) -> Bool
-cellBelongsToOponent (x', _) = x' >= halfway
+cellBelongsToOponent :: Coord -> Bool
+cellBelongsToOponent = (>= halfway)

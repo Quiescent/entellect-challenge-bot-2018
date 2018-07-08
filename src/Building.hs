@@ -4,9 +4,7 @@ module Building (tickBuildings, damageBuilding)
 import Interpretor (GameState(..),
                     Building(..),
                     BuildingType(..),
-                    Player(..),
-                    Row)
-import Row
+                    Player(..))
 import Player
 import GameMap
 import GameState
@@ -22,22 +20,18 @@ generateMissilesAndUpdateCooldown =
 
 generateAndUpdateCooldownMissilesOnPlayer ::  Player -> Player
 generateAndUpdateCooldownMissilesOnPlayer player =
-  mapFoldIndexed (generateMissilesAndUpdateCooldownOnRow) player playerMap
+  mapFoldIndexed generateMissilesAndUpdateCooldownForBuilding player playerMap
   where
     playerMap = towerMap player
 
-generateMissilesAndUpdateCooldownOnRow :: Int -> Row -> Player -> Player
-generateMissilesAndUpdateCooldownOnRow y' row player =
-  rowFoldrIndexed (generateMissilesAndUpdateCooldownForBuilding y') player row
-
-generateMissilesAndUpdateCooldownForBuilding :: Int -> Int -> Building -> Player -> Player
-generateMissilesAndUpdateCooldownForBuilding y' x'
+generateMissilesAndUpdateCooldownForBuilding :: Int -> Building -> Player -> Player
+generateMissilesAndUpdateCooldownForBuilding coord
                                              (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
                                                          buildingType           = buildingType' })
                                              player =
   if (buildingType' /= ATTACK || weaponCooldownTimeLeft' /= 0)
-  then decrementCooldown x' y' player
-  else resetCooldownAndCreateMissile player x' y' attackTowerCooldownTime
+  then decrementCooldown coord player
+  else resetCooldownAndCreateMissile player coord attackTowerCooldownTime
 
 updateBuildingProgress :: GameState -> GameState
 updateBuildingProgress =

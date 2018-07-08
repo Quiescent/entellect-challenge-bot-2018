@@ -2,7 +2,6 @@ module Engine (tickEngine)
   where
 
 import Interpretor (GameState(..),
-                    Row,
                     BuildingType(..),
                     Player(..),
                     Building(..),
@@ -12,8 +11,8 @@ import Missile
 import Building
 import GameMap
 import GameState
-import Row
 import Magic
+import Coord
 
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
@@ -32,11 +31,7 @@ incrementEnergy :: Player -> Player
 incrementEnergy player' =
   updateEnergy (energyPerTurn + energyFromTowers) player'
   where
-    energyFromTowers = mapFold (incrementEnergyRow) 0 $ towerMap player'
-
-incrementEnergyRow :: Row -> Int -> Int
-incrementEnergyRow row' energyAcc =
-  rowFoldr (incrementEnergyAcc) energyAcc row'
+    energyFromTowers = mapFold incrementEnergyAcc 0 $ towerMap player'
 
 incrementEnergyAcc :: Building -> Int -> Int
 incrementEnergyAcc (Building { buildingType = buildingType' }) energyAcc =
@@ -69,7 +64,7 @@ collideMissile collisionDetector missile@(Missile { xDisp = x', yDisp = y' }) (d
     HitBuilding xHit building' ->
       let damaged = damageBuilding missileDamage building'
       in case damaged of
-           Nothing         -> (didntCollide, updateTowerMap (removeAt  (xHit, y')            towerMap') player')
-           Just building'' -> (didntCollide, updateTowerMap (replaceAt building'' (xHit, y') towerMap') player')
+           Nothing         -> (didntCollide, updateTowerMap (removeAt             (toCoord xHit y') towerMap') player')
+           Just building'' -> (didntCollide, updateTowerMap (replaceAt building'' (toCoord xHit y') towerMap') player')
   where
     towerMap' = towerMap player'

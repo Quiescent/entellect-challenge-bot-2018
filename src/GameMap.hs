@@ -1,4 +1,4 @@
-module GameMap (rowAtIndex,
+module GameMap (rowAt,
                 mapFold,
                 removeAt,
                 mapFoldIndexed,
@@ -13,28 +13,32 @@ module GameMap (rowAtIndex,
   where
 
 import Interpretor (Building(..),
-                    Row,
                     TowerMap)
 import Magic
 import qualified Data.IntMap as M
 
-mapFold :: (Row -> a -> a) -> a -> TowerMap -> a
+import Coord
+
+rowAt :: Int -> TowerMap -> TowerMap
+rowAt y' towerMap' =
+  fst $ M.split (toCoord width y') beforeTrimmed
+  where
+    beforeTrimmed = snd $ M.split ((toCoord 0 y') - 1) towerMap'
+
+mapFold :: (Building -> a -> a) -> a -> TowerMap -> a
 mapFold = M.foldr
 
-mapFoldIndexed :: (Int -> Row -> a -> a) -> a -> TowerMap -> a
+mapFoldIndexed :: (Int -> Building -> a -> a) -> a -> TowerMap -> a
 mapFoldIndexed = M.foldrWithKey
 
-adjustAt :: (Building -> Building) -> (Int, Int) -> TowerMap -> TowerMap
-adjustAt f (x, y) = M.adjust (M.adjust f x) y
+adjustAt :: (Building -> Building) -> Coord -> TowerMap -> TowerMap
+adjustAt = M.adjust
 
-replaceAt :: Building -> (Int, Int) -> TowerMap -> TowerMap
+replaceAt :: Building -> Coord -> TowerMap -> TowerMap
 replaceAt building' = adjustAt (\ _ -> building')
 
-addAt :: (Int, Int) -> Building -> TowerMap -> TowerMap
-addAt (x, y) building' towerMap' =
-  if not $ M.member y towerMap'
-  then M.insert y (M.fromList [(x, building')]) towerMap'
-  else M.adjust (M.insert x building') y towerMap'
+addAt :: Coord -> Building -> TowerMap -> TowerMap
+addAt coord building' towerMap' = M.insert coord building' towerMap'
 
 type CollisionDetector = (Int, Int) -> TowerMap -> Collision
 
@@ -45,7 +49,7 @@ data Collision = HitNothing
 
 findRightOf :: CollisionDetector
 findRightOf (x', y') towerMap' =
-  case towerMap' M.!? y' >>= (M.lookupLE (x' + 2)) of
+  case M.lookupLE (toCoord (x' + 2) y') towerMap' of
     Nothing                ->
       if x' <= -1
       then HitPlayer
@@ -53,11 +57,13 @@ findRightOf (x', y') towerMap' =
     Just (xHit, building') ->
       if xHit > x'
       then HitBuilding xHit building'
-      else HitNothing
+      else if x' <= -1
+           then HitPlayer
+           else HitNothing
 
 findLeftOf :: CollisionDetector
 findLeftOf (x', y') towerMap' =
-  case towerMap' M.!? y' >>= (M.lookupGE (x' - 2)) of
+  case M.lookupGE (toCoord (x' - 2) y') towerMap' of
     Nothing                ->
       if x' >= width
       then HitPlayer
@@ -65,23 +71,12 @@ findLeftOf (x', y') towerMap' =
     Just (xHit, building') ->
       if xHit < x'
       then HitBuilding xHit building'
-      else HitNothing
+      else if x' >= width
+           then HitPlayer
+           else HitNothing
 
-definedAt :: (Int, Int) -> TowerMap -> Bool
-definedAt (x', y') towerMap' =
-  M.member y' towerMap' && M.member x' (towerMap' M.! y')
+definedAt :: Coord -> TowerMap -> Bool
+definedAt coord towerMap' = M.member coord towerMap'
 
-rowAtIndex :: Int -> TowerMap -> Maybe Row
-rowAtIndex = M.lookup
-
-removeIfEmpty :: Int -> TowerMap -> TowerMap
-removeIfEmpty y' towerMap' =
-  case M.lookup y' towerMap' of
-    Just x ->
-      if x == M.empty
-      then M.delete y' towerMap'
-      else towerMap'
-    _      -> towerMap'
-
-removeAt :: (Int, Int) -> TowerMap -> TowerMap
-removeAt (x', y') = removeIfEmpty y' . M.adjust (M.delete x') y'
+removeAt :: Coord -> TowerMap -> TowerMap
+removeAt = M.delete

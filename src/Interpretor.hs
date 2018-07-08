@@ -11,7 +11,6 @@ module Interpretor (repl,
                     Command(..),
                     GameState(..),
                     TowerMap,
-                    Row,
                     BuildingUnderConstruction,
                     ConstructionQueue)
   where
@@ -21,11 +20,13 @@ import Data.Aeson (decode,
                    parseJSON,
                    withObject,
                    (.:))
-import qualified Data.PQueue.Min as PQ
-import qualified Data.Vector as V
+import qualified Data.PQueue.Min      as PQ
+import qualified Data.Vector          as V
 import qualified Data.ByteString.Lazy as B
-import qualified Data.IntMap as M
+import qualified Data.IntMap          as M
 import GHC.Generics (Generic(..))
+
+import Coord
 
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
@@ -77,7 +78,7 @@ instance FromJSON ScratchBuilding where
                     <*> v .: "playerType"
 
 -- TODO consider making this data to showup errors in how I've done this
-type BuildingUnderConstruction = (Int, (Int, Int), Building)
+type BuildingUnderConstruction = (Int, Coord, Building)
 
 instance {-# OVERLAPPING #-} Ord BuildingUnderConstruction where 
   (<) (x, _, _) (y, _, _) = x < y
@@ -165,9 +166,7 @@ extractPlayers players =
      then (firstPlayer,  secondPlayer)
      else (secondPlayer, firstPlayer)
 
-type Row = M.IntMap Building
-
-type TowerMap = M.IntMap Row
+type TowerMap = M.IntMap Building
 
 data CellStateContainer = CellStateContainer Int
                                              Int
@@ -193,33 +192,33 @@ type DenseMap = V.Vector DenseRow
 
 type DenseRow = V.Vector CellStateContainer
 
-type RowAccumulator = (Row, Row, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
+type RowAccumulator = (TowerMap, TowerMap, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
 
 makeRow :: DenseRow -> RowAccumulator
 makeRow =
   V.foldr accCell (M.empty, M.empty, PQ.empty, PQ.empty, [], [])
 
 accCell :: CellStateContainer -> RowAccumulator -> RowAccumulator
-accCell (CellStateContainer x' y' _ buildings' missiles') row@(_, _, _, _, myMissiles, oponentsMissiles) =
-  (myRow', oponentsRow', myQueue', oponentsQueue', myMissiles ++ myMissiles', oponentsMissiles ++ oponentsMissiles')
+accCell (CellStateContainer x' y' _ buildings' missiles') acc@(myTowerMap, oponentsTowerMap, _, _, myMissiles, oponentsMissiles) =
+  (myTowerMap', oponentsTowerMap', myQueue', oponentsQueue', myMissiles ++ myMissiles', oponentsMissiles ++ oponentsMissiles')
   where
     (myMissiles', oponentsMissiles') = splitMissiles missiles'
-    (myRow', oponentsRow', myQueue', oponentsQueue', _, _) =
+    (myTowerMap', oponentsTowerMap', myQueue', oponentsQueue', _, _) =
       if not $ V.null buildings'
-      then accBuilding x' y' (buildings' V.! 0) row
-      else row
+      then accBuilding x' y' (buildings' V.! 0) acc
+      else acc
 
 accBuilding :: Int -> Int -> ScratchBuilding -> RowAccumulator -> RowAccumulator
-accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (row, b, queue, d, e, f) =
+accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (myTowerMap, b, queue, d, e, f) =
   let building' = (Building int wctl bt)
   in if ctl < 0
-     then (M.insert (fromIntegral x') building' row, b, queue,                                      d, e, f)
-     else (row,                                      b, PQ.insert (ctl, (x', y'), building') queue, d, e, f)
-accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, row, c, queue, e, f) =
+     then (M.insert (toCoord x' y') building' myTowerMap, b, queue,                                            d, e, f)
+     else (myTowerMap,                                    b, PQ.insert (ctl, toCoord x' y', building') queue, d, e, f)
+accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, oponentsTowerMap, c, queue, e, f) =
   let building' = (Building int wctl bt)
   in if ctl < 0
-     then (a, M.insert (fromIntegral x') building' row, c, queue,                                      e, f)
-     else (a, row,                                      c, PQ.insert (ctl, (x', y'), building') queue, e, f)
+     then (a, M.insert (toCoord x' y') building' oponentsTowerMap, c, queue,                                            e, f)
+     else (a, oponentsTowerMap,                                    c, PQ.insert (ctl, toCoord x' y', building') queue, e, f)
 
 splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
 splitMissiles =
@@ -240,19 +239,13 @@ convertDenseMap denseMap =
 
 accRow :: Int -> DenseRow -> MapAccumulator -> MapAccumulator
 accRow y' row (myMap, oponentsMap, myQueue, oponentsQueue, myMissiles, oponentsMissiles) =
-  let (myRow, oponentsRow, myQueue', oponentsQueue', myMissiles', oponentsMissiles') = makeRow row
-  in  (insertIfNotEmpty y' myRow       myMap,
-       insertIfNotEmpty y' oponentsRow oponentsMap,
+  let (myMapWithRow, oponentsMapWithRow, myQueue', oponentsQueue', myMissiles', oponentsMissiles') = makeRow row
+  in  (myMapWithRow,
+       oponentsMapWithRow,
        PQ.union myQueue' myQueue,
        PQ.union oponentsQueue' oponentsQueue,
        myMissiles ++ myMissiles',
        oponentsMissiles ++ oponentsMissiles')
-
-insertIfNotEmpty :: Int -> Row -> TowerMap -> TowerMap
-insertIfNotEmpty key row towerMap' =
-  if M.null row
-  then towerMap'
-  else M.insert key row towerMap'
 
 stateFilePath :: String
 stateFilePath = "state.json"

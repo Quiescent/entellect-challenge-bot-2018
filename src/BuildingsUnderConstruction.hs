@@ -12,19 +12,20 @@ import Interpretor (BuildingUnderConstruction,
                     Building(..),
                     TowerMap)
 import GameMap
+import Coord
 
 import qualified Data.PQueue.Min as PQ
 import qualified Data.Set        as S
 
-createBuildingUnderConstruction :: Int -> Int -> Int -> Building -> BuildingUnderConstruction
-createBuildingUnderConstruction timeLeft x' y' building' = (timeLeft, (x', y'), building')
+createBuildingUnderConstruction :: Int -> Coord -> Building -> BuildingUnderConstruction
+createBuildingUnderConstruction timeLeft coord building' = (timeLeft, coord, building')
 
 -- TODO consider BitSet
-type ConstructionSite = (Int, Int)
-type ConstructionSites = S.Set (Int, Int)
+type ConstructionSite = Coord
+type ConstructionSites = S.Set Coord
 
 buildingConstructionSites :: ConstructionQueue -> ConstructionSites
-buildingConstructionSites = S.fromList . map (\ (_, x, _) -> x) . PQ.toList
+buildingConstructionSites = S.fromList . map (\ (_, coord, _) -> coord) . PQ.toList
 
 containsSite :: ConstructionSite -> ConstructionSites -> Bool
 containsSite = S.member

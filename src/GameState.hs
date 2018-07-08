@@ -27,6 +27,7 @@ import Interpretor (GameState(..),
 import Player
 import GameMap
 import BuildingsUnderConstruction
+import Coord
 
 type MapPlayer = (Player -> Player) -> GameState -> GameState
 
@@ -47,9 +48,9 @@ mapOponentsPlayer f state@(GameState { oponent = oponent' }) =
 runCommand :: Player -> Command -> Player
 runCommand player NothingCommand              = player
 runCommand player (Deconstruct x' y')         =
-  mapMap (removeAt (x', y')) player
+  mapMap (removeAt (toCoord x' y')) player
 runCommand player (Build x' y' buildingType') = 
-  player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' x' y' building')
+  player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' (toCoord x' y') building')
                                            (constructionQueue player) }
   where
     constructionTime' = constructionTime  buildingType'
@@ -83,8 +84,8 @@ updateMyMove command = mapMyPlayer (updateMove command)
 updateOponentsMove :: Command -> GameState -> GameState
 updateOponentsMove command = mapOponentsPlayer (updateMove command)
 
-buildForMe :: Int -> Int -> Int -> Building -> GameState -> GameState
-buildForMe timeLeft x' y' building' = mapMyPlayer (build timeLeft x' y' building')
+buildForMe :: Int -> Coord -> Building -> GameState -> GameState
+buildForMe timeLeft coord building' = mapMyPlayer (build timeLeft coord building')
 
-buildForOponent :: Int -> Int -> Int -> Building -> GameState -> GameState
-buildForOponent timeLeft x' y' building' = mapMyPlayer (build timeLeft x' y' building')
+buildForOponent :: Int -> Coord -> Building -> GameState -> GameState
+buildForOponent timeLeft coord building' = mapMyPlayer (build timeLeft coord building')
