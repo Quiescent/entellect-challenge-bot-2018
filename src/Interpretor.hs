@@ -283,5 +283,5 @@ instance Show Command where
 printCommand :: Command ->  IO ()
 printCommand = writeFile commandFilePath . show
 
-repl :: (GameState -> Command) -> IO ()
-repl evaluate = fmap evaluate readGameState >>= printCommand
+repl :: (GameState -> IO Command) -> IO ()
+repl evaluate = readGameState >>= evaluate >>= printCommand

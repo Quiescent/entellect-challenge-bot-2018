@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module SearchSpace (advanceState,
                     myAvailableMoves,
                     oponentsAvailableMoves,
@@ -16,6 +18,8 @@ import Objective
 import BuildingsUnderConstruction
 import Coord
 
+import Data.Int
+import System.Clock
 import Data.Maybe
 import System.Random
 import qualified Data.List as L
@@ -41,9 +45,15 @@ oponentsAvailableMoves :: GameState -> [Command]
 oponentsAvailableMoves state =
   NothingCommand : (availableMoves cellBelongsToOponent $ oponent state)
 
-search :: RandomGen g => g -> GameState -> Maybe (Command, g)
-search g state =
-  Just (searchDeeper g'' depthToSearch selected)
+maxSearchTime :: Int64
+maxSearchTime = 150000000
+
+search :: RandomGen g => g -> GameState -> IO Command
+search g state = do
+  let clock = Realtime
+  startTime <- getTime clock
+  result    <- searchDeeper clock (nsec startTime) g'' selected
+  return $ fst $ result
   where
     (selected, g'')      = chooseN breadthToSearch g' $ zipCDF $ map (myBoardScore) initialChoices
     (initialChoices, g') = advanceState g state
@@ -52,11 +62,12 @@ maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
 maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
--- TODO Time box this
-searchDeeper :: RandomGen g => g -> Int -> [(Float, (GameState, Move))] -> (Command, g)
-searchDeeper g 0         states = (myMove $ snd $ snd $ maximumByScore states, g)
-searchDeeper g remaining states =
-  searchDeeper g'' (remaining - 1) selected
+searchDeeper :: RandomGen g => Clock -> Int64 -> g -> [(Float, (GameState, Move))] -> IO (Command, g)
+searchDeeper clock startTime g !states = do
+  currentTime <- getTime clock
+  if nsec currentTime - startTime > maxSearchTime
+    then return (myMove $ snd $ snd $ maximumByScore states, g)
+    else searchDeeper clock startTime g'' selected
   where
     (nextStates, g') = foldr ( \ (_, (state, move)) (statesAcc, g''') ->
                                  let (newStates, g'''') = advanceState g''' state
@@ -67,9 +78,6 @@ searchDeeper g remaining states =
 
 breadthToSearch :: Int
 breadthToSearch = 5
-
-depthToSearch :: Int
-depthToSearch = 10
 
 advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
 advanceState g gameState =

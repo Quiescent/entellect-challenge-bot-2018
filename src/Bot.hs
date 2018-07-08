@@ -7,8 +7,5 @@ import SearchSpace
 import System.Random
 import Control.Monad
 
-decide :: RandomGen g => g -> GameState -> Command
-decide gen state =
-  case msum [fmap fst $ search gen state] of
-    Just x  -> x
-    Nothing -> NothingCommand
+decide :: RandomGen g => g -> GameState -> IO Command
+decide = search
