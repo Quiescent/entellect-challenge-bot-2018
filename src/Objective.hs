@@ -13,8 +13,10 @@ import GameMap
 import Player
 import Magic
 import BuildingsUnderConstruction
+import Coord
 
-import qualified Data.List as L
+import qualified Data.List   as L
+import qualified Data.IntMap as M
 
 data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
@@ -92,12 +94,23 @@ oneIfZero x = x
 
 healthAndDamageOfRow :: Int -> TowerMap -> (Float, Float)
 healthAndDamageOfRow y' towerMap' =
-  mapFold (accBuilding (fromIntegral . integrity) damagePerTurn) (0, 0) row
-  where
-    row = rowAt y' towerMap'
+  mapFoldRow y' (fromIntegral . integrity) damagePerTurn towerMap'
 
-accBuilding :: (Building -> Float) -> (Building -> Float) -> Building -> (Float, Float) -> (Float, Float)
-accBuilding f g building' (a, b) = (f building' + a, g building' + b)
+mapFoldRow :: Int -> (Building -> Float) -> (Building -> Float) -> TowerMap -> (Float, Float)
+mapFoldRow y' f g towerMap' =
+  iterMapFoldRow rowStart (0, 0)
+  where
+    iterMapFoldRow coord (a, b)
+      | coord > rowEnd = (a, b)
+      | otherwise      =
+        case M.lookupGE coord towerMap' of
+          Just (coord', building') ->
+            if coord' > rowEnd
+            then (a, b)
+            else iterMapFoldRow (coord' + 1) (f building' + a, g building' + b)
+          Nothing -> (a, b)
+    rowStart = toCoord 0           y'
+    rowEnd   = toCoord (width - 1) y'
 
 missileDamagePerTurn :: Float
 missileDamagePerTurn = (fromIntegral missileDamage) / (fromIntegral attackTowerCooldownTime)
