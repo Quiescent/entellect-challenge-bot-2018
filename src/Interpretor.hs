@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 
@@ -25,6 +26,7 @@ import qualified Data.Vector          as V
 import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap          as M
 import GHC.Generics (Generic(..))
+import Control.DeepSeq
 
 import Coord
 
@@ -36,6 +38,8 @@ instance FromJSON PlayerType
 data Missile = Missile { xDisp  :: Int,
                          yDisp  :: Int }
   deriving (Show, Generic, Eq)
+
+instance NFData Missile
 
 data ScratchMissile = ScratchMissile Int
                                      Int
@@ -55,12 +59,15 @@ instance FromJSON ScratchMissile where
 data BuildingType = DEFENSE | ATTACK | ENERGY | TESLA
   deriving (Show, Generic, Eq)
 
+instance NFData BuildingType
 instance FromJSON BuildingType
 
 data Building = Building { integrity              :: Int,
                            weaponCooldownTimeLeft :: Int,
                            buildingType           :: BuildingType }
-              deriving (Show, Eq)
+              deriving (Show, Eq, Generic)
+
+instance NFData Building
 
 data ScratchBuilding = ScratchBuilding Int
                                        Int
@@ -97,7 +104,9 @@ data Player = Player { energy            :: Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
                        ownedMissiles     :: [Missile] }
-              deriving (Show, Eq)
+              deriving (Show, Eq, Generic)
+
+instance NFData Player
 
 data ScratchPlayer = ScratchPlayer { playerType :: PlayerType,
                                      energy'    :: Int,
@@ -121,7 +130,9 @@ instance FromJSON ScratchPlayer where
 
 data GameState = GameState { me       :: Player,
                              oponent  :: Player }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance NFData GameState
 
 instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
@@ -267,7 +278,9 @@ data Command = Build { xCoord   :: Int,
                | Deconstruct { xCoord :: Int,
                                yCoord :: Int }
                | NothingCommand
-             deriving (Eq)
+             deriving (Eq, Generic)
+
+instance NFData Command
 
 instance Show Command where
   show (Build x' y' building') =

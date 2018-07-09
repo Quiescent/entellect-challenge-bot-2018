@@ -24,6 +24,8 @@ import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
+import Control.Parallel.Strategies (withStrategy, parList, parMap, parListChunk, rdeepseq)
+
 availableMoves :: (Coord -> Bool) -> Player -> [Command]
 availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
                                                  constructionQueue = constructionQueue' }) = do
@@ -46,47 +48,50 @@ oponentsAvailableMoves state =
   NothingCommand : (availableMoves cellBelongsToOponent $ oponent state)
 
 maxSearchTime :: Int64
-maxSearchTime = 150000000
+maxSearchTime = 1500000000
+
+timeToNanos :: TimeSpec -> Int64
+timeToNanos time = ((sec time) * 1000000000) + nsec time
 
 search :: RandomGen g => g -> GameState -> IO Command
 search g state = do
   let clock = Realtime
   startTime <- getTime clock
-  result    <- searchDeeper clock (nsec startTime) g'' selected
+  result    <- searchDeeper clock (timeToNanos startTime) g' selected
   return $ fst $ result
   where
-    (selected, g'')      = chooseN breadthToSearch g' $ zipCDF $ map (myBoardScore) initialChoices
-    (initialChoices, g') = advanceState g state
+    (selected, g') = chooseN breadthToSearch g $ zipCDF $ map (myBoardScore) initialChoices
+    initialChoices = advanceState state
 
 maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
 maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
 searchDeeper :: RandomGen g => Clock -> Int64 -> g -> [(Float, (GameState, Move))] -> IO (Command, g)
-searchDeeper clock startTime g !states = do
+searchDeeper clock startTime g states = do
   currentTime <- getTime clock
-  if nsec currentTime - startTime > maxSearchTime
+  putStrLn "Tick"
+  if timeToNanos currentTime - startTime > maxSearchTime
     then return (myMove $ snd $ snd $ maximumByScore states, g)
-    else searchDeeper clock startTime g'' selected
+    else selected `seq` searchDeeper clock startTime g' selected
   where
-    (nextStates, g') = foldr ( \ (_, (state, move)) (statesAcc, g''') ->
-                                 let (newStates, g'''') = advanceState g''' state
-                                 in  (map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc, g''''))
-                             ([], g)
-                             states
-    (selected, g'')  = chooseN breadthToSearch g' $ zipCDF $ map (myBoardScore) nextStates
+    nextStates = foldr ( \ (_, (state, move)) statesAcc ->
+                           let newStates = advanceState state
+                           in  map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc)
+                 []
+                 states
+    scored          = withStrategy ((parListChunk 100) rdeepseq) $ map myBoardScore nextStates
+    (selected, g')  = chooseN breadthToSearch g $ zipCDF $ scored
 
 breadthToSearch :: Int
 breadthToSearch = 5
 
-advanceState :: RandomGen g => g -> GameState -> ([(GameState, Move)], g)
-advanceState g gameState =
-  (do
-      myCommand       <- myAvailableMoves       gameState
-      oponentsCommand <- oponentsAvailableMoves gameState
-      return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
-              Move myCommand oponentsCommand),
-    g)
+advanceState :: GameState -> [(GameState, Move)]
+advanceState gameState = do
+  myCommand       <- myAvailableMoves       gameState
+  oponentsCommand <- oponentsAvailableMoves gameState
+  return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
+           Move myCommand oponentsCommand)
 
 zipCDF :: Show a => [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 zipCDF xs =

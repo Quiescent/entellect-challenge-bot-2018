@@ -66,9 +66,8 @@ packages:
 # compiler-check: newer-minor
 
 extra-deps:
-- containers-0.6.0.1
+- containers-0.5.11.0
 - th-abstraction-0.2.7.0
 - hspec-2.5.3
 - hspec-core-2.5.3
 - hspec-discover-2.5.3
-
