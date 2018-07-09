@@ -135,20 +135,19 @@ mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, 
 infinity :: Float
 infinity = 1000000
 
-divWithZero :: Float -> Float -> Float
-divWithZero x y =
-  if y == 0
-  then infinity
-  else x / y
+asFractionOfMaximumTurns :: Float -> Float
+asFractionOfMaximumTurns myEnergyPerTurn =
+  if myEnergyPerTurn >= mostExpensiveTower
+  then 0
+  else (mostExpensiveTower / myEnergyPerTurn) / maxTurnsToNextTower
 
 maxTurnsToNextTower :: Float
 maxTurnsToNextTower = mostExpensiveTower / (fromIntegral energyPerTurn)
 
 turnsToNextTowerByTurn :: Player -> Float
 turnsToNextTowerByTurn =
-  (/ maxTurnsToNextTower) .
+  asFractionOfMaximumTurns .
   (+ (fromIntegral energyPerTurn)) .
-  divWithZero (zeroIfBelow mostExpensiveTower) .
   mapFold accEnergy 0 .
   towerMap
 
