@@ -76,7 +76,7 @@ findLeftOf (x', y') towerMap' =
            else HitNothing
 
 definedAt :: Coord -> TowerMap -> Bool
-definedAt coord towerMap' = M.member coord towerMap'
+definedAt = M.member
 
 removeAt :: Coord -> TowerMap -> TowerMap
 removeAt = M.delete
