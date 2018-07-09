@@ -23,7 +23,7 @@ import Control.DeepSeq
 
 data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
-          deriving (Show, Generic)
+          deriving (Show, Generic, Eq)
 
 instance NFData Move
 
@@ -48,8 +48,8 @@ myBoardScore withMove@(state, _) =
 
 resultBonus :: GameState -> Float
 resultBonus state =
-  if myHealth state       == 0 then -1 else 0 +
-  if oponentsHealth state == 0 then 1  else 0
+  if myHealth state       == 0 then -100 else 0 +
+  if oponentsHealth state == 0 then 100  else 0
 
 maxHitsTaken :: Float
 maxHitsTaken = (fromIntegral startingHealth) / (fromIntegral missileDamage)
