@@ -99,7 +99,7 @@ advanceState gameState = do
   return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
            Move myCommand oponentsCommand)
 
-zipCDF :: Show a => [(Float, (GameState, a))] -> [(Float, (GameState, a))]
+zipCDF :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
 zipCDF xs =
   zipWith ( \ x (_, y) -> (x, y)) normalised (head descending : descending)
   where
@@ -111,9 +111,9 @@ zipCDF xs =
     minValue   = abs $ minimum $ map fst xs
 
 eliteChoices :: Int
-eliteChoices = 3
+eliteChoices = 1
 
-chooseN :: RandomGen g => Int -> g -> [(Float, (GameState, a))] -> ([(Float, (GameState, a))], g)
+chooseN :: (RandomGen g) => Int -> g -> [(Float, (GameState, Move))] -> ([(Float, (GameState, Move))], g)
 chooseN n g xs =
   (elite ++ randomChoices, g''')
   where
@@ -121,7 +121,7 @@ chooseN n g xs =
     floatingMax            = fromIntegral max'
     normalise              = (/ floatingMax) . fromIntegral . abs
     elite                  = take eliteChoices xs
-    (randomChoices, g''')  = foldr choose ([], g) [1..(n - eliteChoices - 1)]
+    (randomChoices, g''')  = foldr choose ([], g) [1..(n - eliteChoices)]
     choose _ (choices, g') =
       let (value, g'') = next g'
           normalised   = normalise value
