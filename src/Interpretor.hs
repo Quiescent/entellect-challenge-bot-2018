@@ -205,12 +205,12 @@ type DenseRow = V.Vector CellStateContainer
 
 type RowAccumulator = (TowerMap, TowerMap, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
 
-makeRow :: DenseRow -> RowAccumulator
-makeRow =
-  V.foldr accCell (M.empty, M.empty, PQ.empty, PQ.empty, [], [])
+makeRow :: TowerMap -> TowerMap -> DenseRow -> RowAccumulator
+makeRow myTowerMap oponentsTowerMap =
+  V.foldr accCell (myTowerMap, oponentsTowerMap, PQ.empty, PQ.empty, [], [])
 
 accCell :: CellStateContainer -> RowAccumulator -> RowAccumulator
-accCell (CellStateContainer x' y' _ buildings' missiles') acc@(myTowerMap, oponentsTowerMap, _, _, myMissiles, oponentsMissiles) =
+accCell (CellStateContainer x' y' _ buildings' missiles') acc@(_, _, _, _, myMissiles, oponentsMissiles) =
   (myTowerMap', oponentsTowerMap', myQueue', oponentsQueue', myMissiles ++ myMissiles', oponentsMissiles ++ oponentsMissiles')
   where
     (myMissiles', oponentsMissiles') = splitMissiles missiles'
@@ -223,12 +223,12 @@ accBuilding :: Int -> Int -> ScratchBuilding -> RowAccumulator -> RowAccumulator
 accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (myTowerMap, b, queue, d, e, f) =
   let building' = (Building int wctl bt)
   in if ctl < 0
-     then (M.insert (toCoord x' y') building' myTowerMap, b, queue,                                            d, e, f)
+     then (M.insert (toCoord x' y') building' myTowerMap, b, queue,                                           d, e, f)
      else (myTowerMap,                                    b, PQ.insert (ctl, toCoord x' y', building') queue, d, e, f)
 accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, oponentsTowerMap, c, queue, e, f) =
   let building' = (Building int wctl bt)
   in if ctl < 0
-     then (a, M.insert (toCoord x' y') building' oponentsTowerMap, c, queue,                                            e, f)
+     then (a, M.insert (toCoord x' y') building' oponentsTowerMap, c, queue,                                           e, f)
      else (a, oponentsTowerMap,                                    c, PQ.insert (ctl, toCoord x' y', building') queue, e, f)
 
 splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
@@ -246,11 +246,11 @@ type MapAccumulator = (TowerMap, TowerMap, ConstructionQueue, ConstructionQueue,
 
 convertDenseMap :: DenseMap -> MapAccumulator
 convertDenseMap denseMap =
-  V.ifoldr accRow (M.empty, M.empty, PQ.empty, PQ.empty, [], []) denseMap
+  V.foldr accRow (M.empty, M.empty, PQ.empty, PQ.empty, [], []) denseMap
 
-accRow :: Int -> DenseRow -> MapAccumulator -> MapAccumulator
-accRow y' row (myMap, oponentsMap, myQueue, oponentsQueue, myMissiles, oponentsMissiles) =
-  let (myMapWithRow, oponentsMapWithRow, myQueue', oponentsQueue', myMissiles', oponentsMissiles') = makeRow row
+accRow :: DenseRow -> MapAccumulator -> MapAccumulator
+accRow row (myMap, oponentsMap, myQueue, oponentsQueue, myMissiles, oponentsMissiles) =
+  let (myMapWithRow, oponentsMapWithRow, myQueue', oponentsQueue', myMissiles', oponentsMissiles') = makeRow myMap oponentsMap row
   in  (myMapWithRow,
        oponentsMapWithRow,
        PQ.union myQueue' myQueue,
