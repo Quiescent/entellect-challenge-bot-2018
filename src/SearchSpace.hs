@@ -24,7 +24,8 @@ import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
-import Control.Parallel.Strategies (withStrategy, parList, parMap, parListChunk, rdeepseq)
+import Control.Parallel (par, pseq)
+import Control.DeepSeq (rnf)
 
 availableMoves :: (Coord -> Bool) -> Player -> [Command]
 availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
@@ -73,15 +74,20 @@ searchDeeper clock startTime g states = do
   putStrLn "Tick"
   if timeToNanos currentTime - startTime > maxSearchTime
     then return (myMove $ snd $ snd $ maximumByScore states, g)
-    else selected `seq` searchDeeper clock startTime g' selected
+    else selected `pseq` searchDeeper clock startTime g' selected
   where
-    nextStates = foldr ( \ (_, (state, move)) statesAcc ->
-                           let newStates = advanceState state
-                           in  map ( \ (state', _) ->  (state', move)) newStates ++ statesAcc)
-                 []
-                 states
-    scored          = withStrategy ((parListChunk 100) rdeepseq) $ map myBoardScore nextStates
-    (selected, g')  = chooseN breadthToSearch g $ zipCDF $ scored
+    nextStates     = scoreNextStates states
+    (selected, g') = chooseN breadthToSearch g $ zipCDF nextStates
+
+scoreNextStates :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
+scoreNextStates = foldr scoreNextStatesAcc []
+
+scoreNextStatesAcc :: (Float, (GameState, Move)) -> [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
+scoreNextStatesAcc (_, (state, move)) statesAcc =
+  let newStates = advanceState state
+      threaded  = map ( \ (state', _) ->  (state', move)) newStates
+      scored    = map myBoardScore threaded
+  in rnf scored `par` scored ++ statesAcc
 
 breadthToSearch :: Int
 breadthToSearch = 5
