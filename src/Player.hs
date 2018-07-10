@@ -26,11 +26,13 @@ import Interpretor (GameState(..),
                     Player(..),
                     Missile(..),
                     Building(..),
+                    BuildingType(..),
                     TowerMap)
 import Coord
 import GameMap
 import BuildingsUnderConstruction
 import Magic
+import Towers
 
 myPlayer :: GameState -> Player
 myPlayer = me
@@ -132,12 +134,14 @@ constructionTime ATTACK  = attackTowerConstructionTime
 
 build :: Int -> Coord -> Building -> Player -> Player
 build timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
-                                                towerMap          = towerMap' }) =
+                                                towerMap          = towerMap',
+                                                energy            = energy' }) =
   if definedAt coord towerMap'
   then player
-  else player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue' }
+  else player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue',
+                energy            = energy' - towerCost (buildingType building') }
   where
-    buildingUnderConstruction = createBuildingUnderConstruction timeLeft coord building'
+    buildingUnderConstruction = createBuildingUnderConstruction (timeLeft - 1) coord building'
 
 deconstructAt :: Coord -> Player -> Player
 deconstructAt coord = mapMap (removeAt coord)
@@ -146,5 +150,8 @@ decrementCooldown :: Coord -> Player -> Player
 decrementCooldown coord = mapMap (adjustAt decrementCooldownOfBuilding coord)
 
 decrementCooldownOfBuilding :: Building -> Building
-decrementCooldownOfBuilding building@(Building { weaponCooldownTimeLeft = cooldown }) =
-  building { weaponCooldownTimeLeft = cooldown - 1 }
+decrementCooldownOfBuilding building'@(Building { weaponCooldownTimeLeft = cooldown,
+                                                  buildingType           = buildingType' }) =
+  if buildingType' == ATTACK || buildingType' == TESLA
+  then building' { weaponCooldownTimeLeft = cooldown - 1 }
+  else building'

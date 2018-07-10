@@ -49,31 +49,33 @@ data Collision = HitNothing
 
 findRightOf :: CollisionDetector
 findRightOf (x', y') towerMap' =
-  case M.lookupLE (toCoord (x' + 2) y') towerMap' of
+  case M.lookupLT (toCoord (x' + 2) y') towerMap' of
     Nothing                ->
       if x' <= -1
       then HitPlayer
       else HitNothing
-    Just (xHit, building') ->
-      if xHit > x'
-      then HitBuilding xHit building'
-      else if x' <= -1
-           then HitPlayer
-           else HitNothing
+    Just (coord, building') ->
+      let (xHit, _) = fromCoord coord
+      in if xHit >= x'
+         then HitBuilding xHit building'
+         else if x' <= -1
+              then HitPlayer
+              else HitNothing
 
 findLeftOf :: CollisionDetector
 findLeftOf (x', y') towerMap' =
-  case M.lookupGE (toCoord (x' - 2) y') towerMap' of
+  case M.lookupGT (toCoord (x' - 2) y') towerMap' of
     Nothing                ->
       if x' >= width
       then HitPlayer
       else HitNothing
-    Just (xHit, building') ->
-      if xHit < x'
-      then HitBuilding xHit building'
-      else if x' >= width
-           then HitPlayer
-           else HitNothing
+    Just (coord, building') ->
+      let (xHit, _) = fromCoord coord
+      in if xHit <= x'
+         then HitBuilding xHit building'
+         else if x' >= width
+              then HitPlayer
+              else HitNothing
 
 definedAt :: Coord -> TowerMap -> Bool
 definedAt = M.member

@@ -11,8 +11,6 @@ module GameState (runCommand,
                   updateOponent,
                   incrementMyHitsTaken,
                   incrementOponentsHitsTaken,
-                  buildForMe,
-                  buildForOponent,
                   Command(..),
                   updateMyMove,
                   updateOponentsMove)
@@ -83,9 +81,3 @@ updateMyMove command = mapMyPlayer (updateMove command)
 
 updateOponentsMove :: Command -> GameState -> GameState
 updateOponentsMove command = mapOponentsPlayer (updateMove command)
-
-buildForMe :: Int -> Coord -> Building -> GameState -> GameState
-buildForMe timeLeft coord building' = mapMyPlayer (build timeLeft coord building')
-
-buildForOponent :: Int -> Coord -> Building -> GameState -> GameState
-buildForOponent timeLeft coord building' = mapMyPlayer (build timeLeft coord building')

@@ -25,6 +25,7 @@ import qualified Data.PQueue.Min      as PQ
 import qualified Data.Vector          as V
 import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap          as M
+import qualified Data.List            as L
 import GHC.Generics (Generic(..))
 import Control.DeepSeq
 
@@ -37,7 +38,7 @@ instance FromJSON PlayerType
 
 data Missile = Missile { xDisp  :: Int,
                          yDisp  :: Int }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Ord)
 
 instance NFData Missile
 
@@ -100,19 +101,27 @@ type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
 data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
-                       score             :: Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
                        ownedMissiles     :: [Missile] }
-              deriving (Show, Eq, Generic)
+              deriving (Show, Generic)
+
+instance Eq Player where
+  (==) (Player energyA healthA hitsTakenA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB hitsTakenB towerMapB constructionQueueB ownedMissilesB)
+    = energyA                                 == energyB &&
+      healthA                                 == healthB &&
+      hitsTakenA                              == hitsTakenB &&
+      towerMapA                               == towerMapB &&
+      (L.sort $ PQ.toList constructionQueueA) == (L.sort $ PQ.toList constructionQueueB) &&
+      L.sort ownedMissilesA                   == L.sort ownedMissilesB -- THIS IS WHERE THE PROBLEM IS!!!
 
 instance NFData Player
 
 data ScratchPlayer = ScratchPlayer { playerType :: PlayerType,
                                      energy'    :: Int,
                                      health'    :: Int,
-                                     hitsTaken' :: Int,
-                                     score'     :: Int }
+                                     hitsTaken' :: Int }
                    deriving (Show, Generic, Eq)
 
 instance FromJSON ScratchPlayer where
@@ -121,12 +130,10 @@ instance FromJSON ScratchPlayer where
     energy''    <- v .: "energy"
     health''    <- v .: "health"
     hitsTaken'' <- v .: "hitsTaken"
-    score''     <- v .: "score"
     return $ ScratchPlayer playerType'
                            energy''
                            health''
                            hitsTaken''
-                           score''
 
 data GameState = GameState { me       :: Player,
                              oponent  :: Player }
@@ -147,31 +154,27 @@ instance FromJSON GameState where
     let (((ScratchPlayer _
                          aEnergy
                          aHealth
-                         aHitsTaken
-                         aScore),
+                         aHitsTaken),
            (ScratchPlayer _
                           bEnergy
                           bHealth
-                          bHitsTaken
-                          bScore))) = extractPlayers players'
+                          bHitsTaken))) = extractPlayers players'
     return (GameState (Player aEnergy
                                aHealth
                                aHitsTaken
-                               aScore
                                myTowerMap
                                myQueue
                                myMissiles)
                        (Player bEnergy
                                bHealth
                                bHitsTaken
-                               bScore
                                oponentsTowerMap
                                oponentsQueue
                                oponentsMissiles))
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
-  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _ _)  = players V.! 0
+  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players V.! 0
       secondPlayer = players V.! 1
   in if firstPlayerType == A
      then (firstPlayer,  secondPlayer)
