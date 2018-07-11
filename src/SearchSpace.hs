@@ -49,7 +49,7 @@ oponentsAvailableMoves state =
   NothingCommand : (availableMoves cellBelongsToOponent $ oponent state)
 
 maxSearchTime :: Int64
-maxSearchTime = 1000000000
+maxSearchTime = 900000000
 
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time

@@ -32,7 +32,7 @@ myBoardScore withMove@(state, _) =
   (hitsSubtractTakenAfterTime withPlacedBuildings +
    hitsDealtToOponent state -
    hitsTakenByMe state -
-   turnsToNextTowerByTurn meWithPlacedBuildings +
+   (zeroIfEnoughEnergy meWithPlacedBuildings $ turnsToNextTowerByTurn meWithPlacedBuildings) +
    resultBonus state,
      withMove)
   where
@@ -126,14 +126,8 @@ damagePerTurn (Building { buildingType = buildingType' }) =
   then 0
   else missileDamagePerTurn
 
-zeroIfBelow :: Float -> Float
-zeroIfBelow x = if x < 0 then 0 else x
-
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
-
-infinity :: Float
-infinity = 1000000
 
 asFractionOfMaximumTurns :: Float -> Float
 asFractionOfMaximumTurns myEnergyPerTurn =
@@ -154,3 +148,9 @@ turnsToNextTowerByTurn =
 accEnergy :: Building -> Float -> Float
 accEnergy (Building _ _ ENERGY) acc = acc + (fromIntegral energyTowerEnergyGeneratedPerTurn)
 accEnergy _                     acc = acc
+
+zeroIfEnoughEnergy :: Player -> Float -> Float
+zeroIfEnoughEnergy (Player { energy = energy' }) x =
+  if (fromIntegral energy') >= mostExpensiveTower
+  then 0
+  else x
