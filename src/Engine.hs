@@ -46,8 +46,8 @@ collideMissiles state =
     state'           = collideMissiles' oponentsMissiles me'      findRightOf updateOponentsMissiles updateMe      state
     state''          = collideMissiles' myMissiles       oponent' findLeftOf  updateMyMissiles       updateOponent state'
     me'              = me      state
-    oponent'         = oponent state
-    oponentsMissiles = ownedMissiles oponent'
+    oponent'         = oponent state'
+    oponentsMissiles = ownedMissiles (oponent state)
     myMissiles       = ownedMissiles me'
 
 collideMissiles' :: [Missile] -> Player -> CollisionDetector -> UpdateMissiles -> UpdatePlayer -> GameState -> GameState

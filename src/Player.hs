@@ -97,8 +97,8 @@ updateTowerMap :: TowerMap -> Player -> Player
 updateTowerMap towerMap' player' = player' { towerMap = towerMap' }
 
 takeDamage :: Int -> Player -> Player
-takeDamage damage' player'@(Player { health = health' }) =
-  player' { health = health' - damage' }
+takeDamage damage' player'@(Player { health = health', hitsTaken = hitsTaken' }) =
+  player' { health = health' - damage', hitsTaken = hitsTaken' + 1 }
 
 buildingFromStats :: BuildingType -> Building
 buildingFromStats TESLA   = teslaTower

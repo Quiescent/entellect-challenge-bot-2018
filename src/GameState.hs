@@ -17,7 +17,6 @@ module GameState (runCommand,
   where
 
 import Interpretor (GameState(..),
-                    Building(..),
                     Missile(..),
                     Command(..),
                     Player(..),

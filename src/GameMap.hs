@@ -55,8 +55,8 @@ findRightOf (x', y') towerMap' =
       then HitPlayer
       else HitNothing
     Just (coord, building') ->
-      let (xHit, _) = fromCoord coord
-      in if xHit >= x'
+      let (xHit, yHit) = fromCoord coord
+      in if xHit >= x' && yHit == y'
          then HitBuilding xHit building'
          else if x' <= -1
               then HitPlayer
@@ -70,8 +70,8 @@ findLeftOf (x', y') towerMap' =
       then HitPlayer
       else HitNothing
     Just (coord, building') ->
-      let (xHit, _) = fromCoord coord
-      in if xHit <= x'
+      let (xHit, yHit) = fromCoord coord
+      in if xHit <= x' && yHit == y'
          then HitBuilding xHit building'
          else if x' >= width
               then HitPlayer
