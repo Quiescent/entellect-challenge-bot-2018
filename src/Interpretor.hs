@@ -58,7 +58,7 @@ instance FromJSON ScratchMissile where
                    <*> v.: "y"
 
 data BuildingType = DEFENSE | ATTACK | ENERGY | TESLA
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Ord)
 
 instance NFData BuildingType
 instance FromJSON BuildingType
@@ -66,7 +66,7 @@ instance FromJSON BuildingType
 data Building = Building { integrity              :: Int,
                            weaponCooldownTimeLeft :: Int,
                            buildingType           :: BuildingType }
-              deriving (Show, Eq, Generic)
+              deriving (Show, Eq, Generic, Ord)
 
 instance NFData Building
 
@@ -106,6 +106,13 @@ data Player = Player { energy            :: Int,
                        ownedMissiles     :: [Missile] }
               deriving (Show, Generic)
 
+-- Allows for built in sorting
+toOrderedBuildingUnderConstruction :: BuildingUnderConstruction -> (Int, Int, Coord, Building)
+toOrderedBuildingUnderConstruction (x, y, z) = (0, x, y, z)
+
+compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderConstruction -> Ordering
+compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
+
 instance Eq Player where
   (==) (Player energyA healthA hitsTakenA towerMapA constructionQueueA ownedMissilesA)
        (Player energyB healthB hitsTakenB towerMapB constructionQueueB ownedMissilesB)
@@ -113,8 +120,8 @@ instance Eq Player where
       healthA                                 == healthB &&
       hitsTakenA                              == hitsTakenB &&
       towerMapA                               == towerMapB &&
-      (L.sort $ PQ.toList constructionQueueA) == (L.sort $ PQ.toList constructionQueueB) &&
-      L.sort ownedMissilesA                   == L.sort ownedMissilesB -- THIS IS WHERE THE PROBLEM IS!!!
+      L.sort ownedMissilesA                   == L.sort ownedMissilesB &&
+      (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
 
 instance NFData Player
 
