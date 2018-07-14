@@ -13,3 +13,10 @@ bin/
 # Game files
 command.txt
 
+# Testing Files
+.dir-locals.el
+EntelectChallenge2018-exe.eventlog
+EntelectChallenge2018-exe.prof
+Test-Engine-exe.prof
+starter-pack
+working-binaries
