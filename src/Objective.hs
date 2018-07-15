@@ -10,7 +10,6 @@ import Interpretor (GameState(..),
                     BuildingType(..),
                     Player(..),
                     TowerMap)
-import GameMap
 import Player
 import Magic
 import BuildingsUnderConstruction
@@ -69,14 +68,11 @@ normaliseHitsTakenAfterTime = (/ (2.0 * (fromIntegral height)))
 hitsSubtractTakenAfterTime :: GameState -> Float
 hitsSubtractTakenAfterTime (GameState me' oponent') =
   normaliseHitsTakenAfterTime $
-  L.foldl' (accDamageAndDefense myTowerMap oponentsTowerMap) 0 [0..height]
-  where
-    myTowerMap       = towerMap me'
-    oponentsTowerMap = towerMap oponent'
+  L.foldl' (accDamageAndDefense me' oponent') 0 [0..height]
 
-accDamageAndDefense :: TowerMap -> TowerMap -> Float -> Int -> Float
-accDamageAndDefense myTowerMap oponentsTowerMap acc y' =
-  acc + matchDefenseToAttack (healthAndDamageOfRow y' myTowerMap) (healthAndDamageOfRow y' oponentsTowerMap)
+accDamageAndDefense :: Player -> Player -> Float -> Int -> Float
+accDamageAndDefense me' oponent' acc y' =
+  acc + matchDefenseToAttack (healthAndDamageOfRow y' me') (healthAndDamageOfRow y' oponent')
 
 matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
 matchDefenseToAttack (myAttackPerTurn, myDefense) (oponentsAttackPerTurn, oponentsDefense) =
@@ -97,34 +93,11 @@ oneIfZero :: Float -> Float
 oneIfZero 0 = 1
 oneIfZero x = x
 
-healthAndDamageOfRow :: Int -> TowerMap -> (Float, Float)
-healthAndDamageOfRow y' towerMap' =
-  mapFoldRow y' (fromIntegral . integrity) damagePerTurn towerMap'
-
-mapFoldRow :: Int -> (Building -> Float) -> (Building -> Float) -> TowerMap -> (Float, Float)
-mapFoldRow y' f g towerMap' =
-  iterMapFoldRow rowStart (0, 0)
-  where
-    iterMapFoldRow coord (a, b)
-      | coord > rowEnd = (a, b)
-      | otherwise      =
-        case M.lookupGE coord towerMap' of
-          Just (coord', building') ->
-            if coord' > rowEnd
-            then (a, b)
-            else iterMapFoldRow (coord' + 1) (f building' + a, g building' + b)
-          Nothing -> (a, b)
-    rowStart = toCoord 0           y'
-    rowEnd   = toCoord (width - 1) y'
-
-missileDamagePerTurn :: Float
-missileDamagePerTurn = (fromIntegral missileDamage) / (fromIntegral attackTowerCooldownTime)
-
-damagePerTurn :: Building -> Float
-damagePerTurn (Building { buildingType = buildingType' }) =
-  if buildingType' /= ATTACK
-  then 0
-  else missileDamagePerTurn
+healthAndDamageOfRow :: Int -> Player -> (Float, Float)
+healthAndDamageOfRow y' (Player { attackPerRow  = attackPerRow',
+                                  defensePerRow = defensePerRow' }) =
+  (fromIntegral $ M.findWithDefault 0 y' defensePerRow',
+   M.findWithDefault 0 y' attackPerRow')
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
@@ -142,12 +115,8 @@ turnsToNextTowerByTurn :: Player -> Float
 turnsToNextTowerByTurn =
   asFractionOfMaximumTurns .
   (+ (fromIntegral energyPerTurn)) .
-  mapFold accEnergy 0 .
-  towerMap
-
-accEnergy :: Building -> Float -> Float
-accEnergy (Building _ _ ENERGY) acc = acc + (fromIntegral energyTowerEnergyGeneratedPerTurn)
-accEnergy _                     acc = acc
+  fromIntegral .
+  energyGenPerTurn
 
 zeroIfEnoughEnergy :: Player -> Float -> Float
 zeroIfEnoughEnergy (Player { energy = energy' }) x =

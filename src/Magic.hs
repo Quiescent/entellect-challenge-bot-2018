@@ -62,10 +62,13 @@ teslaTowerDamagePerHit :: Int
 teslaTowerDamagePerHit = 20
 
 teslaTowerMaximumHitDamage :: Int
-teslaTowerMaximumHitDamage = teslaTowerDamagePerHit * (div width 2)
+teslaTowerMaximumHitDamage = teslaTowerDamagePerHit * teslaTowerRange
 
 teslaTowerConstructionTime :: Int
 teslaTowerConstructionTime = 10
+
+teslaTowerCooldownTime :: Int
+teslaTowerCooldownTime = 10
 
 teslaTowerEnergyPerAttack :: Int
 teslaTowerEnergyPerAttack = 100
