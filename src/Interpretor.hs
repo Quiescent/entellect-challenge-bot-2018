@@ -222,16 +222,16 @@ accRow = flip (V.foldr accCell)
 
 accCell :: CellStateContainer -> GameState -> GameState
 accCell (CellStateContainer x' y' _ buildings' missiles') =
-  accMissiles (probe ("Missiles on " ++ show x' ++ ", " ++ show y' ++ ": ") missiles') . accBuildings x' y' buildings'
-
-probe message x = trace (message ++ show x) x
+  accMissiles missiles' . accBuildings x' y' buildings'
 
 accMissiles :: V.Vector ScratchMissile -> GameState -> GameState
-accMissiles missiles gameState@(GameState me' oponent') =
-  gameState { me      = me'      { ownedMissiles = myMissiles },
-              oponent = oponent' { ownedMissiles = oponentsMissiles } }
+accMissiles missiles' gameState@(GameState me' oponent') =
+  gameState { me      = me'      { ownedMissiles = myExistingMissiles       ++ myMissiles },
+              oponent = oponent' { ownedMissiles = oponentsExistingMissiles ++ oponentsMissiles } }
   where
-    (myMissiles, oponentsMissiles) = probe "split: " (splitMissiles missiles)
+    myExistingMissiles             = ownedMissiles me'
+    oponentsExistingMissiles       = ownedMissiles oponent'
+    (myMissiles, oponentsMissiles) = (splitMissiles missiles')
 
 splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
 splitMissiles = V.foldr splitMissilesAcc ([], [])
