@@ -31,8 +31,6 @@ import Control.DeepSeq
 
 import Coord
 
-import Debug.Trace
-
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
 
@@ -103,6 +101,7 @@ type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
 data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
+                       energyGenPerTurn  :: Float,
                        attackPerRow      :: M.IntMap Int,
                        defensePerRow     :: M.IntMap Int,
                        towerMap          :: TowerMap,
@@ -118,11 +117,12 @@ compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderCon
 compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
 
 instance Eq Player where
-  (==) (Player energyA healthA hitsTakenA attackPerRowA defensePerRowA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB hitsTakenB attackPerRowB defensePerRowB towerMapB constructionQueueB ownedMissilesB)
+  (==) (Player energyA healthA hitsTakenA energyGenPerTurnA attackPerRowA defensePerRowA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB hitsTakenB energyGenPerTurnB attackPerRowB defensePerRowB towerMapB constructionQueueB ownedMissilesB)
     = energyA                                 == energyB &&
       healthA                                 == healthB &&
       hitsTakenA                              == hitsTakenB &&
+      energyGenPerTurnA                       == energyGenPerTurnB &&
       attackPerRowA                           == attackPerRowB &&
       defensePerRowA                          == defensePerRowB &&
       towerMapA                               == towerMapB &&
@@ -131,10 +131,7 @@ instance Eq Player where
 
 instance NFData Player
 
-data ScratchPlayer = ScratchPlayer { playerType :: PlayerType,
-                                     energy'    :: Int,
-                                     health'    :: Int,
-                                     hitsTaken' :: Int }
+data ScratchPlayer = ScratchPlayer PlayerType Int Int Int
                    deriving (Show, Generic, Eq)
 
 instance FromJSON ScratchPlayer where
@@ -209,7 +206,7 @@ type DenseMap = V.Vector DenseRow
 type DenseRow = V.Vector CellStateContainer
 
 emptyPlayer :: Player
-emptyPlayer = Player 0 0 0 M.empty M.empty M.empty PQ.empty []
+emptyPlayer = Player 0 0 0 0 M.empty M.empty M.empty PQ.empty []
 
 emptyGameState :: GameState
 emptyGameState = GameState emptyPlayer emptyPlayer
