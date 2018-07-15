@@ -24,6 +24,13 @@ import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
+import Control.Concurrent (tryTakeMVar,
+                           newEmptyMVar,
+                           putMVar,
+                           forkIO,
+                           threadDelay,
+                           MVar)
+
 import Control.Parallel (par, pseq)
 import Control.DeepSeq (rnf)
 
@@ -49,17 +56,34 @@ oponentsAvailableMoves state =
   NothingCommand : (availableMoves cellBelongsToOponent $ oponent state)
 
 maxSearchTime :: Int64
-maxSearchTime = 900000000
+maxSearchTime = 1800000000
 
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time
 
+delayTime :: Int
+delayTime = 10
+
 search :: RandomGen g => g -> GameState -> IO Command
 search g state = do
-  let clock = Realtime
-  startTime <- getTime clock
-  result    <- searchDeeper clock (timeToNanos startTime) g' selected
-  return $ fst $ result
+  let clock          = Realtime
+  startTime         <- getTime clock
+  let startTimeNanos = timeToNanos startTime
+  bestMove          <- newEmptyMVar
+  _ <- forkIO $ searchDeeper bestMove g' selected
+  let searchIter bestSoFar = do
+        bestMoveSoFar <- tryTakeMVar bestMove
+        timeNow       <- getTime clock
+        let newBest = if isJust bestMoveSoFar
+                      then fromJust bestMoveSoFar
+                      else bestSoFar
+        let timeSoFar  = timeToNanos timeNow - startTimeNanos
+        if timeSoFar < maxSearchTime
+          then do
+            threadDelay delayTime
+            searchIter newBest
+          else return newBest
+  searchIter undefined
   where
     (selected, g') = chooseN breadthToSearch g $ zipCDF $ map (myBoardScore) initialChoices
     initialChoices = advanceState state
@@ -68,14 +92,13 @@ maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
 maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
-searchDeeper :: RandomGen g => Clock -> Int64 -> g -> [(Float, (GameState, Move))] -> IO (Command, g)
-searchDeeper clock startTime g states = do
-  currentTime <- getTime clock
+searchDeeper :: RandomGen g => MVar Command -> g -> [(Float, (GameState, Move))] -> IO ()
+searchDeeper best g states = do
   putStrLn "Tick"
-  if timeToNanos currentTime - startTime > maxSearchTime
-    then return (myMove $ snd $ snd $ maximumByScore states, g)
-    else selected `pseq` searchDeeper clock startTime g' selected
+  putMVar best $ rnf bestMoveSoFar `seq` bestMoveSoFar
+  selected `pseq` searchDeeper best g' selected
   where
+    bestMoveSoFar  = myMove $ snd $ snd $ maximumByScore states
     nextStates     = scoreNextStates states
     (selected, g') = chooseN breadthToSearch g $ zipCDF nextStates
 
