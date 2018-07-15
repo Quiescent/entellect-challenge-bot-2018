@@ -1,7 +1,8 @@
 module Engine (tickEngine)
   where
 
-import Interpretor (GameState(..),
+import Interpretor (decrementFitness,
+                    GameState(..),
                     BuildingType(..),
                     Player(..),
                     Building(..),
@@ -64,7 +65,13 @@ collideMissile collisionDetector missile@(Missile { xDisp = x', yDisp = y' }) (d
     HitBuilding xHit building' ->
       let damaged = damageBuilding missileDamage building'
       in case damaged of
-           Nothing         -> (didntCollide, updateTowerMap (removeAt             (toCoord xHit y') towerMap') player')
-           Just building'' -> (didntCollide, updateTowerMap (replaceAt building'' (toCoord xHit y') towerMap') player')
+           Nothing         ->
+             (didntCollide,
+              decrementFitness y' building' $
+              updateTowerMap (removeAt (toCoord xHit y') towerMap') player')
+           Just building'' ->
+             (didntCollide,
+              decrementFitness y' building' $
+              updateTowerMap (replaceAt building'' (toCoord xHit y') towerMap') player')
   where
     towerMap' = towerMap player'

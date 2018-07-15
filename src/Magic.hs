@@ -61,6 +61,9 @@ teslaTowerHealth = 5
 teslaTowerDamagePerHit :: Int
 teslaTowerDamagePerHit = 20
 
+teslaTowerMaximumHitDamage :: Int
+teslaTowerMaximumHitDamage = teslaTowerDamagePerHit * (div width 2)
+
 teslaTowerConstructionTime :: Int
 teslaTowerConstructionTime = 10
 

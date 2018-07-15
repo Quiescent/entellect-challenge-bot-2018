@@ -5,6 +5,8 @@
 
 module Interpretor (repl,
                     parseStateString,
+                    incrementFitness,
+                    decrementFitness,
                     Player(..),
                     Missile(..),
                     BuildingType(..),
@@ -30,6 +32,7 @@ import GHC.Generics (Generic(..))
 import Control.DeepSeq
 
 import Coord
+import Magic
 
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
@@ -101,7 +104,7 @@ type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
 data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
-                       energyGenPerTurn  :: Float,
+                       energyGenPerTurn  :: Int,
                        attackPerRow      :: M.IntMap Int,
                        defensePerRow     :: M.IntMap Int,
                        towerMap          :: TowerMap,
@@ -256,9 +259,54 @@ accBuildingToPlayer :: Int -> Int -> ScratchBuilding -> Player -> Player
 accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _) player@(Player { towerMap          = towerMap',
                                                                                constructionQueue = constructionQueue' }) =
   let building' = (Building int wctl bt)
-  in if ctl < 0
+  in incrementFitness y' building' $
+     if ctl < 0
      then player { towerMap = M.insert (toCoord x' y') building' towerMap' }
      else player { constructionQueue = PQ.insert (ctl, toCoord x' y', building') constructionQueue' }
+
+incrementFitness :: Int -> Building -> Player -> Player
+incrementFitness y' (Building _       _ ATTACK)  player@(Player { attackPerRow  = attackPerRow',
+                                                                  defensePerRow = defensePerRow' }) =
+  player { attackPerRow  = M.alter (incrementMaybeInt missileDamage)     y' attackPerRow',
+           defensePerRow = M.alter (incrementMaybeInt attackTowerHealth) y' defensePerRow' }
+incrementFitness y' (Building health' _ DEFENSE) player@(Player { defensePerRow = defensePerRow' }) =
+  player { defensePerRow = M.alter (incrementMaybeInt health') y' defensePerRow' }
+incrementFitness y' (Building _       _ ENERGY)  player@(Player { defensePerRow    = defensePerRow',
+                                                                  energyGenPerTurn = energyGenPerTurn' }) =
+  player { defensePerRow    = M.alter (incrementMaybeInt energyTowerHealth) y' defensePerRow',
+           energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn }
+incrementFitness y' (Building _      _ TESLA)   player@(Player { defensePerRow = defensePerRow',
+                                                                 attackPerRow  = attackPerRow' }) =
+  player { defensePerRow = M.alter (incrementMaybeInt teslaTowerHealth)           y' defensePerRow',
+           attackPerRow  = M.alter (incrementMaybeInt teslaTowerMaximumHitDamage) y' attackPerRow' }
+
+incrementMaybeInt :: Int -> Maybe Int -> Maybe Int
+incrementMaybeInt x Nothing  = Just x
+incrementMaybeInt x (Just y) = Just $ x + y
+
+decrementFitness :: Int -> Building -> Player -> Player
+decrementFitness y' (Building _ _ ATTACK)  player@(Player { attackPerRow  = attackPerRow',
+                                                            defensePerRow = defensePerRow' }) =
+  player { attackPerRow  = M.alter (decrementMaybeInt missileDamage)     y' attackPerRow',
+           defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
+decrementFitness y' (Building _ _ DEFENSE) player@(Player { defensePerRow = defensePerRow' }) =
+  player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
+decrementFitness y' (Building _ _ ENERGY)  player@(Player { defensePerRow    = defensePerRow',
+                                                            energyGenPerTurn = energyGenPerTurn' }) =
+  player { defensePerRow    = M.alter (decrementMaybeInt missileDamage) y' defensePerRow',
+           energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn }
+decrementFitness y' (Building _ _ TESLA)   player@(Player { defensePerRow = defensePerRow',
+                                                            attackPerRow  = attackPerRow' }) =
+  player { defensePerRow = M.alter (decrementMaybeInt missileDamage)           y' defensePerRow',
+           attackPerRow  = M.alter (decrementMaybeInt teslaTowerMaximumHitDamage) y' attackPerRow' }
+
+decrementMaybeInt :: Int -> Maybe Int -> Maybe Int
+decrementMaybeInt x Nothing  = Just x
+decrementMaybeInt x (Just y) =
+  let result = y - x
+  in if result == 0
+     then Nothing
+     else Just $ y - x
 
 stateFilePath :: String
 stateFilePath = "state.json"

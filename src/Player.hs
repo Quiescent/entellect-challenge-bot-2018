@@ -20,7 +20,9 @@ module Player (updateEnergy,
                decrementCooldown)
   where
 
-import Interpretor (GameState(..),
+import Interpretor (decrementFitness,
+                    incrementFitness,
+                    GameState(..),
                     BuildingType(..),
                     Command(..),
                     Player(..),
@@ -119,9 +121,17 @@ energyTower :: Building
 energyTower = (Building energyTowerHealth 0 ENERGY)
 
 updateMove :: Command -> Player -> Player
-updateMove (Deconstruct x' y')         = deconstructAt $ toCoord x' y'
-updateMove NothingCommand              = id
-updateMove (Build x' y' buildingType') = build timeLeft (toCoord x' y') building'
+updateMove (Deconstruct x' y') player' =
+  let maybeBuilding = getAt (toCoord x' y') $ towerMap player'
+  in case maybeBuilding of
+    Just building' ->
+      decrementFitness y' building' $
+      deconstructAt (toCoord x' y') player'
+    Nothing                               ->
+      deconstructAt (toCoord x' y') player'
+updateMove NothingCommand              player' = player'
+updateMove (Build x' y' buildingType') player' =
+  incrementFitness y' building' $ build timeLeft (toCoord x' y') building' player'
   where
     timeLeft  = constructionTime buildingType'
     building' = buildingFromStats buildingType'
