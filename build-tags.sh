@@ -23,4 +23,4 @@ for tag in $TAGS; do
     echo
 done
 
-git checkout master
+git checkout origin/master
