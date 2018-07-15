@@ -31,6 +31,8 @@ import Control.DeepSeq
 
 import Coord
 
+import Debug.Trace
+
 data PlayerType =
   A | B deriving (Show, Generic, Eq)
 
@@ -101,6 +103,8 @@ type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
 data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
+                       attackPerRow      :: M.IntMap Int,
+                       defensePerRow     :: M.IntMap Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
                        ownedMissiles     :: [Missile] }
@@ -114,11 +118,13 @@ compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderCon
 compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
 
 instance Eq Player where
-  (==) (Player energyA healthA hitsTakenA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB hitsTakenB towerMapB constructionQueueB ownedMissilesB)
+  (==) (Player energyA healthA hitsTakenA attackPerRowA defensePerRowA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB hitsTakenB attackPerRowB defensePerRowB towerMapB constructionQueueB ownedMissilesB)
     = energyA                                 == energyB &&
       healthA                                 == healthB &&
       hitsTakenA                              == hitsTakenB &&
+      attackPerRowA                           == attackPerRowB &&
+      defensePerRowA                          == defensePerRowB &&
       towerMapA                               == towerMapB &&
       L.sort ownedMissilesA                   == L.sort ownedMissilesB &&
       (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
@@ -152,12 +158,7 @@ instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
     players'      <- v .: "players"
     denseGameMap  <- v .: "gameMap"
-    let (myTowerMap,
-         oponentsTowerMap,
-         myQueue,
-         oponentsQueue,
-         myMissiles,
-         oponentsMissiles) = convertDenseMap denseGameMap
+    let (GameState me' oponent') = convertDenseMap denseGameMap
     let (((ScratchPlayer _
                          aEnergy
                          aHealth
@@ -166,18 +167,12 @@ instance FromJSON GameState where
                           bEnergy
                           bHealth
                           bHitsTaken))) = extractPlayers players'
-    return (GameState (Player aEnergy
-                               aHealth
-                               aHitsTaken
-                               myTowerMap
-                               myQueue
-                               myMissiles)
-                       (Player bEnergy
-                               bHealth
-                               bHitsTaken
-                               oponentsTowerMap
-                               oponentsQueue
-                               oponentsMissiles))
+    return (GameState me' { energy    = aEnergy,
+                            health    = aHealth,
+                            hitsTaken = aHitsTaken }
+                      oponent' { energy    = bEnergy,
+                                 health    = bHealth,
+                                 hitsTaken = bHitsTaken })
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
@@ -213,37 +208,33 @@ type DenseMap = V.Vector DenseRow
 
 type DenseRow = V.Vector CellStateContainer
 
-type RowAccumulator = (TowerMap, TowerMap, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
+emptyPlayer :: Player
+emptyPlayer = Player 0 0 0 M.empty M.empty M.empty PQ.empty []
 
-makeRow :: TowerMap -> TowerMap -> DenseRow -> RowAccumulator
-makeRow myTowerMap oponentsTowerMap =
-  V.foldr accCell (myTowerMap, oponentsTowerMap, PQ.empty, PQ.empty, [], [])
+emptyGameState :: GameState
+emptyGameState = GameState emptyPlayer emptyPlayer
 
-accCell :: CellStateContainer -> RowAccumulator -> RowAccumulator
-accCell (CellStateContainer x' y' _ buildings' missiles') acc@(_, _, _, _, myMissiles, oponentsMissiles) =
-  (myTowerMap', oponentsTowerMap', myQueue', oponentsQueue', myMissiles ++ myMissiles', oponentsMissiles ++ oponentsMissiles')
+convertDenseMap :: DenseMap -> GameState
+convertDenseMap = V.foldr accRow emptyGameState
+
+accRow :: DenseRow -> GameState -> GameState
+accRow = flip (V.foldr accCell)
+
+accCell :: CellStateContainer -> GameState -> GameState
+accCell (CellStateContainer x' y' _ buildings' missiles') =
+  accMissiles (probe ("Missiles on " ++ show x' ++ ", " ++ show y' ++ ": ") missiles') . accBuildings x' y' buildings'
+
+probe message x = trace (message ++ show x) x
+
+accMissiles :: V.Vector ScratchMissile -> GameState -> GameState
+accMissiles missiles gameState@(GameState me' oponent') =
+  gameState { me      = me'      { ownedMissiles = myMissiles },
+              oponent = oponent' { ownedMissiles = oponentsMissiles } }
   where
-    (myMissiles', oponentsMissiles') = splitMissiles missiles'
-    (myTowerMap', oponentsTowerMap', myQueue', oponentsQueue', _, _) =
-      if not $ V.null buildings'
-      then accBuilding x' y' (buildings' V.! 0) acc
-      else acc
-
-accBuilding :: Int -> Int -> ScratchBuilding -> RowAccumulator -> RowAccumulator
-accBuilding x' y' (ScratchBuilding int ctl wctl bt A) (myTowerMap, b, queue, d, e, f) =
-  let building' = (Building int wctl bt)
-  in if ctl < 0
-     then (M.insert (toCoord x' y') building' myTowerMap, b, queue,                                           d, e, f)
-     else (myTowerMap,                                    b, PQ.insert (ctl, toCoord x' y', building') queue, d, e, f)
-accBuilding x' y' (ScratchBuilding int ctl wctl bt B) (a, oponentsTowerMap, c, queue, e, f) =
-  let building' = (Building int wctl bt)
-  in if ctl < 0
-     then (a, M.insert (toCoord x' y') building' oponentsTowerMap, c, queue,                                           e, f)
-     else (a, oponentsTowerMap,                                    c, PQ.insert (ctl, toCoord x' y', building') queue, e, f)
+    (myMissiles, oponentsMissiles) = probe "split: " (splitMissiles missiles)
 
 splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
-splitMissiles =
-  V.foldr splitMissilesAcc ([], [])
+splitMissiles = V.foldr splitMissilesAcc ([], [])
 
 splitMissilesAcc :: ScratchMissile -> ([Missile], [Missile]) -> ([Missile], [Missile])
 splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles) =
@@ -252,21 +243,25 @@ splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles
      then (missile : myMissiles, oponentsMissiles)
      else (myMissiles,           missile : oponentsMissiles)
 
-type MapAccumulator = (TowerMap, TowerMap, ConstructionQueue, ConstructionQueue, [Missile], [Missile])
+accBuildings :: Int -> Int -> V.Vector ScratchBuilding -> GameState -> GameState
+accBuildings x' y' buildings' =
+  if not $ V.null buildings'
+  then accBuilding x' y' (buildings' V.! 0)
+  else id
 
-convertDenseMap :: DenseMap -> MapAccumulator
-convertDenseMap denseMap =
-  V.foldr accRow (M.empty, M.empty, PQ.empty, PQ.empty, [], []) denseMap
+accBuilding :: Int -> Int -> ScratchBuilding -> GameState -> GameState
+accBuilding x' y' building'@(ScratchBuilding _ _ _ _ A) state =
+  state { me = accBuildingToPlayer x' y' building' (me state) }
+accBuilding x' y' building'@(ScratchBuilding _ _ _ _ B) state =
+  state { oponent = accBuildingToPlayer x' y' building' (oponent state) }
 
-accRow :: DenseRow -> MapAccumulator -> MapAccumulator
-accRow row (myMap, oponentsMap, myQueue, oponentsQueue, myMissiles, oponentsMissiles) =
-  let (myMapWithRow, oponentsMapWithRow, myQueue', oponentsQueue', myMissiles', oponentsMissiles') = makeRow myMap oponentsMap row
-  in  (myMapWithRow,
-       oponentsMapWithRow,
-       PQ.union myQueue' myQueue,
-       PQ.union oponentsQueue' oponentsQueue,
-       myMissiles ++ myMissiles',
-       oponentsMissiles ++ oponentsMissiles')
+accBuildingToPlayer :: Int -> Int -> ScratchBuilding -> Player -> Player
+accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _) player@(Player { towerMap          = towerMap',
+                                                                               constructionQueue = constructionQueue' }) =
+  let building' = (Building int wctl bt)
+  in if ctl < 0
+     then player { towerMap = M.insert (toCoord x' y') building' towerMap' }
+     else player { constructionQueue = PQ.insert (ctl, toCoord x' y', building') constructionQueue' }
 
 stateFilePath :: String
 stateFilePath = "state.json"
