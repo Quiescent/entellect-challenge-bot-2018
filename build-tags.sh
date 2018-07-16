@@ -4,14 +4,21 @@ TAGS=$(git tag)
 
 set -e
 
+if [ "$1" == "NIX" ]; then
+    NIX="--nix"
+else
+    NIX=""
+fi
+
+
 for tag in $TAGS; do
     echo "=========="
     echo "WORKING ON: $tag"
     echo "=========="
     echo git reset --hard $tag
     git reset --hard $tag
-    echo stack install --local-bin-path bin
-    stack install --local-bin-path bin
+    echo stack $NIX install --local-bin-path bin
+    stack $NIX install --local-bin-path bin
     BASE_DIR="working-binaries/$tag/"
     BIN_DIR="$BASE_DIR/bin"
     echo mkdir -p $BIN_DIR
