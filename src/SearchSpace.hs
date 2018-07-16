@@ -70,7 +70,7 @@ search g state = do
   startTime         <- getTime clock
   let startTimeNanos = timeToNanos startTime
   bestMove          <- newEmptyMVar
-  _ <- forkIO $ searchDeeper bestMove g' selected
+  _ <- forkIO $ searchDeeper bestMove g state
   let searchIter bestSoFar = do
         bestMoveSoFar <- tryTakeMVar bestMove
         timeNow       <- getTime clock
@@ -84,45 +84,85 @@ search g state = do
             searchIter newBest
           else return newBest
   searchIter undefined
-  where
-    (selected, g') = chooseN breadthToSearch g $ zipCDF $ map (myBoardScore) initialChoices
-    initialChoices = advanceState state
 
-maximumByScore :: [(Float, (GameState, Move))] -> (Float, (GameState, Move))
+maximumByScore :: [(Float, (GameState, a))] -> (Float, (GameState, a))
 maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 -- TODO Remove finished ones from the search as we go
-searchDeeper :: RandomGen g => MVar Command -> g -> [(Float, (GameState, Move))] -> IO ()
-searchDeeper best g states = do
-  putStrLn "Tick"
-  putMVar best $ rnf bestMoveSoFar `seq` bestMoveSoFar
-  selected `pseq` searchDeeper best g' selected
+searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
+searchDeeper best g initialState =
+  let (g', selected) = advanceState g (initialState, Move NothingCommand NothingCommand)
+  in searchDeeperIter g' $ map myBoardScore selected
   where
-    bestMoveSoFar  = myMove $ snd $ snd $ maximumByScore states
-    nextStates     = scoreNextStates states
-    (selected, g') = chooseN breadthToSearch g $ zipCDF nextStates
+    searchDeeperIter :: RandomGen g => g -> [(Float, (GameState, Move))] -> IO ()
+    searchDeeperIter g'' states = do
+        putMVar best $ rnf bestMoveSoFar `seq` bestMoveSoFar
+        selected `pseq` searchDeeperIter g'''' selected
+        where
+          bestMoveSoFar      = myMove $ snd $ snd $ maximumByScore states
+          (g''', nextStates) = scoreNextStates g'' states
+          (selected, g'''')  = chooseN breadthToSearch g''' $ zipCDF nextStates
 
-scoreNextStates :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
-scoreNextStates = foldr scoreNextStatesAcc []
+scoreNextStates :: RandomGen g => g -> [(Float, (GameState, Move))] -> (g, [(Float, (GameState, Move))])
+scoreNextStates g = foldr scoreNextStatesAcc (g, [])
 
-scoreNextStatesAcc :: (Float, (GameState, Move)) -> [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
-scoreNextStatesAcc (_, (state, move)) statesAcc =
-  let newStates = advanceState state
-      threaded  = map ( \ (state', _) ->  (state', move)) newStates
-      scored    = map myBoardScore threaded
-  in rnf scored `par` scored ++ statesAcc
+scoreNextStatesAcc :: RandomGen g => (Float, (GameState, Move)) -> (g, [(Float, (GameState, Move))]) -> (g, [(Float, (GameState, Move))])
+scoreNextStatesAcc (_, withMove@(_, move)) (g, statesAcc) =
+  rnf threaded `par` (g', scored ++ statesAcc)
+  where
+    (g', newStates) = advanceState g withMove
+    threaded        = map ( \ (state', _) ->  (state', move)) newStates
+    scored          = map myBoardScore threaded
+  
 
 breadthToSearch :: Int
-breadthToSearch = 5
+breadthToSearch = 12
 
-advanceState :: GameState -> [(GameState, Move)]
-advanceState gameState = do
-  myCommand       <- myAvailableMoves       gameState
-  oponentsCommand <- oponentsAvailableMoves gameState
-  return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
-           Move myCommand oponentsCommand)
+splay :: Int
+splay = 5
 
-zipCDF :: [(Float, (GameState, Move))] -> [(Float, (GameState, Move))]
+advanceState :: RandomGen g => g -> (GameState, Move) -> (g, [(GameState, Move)])
+advanceState g (gameState, move) =
+  if gameOver gameState
+  then (g, [(gameState, move)])
+  else (g''',
+        (do
+            myCommand       <- map (snd . snd) myStates
+            oponentsCommand <- map (snd . snd) oponentsStates
+            return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
+                    Move myCommand oponentsCommand)))
+  where
+    chooseCandidates gen = chooseN splay gen . zipCDF
+    (g', g'') = split g
+    (myStates, _)         =
+      chooseCandidates g' $
+      map (myBoardScore) $
+      myMoves gameState
+    (oponentsStates, g''') =
+      chooseCandidates g'' $
+      invertScores $
+      map (myBoardScore) $
+      oponentsMoves gameState
+
+myMoves :: GameState -> [(GameState, Command)]
+myMoves state = do
+  myMove' <- myAvailableMoves state
+  return $ (updateMyMove myMove' state, myMove')
+
+oponentsMoves :: GameState -> [(GameState, Command)]
+oponentsMoves state = do
+  oponentsMove' <- oponentsAvailableMoves state
+  return $ (updateOponentsMove oponentsMove' state, oponentsMove')
+
+invertScores :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
+invertScores = map ( \ (score', x) -> (1.0 / score', x))
+
+gameOver :: GameState -> Bool
+gameOver (GameState { me      = (Player { health = myHealth }),
+                      oponent = (Player { health = oponentsHealth }) }) =
+  myHealth == 0 || oponentsHealth == 0
+
+zipCDF :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 zipCDF xs =
   zipWith ( \ x (_, y) -> (x, y)) normalised (head descending : descending)
   where
@@ -136,7 +176,7 @@ zipCDF xs =
 eliteChoices :: Int
 eliteChoices = 1
 
-chooseN :: (RandomGen g) => Int -> g -> [(Float, (GameState, Move))] -> ([(Float, (GameState, Move))], g)
+chooseN :: (RandomGen g) => Int -> g -> [(Float, (GameState, a))] -> ([(Float, (GameState, a))], g)
 chooseN n g xs =
   (elite ++ randomChoices, g''')
   where

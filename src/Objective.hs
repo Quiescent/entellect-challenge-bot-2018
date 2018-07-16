@@ -13,7 +13,6 @@ import Interpretor (GameState(..),
 import Player
 import Magic
 import BuildingsUnderConstruction
-import Coord
 
 import qualified Data.List   as L
 import qualified Data.IntMap as M
