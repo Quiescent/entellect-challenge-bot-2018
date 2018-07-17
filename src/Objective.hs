@@ -6,13 +6,9 @@ module Objective (myBoardScore, Move(..))
 
 import Interpretor (GameState(..),
                     Command(..),
-                    Building(..),
-                    BuildingType(..),
-                    Player(..),
-                    TowerMap)
+                    Player(..))
 import Player
 import Magic
-import BuildingsUnderConstruction
 
 import qualified Data.List   as L
 import qualified Data.IntMap as M
@@ -27,22 +23,12 @@ instance NFData Move
 
 myBoardScore :: (GameState, a) -> (Float, (GameState, a))
 myBoardScore withMove@(state, _) =
-  (hitsSubtractTakenAfterTime withPlacedBuildings +
+  (hitsSubtractTakenAfterTime state +
    hitsDealtToOponent state -
    hitsTakenByMe state -
-   (zeroIfEnoughEnergy meWithPlacedBuildings $ turnsToNextTowerByTurn meWithPlacedBuildings) +
+   (zeroIfEnoughEnergy (me state) $ turnsToNextTowerByTurn (me state)) +
    resultBonus state,
-     withMove)
-  where
-    withPlacedBuildings         = (GameState meWithPlacedBuildings oponentWithPlacedBuildings)
-    meWithPlacedBuildings       = (me      state) { towerMap = myWithPlacedBuildings }
-    oponentWithPlacedBuildings  = (oponent state) { towerMap = oponentsWithPlacedBuildings }
-    myConstructionQueue         = constructionQueue $ me state
-    myTowerMap                  = towerMap $ me      state
-    myWithPlacedBuildings       = foldrConstruction placeBuilding myTowerMap myConstructionQueue
-    oponentsConstructionQueue   = constructionQueue $ oponent state
-    oponentsTowerMap            = towerMap $ oponent state
-    oponentsWithPlacedBuildings = foldrConstruction placeBuilding oponentsTowerMap oponentsConstructionQueue
+    withMove)
 
 resultBonus :: GameState -> Float
 resultBonus state =
