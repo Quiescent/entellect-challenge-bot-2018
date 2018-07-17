@@ -24,12 +24,15 @@ import Data.Maybe
 import System.Random
 import qualified Data.List as L
 
-import Control.Concurrent (tryTakeMVar,
+import Control.Concurrent (killThread,
+                           tryTakeMVar,
                            newEmptyMVar,
                            putMVar,
                            forkIO,
                            threadDelay,
                            MVar)
+
+import Debug.Trace
 
 import Control.Parallel (par, pseq)
 import Control.DeepSeq (rnf)
@@ -70,7 +73,7 @@ search g state = do
   startTime         <- getTime clock
   let startTimeNanos = timeToNanos startTime
   bestMove          <- newEmptyMVar
-  _ <- forkIO $ searchDeeper bestMove g state
+  threadId          <- forkIO $ searchDeeper bestMove g state
   let searchIter bestSoFar = do
         bestMoveSoFar <- tryTakeMVar bestMove
         timeNow       <- getTime clock
@@ -82,64 +85,83 @@ search g state = do
           then do
             threadDelay delayTime
             searchIter newBest
-          else return newBest
-  searchIter undefined
+          else do
+            killThread threadId -- this had no effect :(
+            return newBest
+  searchIter undefined -- It's not quitting the program here :/
 
-maximumByScore :: [(Float, (GameState, a))] -> (Float, (GameState, a))
+maximumByScore :: [(Float, Command)] -> (Float, Command)
 maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
--- TODO Remove finished ones from the search as we go
+type ItemsUnderSearch = [(Float, Command)]
+
 searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
-searchDeeper best g initialState =
-  let (g', selected) = advanceState g (initialState, Move NothingCommand NothingCommand)
-  in searchDeeperIter g' $ map myBoardScore selected
+searchDeeper best g initialState = searchDeeperIter g initialItems
   where
-    searchDeeperIter :: RandomGen g => g -> [(Float, (GameState, Move))] -> IO ()
-    searchDeeperIter g'' states = do
-        putMVar best $ rnf bestMoveSoFar `seq` bestMoveSoFar
-        selected `pseq` searchDeeperIter g'''' selected
-        where
-          bestMoveSoFar      = myMove $ snd $ snd $ maximumByScore states
-          (g''', nextStates) = scoreNextStates g'' states
-          (selected, g'''')  = chooseN breadthToSearch g''' $ zipCDF nextStates
+    searchDeeperIter :: RandomGen g => g -> ItemsUnderSearch -> IO ()
+    searchDeeperIter h items = do
+      putStrLn "Tick"
+      let (h', newItems) = foldr (playOnceToEnd initialState) (h, []) items
+      let bestSoFar      = maximumByScore newItems
+      putStrLn $ "Best so far: " ++ (show bestSoFar)
+      putMVar best $ snd $ rnf bestSoFar `pseq` bestSoFar
+      searchDeeperIter h' newItems
+    initialItems :: ItemsUnderSearch
+    initialItems = zip (repeat 0) $ myAvailableMoves initialState
 
-scoreNextStates :: RandomGen g => g -> [(Float, (GameState, Move))] -> (g, [(Float, (GameState, Move))])
-scoreNextStates g = foldr scoreNextStatesAcc (g, [])
-
-scoreNextStatesAcc :: RandomGen g => (Float, (GameState, Move)) -> (g, [(Float, (GameState, Move))]) -> (g, [(Float, (GameState, Move))])
-scoreNextStatesAcc (_, withMove@(_, move)) (g, statesAcc) =
-  rnf threaded `par` (g', scored ++ statesAcc)
+playOnceToEnd :: RandomGen g => GameState -> (Float, Command) -> (g, ItemsUnderSearch) -> (g, ItemsUnderSearch)
+playOnceToEnd initialState (score, firstMove) (g, searched) =
+  (g', (score + endScore, firstMove) : searched)
   where
-    (g', newStates) = advanceState g withMove
-    threaded        = map ( \ (state', _) ->  (state', move)) newStates
-    scored          = map myBoardScore threaded
-  
+    (g', endScore) = playToEnd g initialState firstMove
 
-breadthToSearch :: Int
-breadthToSearch = 12
+depth :: Int
+depth = 20
 
-splay :: Int
-splay = 5
-
-advanceState :: RandomGen g => g -> (GameState, Move) -> (g, [(GameState, Move)])
-advanceState g (gameState, move) =
-  if gameOver gameState
-  then (g, [(gameState, move)])
-  else (g''',
-        (do
-            myCommand       <- map (snd . snd) myStates
-            oponentsCommand <- map (snd . snd) oponentsStates
-            return (updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState,
-                    Move myCommand oponentsCommand)))
+playToEnd :: RandomGen g => g -> GameState -> Command -> (g, Float)
+playToEnd g initialState firstMove =
+  let (g', initialMoveMade) = initialAdvanceState g firstMove initialState
+  in playToEndIter depth g' initialMoveMade
   where
-    chooseCandidates gen = chooseN splay gen . zipCDF
+    playToEndIter :: RandomGen g => Int -> g -> GameState -> (g, Float)
+    playToEndIter 0 h currentState = (h, fst $ myBoardScore (currentState, undefined))
+    playToEndIter n h currentState =
+      if gameOver currentState
+      then (h, fst $ myBoardScore (currentState, undefined))
+      else let (h', newState) = advanceState h currentState
+           in playToEndIter (n - 1) h' newState
+
+gameOver :: GameState -> Bool
+gameOver (GameState { me      = (Player { health = myHealth }),
+                      oponent = (Player { health = oponentsHealth }) }) =
+  myHealth == 0 || oponentsHealth == 0
+
+initialAdvanceState :: RandomGen g => g -> Command -> GameState -> (g, GameState)
+initialAdvanceState g firstMove gameState =
+  let oponentsCommand = snd $ snd oponentsState
+  in (g', updateMyMove firstMove $ updateOponentsMove oponentsCommand $ tickEngine gameState)
+  where
+    chooseCandidate gen = chooseOne gen . zipCDF
+    (oponentsState, g') =
+      chooseCandidate g $
+      invertScores $
+      map (myBoardScore) $
+      oponentsMoves gameState
+
+advanceState :: RandomGen g => g -> GameState -> (g, GameState)
+advanceState g gameState =
+  let myCommand       = snd $ snd myState
+      oponentsCommand = snd $ snd oponentsState
+  in (g''', updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState)
+  where
+    chooseCandidate gen = chooseOne gen . zipCDF
     (g', g'') = split g
-    (myStates, _)         =
-      chooseCandidates g' $
+    (myState, _)         =
+      chooseCandidate g' $
       map (myBoardScore) $
       myMoves gameState
-    (oponentsStates, g''') =
-      chooseCandidates g'' $
+    (oponentsState, g''') =
+      chooseCandidate g'' $
       invertScores $
       map (myBoardScore) $
       oponentsMoves gameState
@@ -157,11 +179,6 @@ oponentsMoves state = do
 invertScores :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 invertScores = map ( \ (score', x) -> (1.0 / score', x))
 
-gameOver :: GameState -> Bool
-gameOver (GameState { me      = (Player { health = myHealth }),
-                      oponent = (Player { health = oponentsHealth }) }) =
-  myHealth == 0 || oponentsHealth == 0
-
 zipCDF :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
 zipCDF xs =
   zipWith ( \ x (_, y) -> (x, y)) normalised (head descending : descending)
@@ -173,24 +190,17 @@ zipCDF xs =
     adjusted   = map (\ (boardScore, x) -> (minValue + boardScore, x)) xs
     minValue   = abs $ minimum $ map fst xs
 
-eliteChoices :: Int
-eliteChoices = 1
-
-chooseN :: (RandomGen g) => Int -> g -> [(Float, (GameState, a))] -> ([(Float, (GameState, a))], g)
-chooseN n g xs =
-  (elite ++ randomChoices, g''')
+chooseOne :: (RandomGen g) => g -> [(Float, (GameState, Command))] -> ((Float, (GameState, Command)), g)
+chooseOne g xs =
+  (scanForValue xs, g')
   where
-    (_, max')              = genRange g
-    floatingMax            = fromIntegral max'
-    normalise              = (/ floatingMax) . fromIntegral . abs
-    elite                  = take eliteChoices xs
-    (randomChoices, g''')  = foldr choose ([], g) [1..(n - eliteChoices)]
-    choose _ (choices, g') =
-      let (value, g'') = next g'
-          normalised   = normalise value
-          scanForValue = fromJust . lastIfNothing xs . L.find ((<= normalised) . fst)
-      in (scanForValue xs : choices, g'')
+    (_, max')    = genRange g
+    floatingMax  = fromIntegral max'
+    normalise    = (/ floatingMax) . fromIntegral . abs
+    (value, g')  = next g
+    normalised   = normalise value
+    scanForValue = fromJust . lastIfNothing xs . L.find ((<= normalised) . fst)
 
-lastIfNothing :: [(Float, (GameState, a))] -> Maybe (Float, (GameState, a)) -> Maybe (Float, (GameState, a))
+lastIfNothing :: [(Float, (GameState, Command))] -> Maybe (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command))
 lastIfNothing _  x@(Just _) = x
 lastIfNothing xs Nothing    = Just $ last xs
