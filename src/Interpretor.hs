@@ -277,10 +277,8 @@ incrementFitness y' (Building _       _ ATTACK)  player@(Player { attackPerRow  
            defensePerRow = M.alter (incrementMaybeInt attackTowerHealth)      y' defensePerRow' }
 incrementFitness y' (Building health' _ DEFENSE) player@(Player { defensePerRow = defensePerRow' }) =
   player { defensePerRow = M.alter (incrementMaybeInt health') y' defensePerRow' }
-incrementFitness y' (Building _       _ ENERGY)  player@(Player { defensePerRow    = defensePerRow',
-                                                                  energyGenPerTurn = energyGenPerTurn' }) =
-  player { defensePerRow    = M.alter (incrementMaybeInt energyTowerHealth) y' defensePerRow',
-           energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn }
+incrementFitness _  (Building _       _ ENERGY)  player@(Player { energyGenPerTurn = energyGenPerTurn' }) =
+  player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn }
 incrementFitness y' (Building _      _ TESLA)   player@(Player { defensePerRow = defensePerRow',
                                                                  attackPerRow  = attackPerRow' }) =
   player { defensePerRow = M.alter (incrementMaybeInt   teslaTowerHealth)           y' defensePerRow',
@@ -301,10 +299,8 @@ decrementFitness y' (Building _ _ ATTACK)  player@(Player { attackPerRow  = atta
            defensePerRow = M.alter (decrementMaybeInt missileDamage)          y' defensePerRow' }
 decrementFitness y' (Building _ _ DEFENSE) player@(Player { defensePerRow = defensePerRow' }) =
   player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
-decrementFitness y' (Building _ _ ENERGY)  player@(Player { defensePerRow    = defensePerRow',
-                                                            energyGenPerTurn = energyGenPerTurn' }) =
-  player { defensePerRow    = M.alter (decrementMaybeInt missileDamage) y' defensePerRow',
-           energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn }
+decrementFitness _  (Building _ _ ENERGY)  player@(Player { energyGenPerTurn = energyGenPerTurn' }) =
+  player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn }
 decrementFitness y' (Building _ _ TESLA)   player@(Player { defensePerRow = defensePerRow',
                                                             attackPerRow  = attackPerRow' }) =
   player { defensePerRow = M.alter (decrementMaybeInt missileDamage)             y' defensePerRow',
