@@ -1,0 +1,8 @@
+* Ideas
+** Make a map of computed things and index into it
+* To Implement
+** TODO Create a type for each tower and state
+** TODO Use an Int for a missile
+** TODO Generate all moves upfront then filter
+** TODO Do some maths!!!
+** TODO Check for collision with the player when there are no towers on the row
