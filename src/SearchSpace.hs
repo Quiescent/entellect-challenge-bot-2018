@@ -32,9 +32,8 @@ import Control.Concurrent (killThread,
                            threadDelay,
                            MVar)
 
-import Debug.Trace
-
-import Control.Parallel (par, pseq)
+import Control.Parallel (pseq)
+import Control.Parallel.Strategies (parList, using, rdeepseq)
 import Control.DeepSeq (rnf)
 
 availableMoves :: (Coord -> Bool) -> Player -> [Command]
@@ -95,25 +94,32 @@ maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 type ItemsUnderSearch = [(Float, Command)]
 
+splitNWays :: RandomGen g => g -> Int -> [g]
+splitNWays g 0 = [g]
+splitNWays g n = let (g', g'') = split g
+                 in g' : splitNWays g'' (n - 1)
+
 searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
 searchDeeper best g initialState = searchDeeperIter g initialItems
   where
     searchDeeperIter :: RandomGen g => g -> ItemsUnderSearch -> IO ()
     searchDeeperIter h items = do
       putStrLn "Tick"
-      let (h', newItems) = foldr (playOnceToEnd initialState) (h, []) items
-      let bestSoFar      = maximumByScore newItems
+      let h':hs     = splitNWays h (length items)
+      let newItems  = zipWith (playOnceToEnd initialState) items hs
+      let newItPar  = newItems `using` parList rdeepseq
+      let bestSoFar = maximumByScore newItPar
       putStrLn $ "Best so far: " ++ (show bestSoFar)
       putMVar best $ snd $ rnf bestSoFar `pseq` bestSoFar
       searchDeeperIter h' newItems
     initialItems :: ItemsUnderSearch
     initialItems = zip (repeat 0) $ myAvailableMoves initialState
 
-playOnceToEnd :: RandomGen g => GameState -> (Float, Command) -> (g, ItemsUnderSearch) -> (g, ItemsUnderSearch)
-playOnceToEnd initialState (score, firstMove) (g, searched) =
-  (g', (score + endScore, firstMove) : searched)
+playOnceToEnd :: RandomGen g => GameState -> (Float, Command) -> g -> (Float, Command)
+playOnceToEnd initialState (score, firstMove) g =
+  (score + endScore, firstMove)
   where
-    (g', endScore) = playToEnd g initialState firstMove
+    (_, endScore) = playToEnd g initialState firstMove
 
 depth :: Int
 depth = 20
