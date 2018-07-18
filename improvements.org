@@ -1,14 +1,17 @@
 * Ideas
 ** Make a map of computed things and index into it
 * To Implement
-** DONE Create a type for each tower and state
+** DONE Create a type for each tower 
    CLOSED: [2018-07-18 Wed 22:01]
    :LOGBOOK:
    - CLOSING NOTE [2018-07-18 Wed 22:01] \\
      It hardly touched the benchmark which is really wierd...
    - State "IN_PROGRESS" from "TODO"       [2018-07-17 Tue 20:38]
    :END:
-** TODO Use an Int for a missile
 ** TODO Generate all moves upfront then filter
+** TODO Cache Fitnesses when searching deeper
+** TODO Use an Int for a missile
+** TODO Add rewrite rules and always use map* varients of functions
+** TODO Make a type for each row state
 ** TODO Do some maths!!!
 ** TODO Check for collision with the player when there are no towers on the row
