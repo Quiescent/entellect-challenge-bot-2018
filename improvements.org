@@ -1,7 +1,13 @@
 * Ideas
 ** Make a map of computed things and index into it
 * To Implement
-** TODO Create a type for each tower and state
+** DONE Create a type for each tower and state
+   CLOSED: [2018-07-18 Wed 22:01]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-18 Wed 22:01] \\
+     It hardly touched the benchmark which is really wierd...
+   - State "IN_PROGRESS" from "TODO"       [2018-07-17 Tue 20:38]
+   :END:
 ** TODO Use an Int for a missile
 ** TODO Generate all moves upfront then filter
 ** TODO Do some maths!!!

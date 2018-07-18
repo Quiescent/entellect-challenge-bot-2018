@@ -1,4 +1,4 @@
-module Building (tickBuildings, damageBuilding)
+module Building (tickBuildings, missileDamagesBuilding)
   where
 
 import Interpretor (GameState(..),
@@ -10,6 +10,7 @@ import GameMap
 import GameState
 import BuildingsUnderConstruction
 import Magic
+import Buildings
 
 tickBuildings :: GameState -> GameState
 tickBuildings = (generateMissilesAndUpdateCooldown) . updateBuildingProgress
@@ -25,13 +26,12 @@ generateAndUpdateCooldownMissilesOnPlayer player =
     playerMap = towerMap player
 
 generateMissilesAndUpdateCooldownForBuilding :: Int -> Building -> Player -> Player
-generateMissilesAndUpdateCooldownForBuilding coord
-                                             (Building { weaponCooldownTimeLeft = weaponCooldownTimeLeft',
-                                                         buildingType           = buildingType' })
-                                             player =
-  if (buildingType' /= ATTACK || weaponCooldownTimeLeft' /= 0)
-  then decrementCooldown coord player
-  else resetCooldownAndCreateMissile player coord attackTowerCooldownTime
+generateMissilesAndUpdateCooldownForBuilding coord building' player
+  | building' == attack0 = resetCooldownAndCreateMissile player coord attackTowerCooldownTime
+  | building' == attack1 = decrementCooldown coord player
+  | building' == attack2 = decrementCooldown coord player
+  | building' == attack3 = decrementCooldown coord player
+  | otherwise = player
 
 updateBuildingProgress :: GameState -> GameState
 updateBuildingProgress =
@@ -44,9 +44,9 @@ updateBuildingProgress' player =
   in player { constructionQueue = newConstructionQueue,
               towerMap          = newTowerMap }
 
-damageBuilding :: Int -> Building -> Maybe Building
-damageBuilding damage' building' =
-  let integrity' = integrity building'
-  in if integrity' <= damage'
-     then Nothing
-     else Just (building' { integrity = integrity' - damage' })
+missileDamagesBuilding :: Building -> Maybe Building
+missileDamagesBuilding building'
+  | building' == defense4 = Just defense3
+  | building' == defense3 = Just defense2
+  | building' == defense2 = Just defense1
+  | otherwise             = Nothing

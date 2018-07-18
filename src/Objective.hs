@@ -72,7 +72,7 @@ normaliseByMaxTurns = (/ maxTurnsToBreakThrough)
 
 maxTurnsToBreakThrough :: Float
 maxTurnsToBreakThrough =
-  (fromIntegral (width * defenseTowerHealth)) / (fromIntegral missileDamage)
+  (fromIntegral (width * defenseTowerHealth4)) / (fromIntegral missileDamage)
 
 oneIfZero :: Float -> Float
 oneIfZero 0 = 1

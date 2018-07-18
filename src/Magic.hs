@@ -22,8 +22,17 @@ missileDamage = 5
 defenseTowerCost :: Int
 defenseTowerCost = 30
 
-defenseTowerHealth :: Int
-defenseTowerHealth = 20
+defenseTowerHealth4 :: Int
+defenseTowerHealth4 = 20
+
+defenseTowerHealth3 :: Int
+defenseTowerHealth3 = 15
+
+defenseTowerHealth2 :: Int
+defenseTowerHealth2 = 10
+
+defenseTowerHealth1 :: Int
+defenseTowerHealth1 = 5
 
 defenseTowerConstructionTime :: Int
 defenseTowerConstructionTime = 3

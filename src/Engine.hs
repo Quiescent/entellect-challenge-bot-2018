@@ -25,20 +25,10 @@ moveMissiles :: Direction -> Player -> Player
 moveMissiles direction player = mapMissiles (moveMissile direction) player
 
 gainEnergy :: GameState -> GameState
-gainEnergy =
-  mapMyPlayer (incrementEnergy) . mapOponentsPlayer (incrementEnergy)
+gainEnergy = mapMyPlayer (incrementEnergy) . mapOponentsPlayer (incrementEnergy)
 
 incrementEnergy :: Player -> Player
-incrementEnergy player' =
-  updateEnergy (energyPerTurn + energyFromTowers) player'
-  where
-    energyFromTowers = mapFold incrementEnergyAcc 0 $ towerMap player'
-
-incrementEnergyAcc :: Building -> Int -> Int
-incrementEnergyAcc (Building { buildingType = buildingType' }) energyAcc =
-  if buildingType' == ENERGY
-  then energyTowerEnergyGeneratedPerTurn + energyAcc
-  else energyAcc
+incrementEnergy player' = updateEnergy (energyPerTurn + (energyGenPerTurn player')) player'
 
 collideMissiles :: GameState -> GameState
 collideMissiles state =
@@ -63,7 +53,7 @@ collideMissile collisionDetector missile@(Missile { xDisp = x', yDisp = y' }) (d
     HitNothing                 -> (missile : didntCollide, player')
     HitPlayer                  -> (didntCollide,           takeDamage missileDamage player')
     HitBuilding xHit building' ->
-      let damaged = damageBuilding missileDamage building'
+      let damaged = missileDamagesBuilding building'
       in case damaged of
            Nothing         ->
              (didntCollide,
