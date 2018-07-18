@@ -50,6 +50,19 @@ executables:
     dependencies:
     - EntelectChallenge2018
 
+  TestEngine-exe:
+    main:                Main.hs
+    source-dirs:         test-engine
+    ghc-options:
+    - -threaded
+    - -O2
+    - -eventlog
+    - -rtsopts
+    - -with-rtsopts=-A128m
+    dependencies:
+    - EntelectChallenge2018
+
+
 tests:
   spec:
     main:                Spec.hs
