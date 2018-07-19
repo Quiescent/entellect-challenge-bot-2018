@@ -113,17 +113,19 @@ buildingFromStats buildingType'
   | buildingType' == DEFENSE = defense4
 
 updateMove :: Command -> Player -> Player
-updateMove (Deconstruct x' y') player' =
-  let maybeBuilding = getAt (toCoord x' y') $ towerMap player'
+updateMove (Deconstruct coord') player' =
+  let maybeBuilding = getAt coord' $ towerMap player'
+      y'            = getY coord'
   in case maybeBuilding of
     Just building' ->
       decrementFitness y' building' $
-      deconstructAt (toCoord x' y') player'
+      deconstructAt coord' player'
     Nothing                               ->
-      deconstructAt (toCoord x' y') player'
-updateMove NothingCommand              player' = player'
-updateMove (Build x' y' buildingType') player' =
-  incrementFitness y' building' $ build timeLeft (toCoord x' y') building' player'
+      deconstructAt coord' player'
+updateMove NothingCommand               player' = player'
+updateMove (Build coord' buildingType') player' =
+  let y' = getY coord'
+  in incrementFitness y' building' $ build timeLeft coord' building' player'
   where
     timeLeft  = constructionTime buildingType'
     building' = buildingFromStats buildingType'

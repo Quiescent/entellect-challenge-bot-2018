@@ -5,6 +5,7 @@ import Interpretor
 import Engine
 import GameState
 import Magic
+import Coord
 import Text.Printf
 import System.Environment
 import System.Directory
@@ -41,9 +42,13 @@ main = do
   putStrLn "Done"
 
 transposePlayerTwosMove :: Command -> Command
-transposePlayerTwosMove (Build       x y buildingType) = (Build       (width - x - 1) y buildingType)
-transposePlayerTwosMove (Deconstruct x y)              = (Deconstruct (width - x - 1) y)
-transposePlayerTwosMove x                              = x
+transposePlayerTwosMove (Build       coord' buildingType) =
+  let (x, y) = fromCoord coord'
+  in (Build       (toCoord (width - x - 1) y) buildingType)
+transposePlayerTwosMove (Deconstruct coord')              =
+  let (x, y) = fromCoord coord'
+  in (Deconstruct (toCoord (width - x - 1) y))
+transposePlayerTwosMove x                                 = x
 
 parseState :: String -> IO GameState
 parseState playerRoundDirectory =
@@ -72,11 +77,12 @@ readPlayerCommand directory = do
              x             = read xStr
              (yStr, rest') = span (/= ',') $ tail rest
              y             = read yStr
+             coord         = toCoord x y
              bstr          = tail rest'
          in return $ case bstr of
-                       "0" -> Build x y DEFENSE
-                       "1" -> Build x y ATTACK
-                       "2" -> Build x y ENERGY
-                       "3" -> Deconstruct x y
-                       "4" -> Build x y TESLA
+                       "0" -> Build coord DEFENSE
+                       "1" -> Build coord ATTACK
+                       "2" -> Build coord ENERGY
+                       "3" -> Deconstruct coord
+                       "4" -> Build coord TESLA
                        _   -> error ("Read unhandled building type: " ++ bstr)

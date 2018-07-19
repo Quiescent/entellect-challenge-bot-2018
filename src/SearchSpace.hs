@@ -41,8 +41,7 @@ availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
                                                  constructionQueue = constructionQueue' }) = do
   coord         <- filter (not . (flip definedAt) towerMap') $ filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
   buildingType' <- buildingsWhichICanAfford
-  let (x, y) = fromCoord coord
-  return $ Build x y buildingType'
+  return $ Build coord buildingType'
   where
     constructionSites        = buildingConstructionSites constructionQueue'
     buildingsWhichICanAfford = map snd $ filter ((<= energy') . fst) prices

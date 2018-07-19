@@ -43,11 +43,11 @@ mapOponentsPlayer f state@(GameState { oponent = oponent' }) =
   state { oponent = f oponent' }
 
 runCommand :: Player -> Command -> Player
-runCommand player NothingCommand              = player
-runCommand player (Deconstruct x' y')         =
-  mapMap (removeAt (toCoord x' y')) player
-runCommand player (Build x' y' buildingType') = 
-  player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' (toCoord x' y') building')
+runCommand player NothingCommand               = player
+runCommand player (Deconstruct coord')         =
+  mapMap (removeAt coord') player
+runCommand player (Build coord' buildingType') =
+  player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' coord' building')
                                            (constructionQueue player) }
   where
     constructionTime' = constructionTime  buildingType'

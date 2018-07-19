@@ -10,7 +10,7 @@ module Interpretor (repl,
                     Player(..),
                     Missile(..),
                     BuildingType(..),
-                    Building(..),
+                    Building,
                     Command(..),
                     GameState(..),
                     TowerMap,
@@ -334,7 +334,7 @@ decrementFitness y' building'  player@(Player { attackPerRow     = attackPerRow'
   | building' == defense3    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
   | building' == defense2    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
   | building' == defense1    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
-  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn }
+  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn }
   | otherwise = player { defensePerRow = M.alter (decrementMaybeInt   teslaTowerHealth)        y' defensePerRow',
                          attackPerRow  = M.alter (decrementMaybeFloat teslaTowerDamagePerTurn) y' attackPerRow' }
 
@@ -368,25 +368,25 @@ parseStateString stateString =
 readGameState :: IO GameState
 readGameState = fmap parseStateString $ B.readFile stateFilePath
 
-data Command = Build { xCoord   :: Int,
-                       yCoord   :: Int,
+data Command = Build { bCoord   :: Coord,
                        building :: BuildingType }
-               | Deconstruct { xCoord :: Int,
-                               yCoord :: Int }
+               | Deconstruct { dCoord :: Coord }
                | NothingCommand
              deriving (Eq, Generic)
 
 instance NFData Command
 
 instance Show Command where
-  show (Build x' y' building') =
-    show x' ++ "," ++ show y' ++ ","  ++ case building' of
-    DEFENSE -> "0"
-    ATTACK  -> "1"
-    ENERGY  -> "2"
-    TESLA   -> "4"
-  show (Deconstruct x' y') =
-    show x' ++ "," ++ show y' ++ ","  ++ "3"
+  show (Build bCoord' building') =
+    let (x', y') = fromCoord bCoord'
+    in show x' ++ "," ++ show y' ++ ","  ++ case building' of
+      DEFENSE -> "0"
+      ATTACK  -> "1"
+      ENERGY  -> "2"
+      TESLA   -> "4"
+  show (Deconstruct dCoord') =
+    let (x', y') = fromCoord dCoord'
+    in show x' ++ "," ++ show y' ++ ","  ++ "3"
   show NothingCommand = ""
 
 printCommand :: Command ->  IO ()

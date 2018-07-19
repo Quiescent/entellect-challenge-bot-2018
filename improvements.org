@@ -8,7 +8,13 @@
      It hardly touched the benchmark which is really wierd...
    - State "IN_PROGRESS" from "TODO"       [2018-07-17 Tue 20:38]
    :END:
-** TODO Generate all moves upfront then filter
+** DONE Use an Int for Coords in Moves
+   CLOSED: [2018-07-19 Thu 07:21]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-19 Thu 07:21] \\
+     It made just about no difference, but it'll make generation a bit
+     faster...
+   :END:
 ** TODO Cache Fitnesses when searching deeper
 ** TODO Use an Int for a missile
 ** TODO Add rewrite rules and always use map* varients of functions
