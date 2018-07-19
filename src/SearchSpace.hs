@@ -22,7 +22,8 @@ import Data.Int
 import System.Clock
 import Data.Maybe
 import System.Random
-import qualified Data.List as L
+import qualified Data.List   as L
+import qualified Data.Vector as V
 
 import Control.Concurrent (killThread,
                            tryTakeMVar,
@@ -35,6 +36,14 @@ import Control.Concurrent (killThread,
 import Control.Parallel (pseq)
 import Control.Parallel.Strategies (parList, using, rdeepseq)
 import Control.DeepSeq (rnf)
+
+allMyMovesWithEnoughEnergyForEnergyTowers :: V.Vector Command
+allMyMovesWithEnoughEnergyForEnergyTowers =
+  V.empty
+
+allOponentsMovesWithEnoughEnergyForEnergyTowers :: V.Vector Command
+allOponentsMovesWithEnoughEnergyForEnergyTowers =
+  V.empty
 
 availableMoves :: (Coord -> Bool) -> Player -> [Command]
 availableMoves constrainCellsTo player@(Player { towerMap = towerMap',

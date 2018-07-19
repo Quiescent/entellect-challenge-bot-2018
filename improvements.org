@@ -15,6 +15,10 @@
      It made just about no difference, but it'll make generation a bit
      faster...
    :END:
+** IN_PROGRESS Generate all moves upfront then filter
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-07-19 Thu 07:21]
+   :END:
 ** TODO Cache Fitnesses when searching deeper
 ** TODO Use an Int for a missile
 ** TODO Add rewrite rules and always use map* varients of functions
