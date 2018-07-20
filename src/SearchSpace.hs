@@ -8,15 +8,16 @@ module SearchSpace (advanceState,
 
 import Interpretor (GameState(..),
                     Player(..),
+                    BuildingType(..),
                     Command(..))
 import Engine
 import GameMap
 import Cell
 import GameState
-import Towers
 import Objective
 import BuildingsUnderConstruction
 import Coord
+import Magic
 
 import Data.Int
 import System.Clock
@@ -37,33 +38,83 @@ import Control.Parallel (pseq)
 import Control.Parallel.Strategies (parList, using, rdeepseq)
 import Control.DeepSeq (rnf)
 
-allMyMovesWithEnoughEnergyForEnergyTowers :: V.Vector Command
-allMyMovesWithEnoughEnergyForEnergyTowers =
-  V.empty
+myCells :: V.Vector Coord
+myCells = V.filter cellBelongsToMe $ allCells
 
-allOponentsMovesWithEnoughEnergyForEnergyTowers :: V.Vector Command
-allOponentsMovesWithEnoughEnergyForEnergyTowers =
-  V.empty
+oponentsCells :: V.Vector Coord
+oponentsCells = V.filter cellBelongsToOponent $ allCells
 
-availableMoves :: (Coord -> Bool) -> Player -> [Command]
-availableMoves constrainCellsTo player@(Player { towerMap = towerMap',
-                                                 constructionQueue = constructionQueue' }) = do
-  coord         <- filter (not . (flip definedAt) towerMap') $ filter (not . (flip containsSite constructionSites)) $ filter constrainCellsTo allCells
-  buildingType' <- buildingsWhichICanAfford
-  return $ Build coord buildingType'
+addNothingCommand :: V.Vector Command -> V.Vector Command
+addNothingCommand = V.cons NothingCommand
+
+allMyEnergyTowerMoves :: V.Vector Command
+allMyEnergyTowerMoves = addNothingCommand $ V.map ((flip Build) ENERGY) myCells
+
+allOponentsEnergyTowerMoves :: V.Vector Command
+allOponentsEnergyTowerMoves = addNothingCommand $ V.map ((flip Build) ENERGY) oponentsCells
+
+optionsWithThirtyEnergy :: V.Vector BuildingType
+optionsWithThirtyEnergy = V.fromList [ENERGY, DEFENSE, ATTACK]
+
+allMyDefenseAndAttackTowerMoves :: V.Vector Command
+allMyDefenseAndAttackTowerMoves =
+  addNothingCommand $ myCells >>= (\ i -> V.map (Build i) optionsWithThirtyEnergy)
+
+allOponentsDefenseAndAttackTowerMoves :: V.Vector Command
+allOponentsDefenseAndAttackTowerMoves =
+  addNothingCommand $ oponentsCells >>= (\ i -> V.map (Build i) optionsWithThirtyEnergy)
+
+optionsWithThreeHundredEnergy :: V.Vector BuildingType
+optionsWithThreeHundredEnergy = V.fromList [ENERGY, DEFENSE, ATTACK, TESLA]
+
+allMyMoves :: V.Vector Command
+allMyMoves =
+  addNothingCommand $ myCells >>= (\ i -> V.map (Build i) optionsWithThreeHundredEnergy)
+
+allOponentsMoves :: V.Vector Command
+allOponentsMoves =
+  addNothingCommand $ oponentsCells >>= (\ i -> V.map (Build i) optionsWithThreeHundredEnergy)
+
+-- NOTE: Assumes that attack towers cost the same as defense towers
+switchMovesICanAfford :: Int -> V.Vector Command
+switchMovesICanAfford energy'
+  | energy' < energyTowerCost = V.singleton NothingCommand
+  | energy' < attackTowerCost = allMyEnergyTowerMoves
+  | energy' < teslaTowerCost  = allMyDefenseAndAttackTowerMoves
+  | otherwise                 = allMyMoves
+
+myAvailableMoves :: GameState -> V.Vector Command
+myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
+                                             energy            = energy',
+                                             constructionQueue = constructionQueue' }) }) = do
+  V.filter available affordableMoves
   where
+    available (Build i _)    = notUnderConstruction i && notTaken i
+    available NothingCommand = True
+    notUnderConstruction     = (not . (flip containsSite constructionSites))
+    notTaken                 = (not . (flip definedAt) towerMap')
+    affordableMoves          = switchMovesICanAfford energy'
     constructionSites        = buildingConstructionSites constructionQueue'
-    buildingsWhichICanAfford = map snd $ filter ((<= energy') . fst) prices
-    energy'                  = energy player
-    prices                   = towerPrices
 
-myAvailableMoves :: GameState -> [Command]
-myAvailableMoves state =
-  NothingCommand : (availableMoves cellBelongsToMe $ me state)
+switchMovesOponentCanAfford :: Int -> V.Vector Command
+switchMovesOponentCanAfford energy'
+  | energy' < energyTowerCost = V.singleton NothingCommand
+  | energy' < attackTowerCost = allOponentsEnergyTowerMoves
+  | energy' < teslaTowerCost  = allOponentsDefenseAndAttackTowerMoves
+  | otherwise                 = allOponentsMoves
 
-oponentsAvailableMoves :: GameState -> [Command]
-oponentsAvailableMoves state =
-  NothingCommand : (availableMoves cellBelongsToOponent $ oponent state)
+oponentsAvailableMoves :: GameState -> V.Vector Command
+oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
+                                                   energy            = energy',
+                                                   constructionQueue = constructionQueue' }) }) =
+  V.filter available affordableMoves
+  where
+    available (Build i _)    = notUnderConstruction i && notTaken i
+    available NothingCommand = True
+    notUnderConstruction     = (not . (flip containsSite constructionSites))
+    notTaken                 = (not . (flip definedAt) towerMap')
+    affordableMoves          = switchMovesOponentCanAfford energy'
+    constructionSites        = buildingConstructionSites constructionQueue'
 
 maxSearchTime :: Int64
 maxSearchTime = 1800000000
@@ -97,10 +148,12 @@ search g state = do
             return newBest
   searchIter undefined -- It's not quitting the program here :/
 
-maximumByScore :: [(Float, Command)] -> (Float, Command)
-maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
+type ItemUnderSearch = (Float, Command)
 
-type ItemsUnderSearch = [(Float, Command)]
+type ItemsUnderSearch = V.Vector (Float, Command)
+
+maximumByScore :: ItemsUnderSearch -> ItemUnderSearch
+maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
 
 splitNWays :: RandomGen g => g -> Int -> [g]
 splitNWays g 0 = [g]
@@ -114,16 +167,16 @@ searchDeeper best g initialState = searchDeeperIter g initialItems
     searchDeeperIter h items = do
       putStrLn "Tick"
       let h':hs     = splitNWays h (length items)
-      let newItems  = zipWith (playOnceToEnd initialState) items hs
-      let newItPar  = newItems `using` parList rdeepseq
-      let bestSoFar = maximumByScore newItPar
+      let newItems  = V.zipWith (playOnceToEnd initialState) items $ V.fromList hs
+      let bestSoFar = maximumByScore newItems
       putStrLn $ "Best so far: " ++ (show bestSoFar)
       putMVar best $ snd $ rnf bestSoFar `pseq` bestSoFar
       searchDeeperIter h' newItems
+    myMovesToCheck = myAvailableMoves initialState
     initialItems :: ItemsUnderSearch
-    initialItems = zip (repeat 0) $ myAvailableMoves initialState
+    initialItems = V.zip (V.replicate (length myMovesToCheck) 0) myMovesToCheck
 
-playOnceToEnd :: RandomGen g => GameState -> (Float, Command) -> g -> (Float, Command)
+playOnceToEnd :: RandomGen g => GameState -> ItemUnderSearch -> g -> ItemUnderSearch
 playOnceToEnd initialState (score, firstMove) g =
   (score + endScore, firstMove)
   where
@@ -159,7 +212,7 @@ initialAdvanceState g firstMove gameState =
     (oponentsState, g') =
       chooseCandidate g $
       invertScores $
-      map (myBoardScore) $
+      V.map (myBoardScore) $
       oponentsMoves gameState
 
 advanceState :: RandomGen g => g -> GameState -> (g, GameState)
@@ -172,39 +225,36 @@ advanceState g gameState =
     (g', g'') = split g
     (myState, _)         =
       chooseCandidate g' $
-      map (myBoardScore) $
+      V.map (myBoardScore) $
       myMoves gameState
     (oponentsState, g''') =
       chooseCandidate g'' $
       invertScores $
-      map (myBoardScore) $
+      V.map (myBoardScore) $
       oponentsMoves gameState
 
-myMoves :: GameState -> [(GameState, Command)]
-myMoves state = do
-  myMove' <- myAvailableMoves state
-  return $ (updateMyMove myMove' state, myMove')
+myMoves :: GameState -> V.Vector (GameState, Command)
+myMoves state =
+  V.map ( \ move -> (updateMyMove move state, move)) $ myAvailableMoves state
 
-oponentsMoves :: GameState -> [(GameState, Command)]
+oponentsMoves :: GameState -> V.Vector (GameState, Command)
 oponentsMoves state = do
-  oponentsMove' <- oponentsAvailableMoves state
-  return $ (updateOponentsMove oponentsMove' state, oponentsMove')
+  V.map ( \ move -> (updateOponentsMove move state, move)) $ oponentsAvailableMoves state
 
-invertScores :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
-invertScores = map ( \ (score', x) -> (1.0 / score', x))
+invertScores :: V.Vector (Float, (GameState, a)) -> V.Vector (Float, (GameState, a))
+invertScores = V.map ( \ (score', x) -> (1.0 / score', x))
 
-zipCDF :: [(Float, (GameState, a))] -> [(Float, (GameState, a))]
+zipCDF :: V.Vector (Float, (GameState, a)) -> V.Vector (Float, (GameState, a))
 zipCDF xs =
-  zipWith ( \ x (_, y) -> (x, y)) normalised (head descending : descending)
+  V.zipWith ( \ x (_, y) -> (x, y)) normalised descending
   where
-    descending = reverse sorted
-    normalised = map (/ (head summed)) summed
-    summed     = (reverse . scanl (+) 0 . map fst) sorted
-    sorted     = L.sortOn fst adjusted
-    adjusted   = map (\ (boardScore, x) -> (minValue + boardScore, x)) xs
-    minValue   = abs $ minimum $ map fst xs
+    descending = V.reverse adjusted
+    normalised = V.map (/ (V.head summed)) summed
+    summed     = (V.reverse . V.scanl (+) 0 . V.map fst) adjusted
+    adjusted   = V.map (\ (boardScore, x) -> (minValue + boardScore, x)) xs
+    minValue   = abs $ V.minimum $ V.map fst xs
 
-chooseOne :: (RandomGen g) => g -> [(Float, (GameState, Command))] -> ((Float, (GameState, Command)), g)
+chooseOne :: (RandomGen g) => g -> V.Vector (Float, (GameState, Command)) -> ((Float, (GameState, Command)), g)
 chooseOne g xs =
   (scanForValue xs, g')
   where
@@ -213,8 +263,8 @@ chooseOne g xs =
     normalise    = (/ floatingMax) . fromIntegral . abs
     (value, g')  = next g
     normalised   = normalise value
-    scanForValue = fromJust . lastIfNothing xs . L.find ((<= normalised) . fst)
+    scanForValue = fromJust . lastIfNothing xs . V.find ((<= normalised) . fst)
 
-lastIfNothing :: [(Float, (GameState, Command))] -> Maybe (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command))
+lastIfNothing :: V.Vector (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command))
 lastIfNothing _  x@(Just _) = x
-lastIfNothing xs Nothing    = Just $ last xs
+lastIfNothing xs Nothing    = Just $ V.last xs

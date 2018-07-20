@@ -19,8 +19,10 @@
    :LOGBOOK:
    - State "IN_PROGRESS" from "TODO"       [2018-07-19 Thu 07:21]
    :END:
-** TODO Cache Fitnesses when searching deeper
 ** TODO Use an Int for a missile
+** TODO Use an Int for Each Move
+** TODO Cache Fitnesses when searching deeper
+** TODO Use Vector Algorithms binary search for `chooseOne'
 ** TODO Add rewrite rules and always use map* varients of functions
 ** TODO Make a type for each row state
 ** TODO Do some maths!!!
