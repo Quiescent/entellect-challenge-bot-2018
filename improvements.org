@@ -23,11 +23,17 @@
      because I zip it and reallocate on each evaluation of fitness.
    - State "IN_PROGRESS" from "TODO"       [2018-07-19 Thu 07:21]
    :END:
-** IN_PROGRESS Find the function which is creating Integers
+** IN_PROGRESS Separate the fitness vector from the move vector
    :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 15:41]
+   :END:
+** TODO Find the function which is creating Integers
+   :LOGBOOK:
+   - Note taken on [2018-07-21 Sat 15:41] \\
+     I'm really not sure.  So I'm moving onto something else while I leave
+     my brain to figure it all out.
    - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 15:24]
    :END:
-** TODO Separate the fitness vector from the move vector
 ** TODO Use an Int for a missile
 ** TODO Use an Int for Each Move
 ** TODO Cache Fitnesses when searching deeper
