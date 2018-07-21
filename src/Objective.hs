@@ -21,14 +21,13 @@ data Move = Move { myMove       :: Command,
 
 instance NFData Move
 
-myBoardScore :: (GameState, a) -> (Float, (GameState, a))
-myBoardScore withMove@(state, _) =
-  (hitsSubtractTakenAfterTime state +
-   hitsDealtToOponent state -
-   hitsTakenByMe state -
-   (zeroIfEnoughEnergy (me state) $ turnsToNextTowerByTurn (me state)) +
-   resultBonus state,
-    withMove)
+myBoardScore :: GameState -> Float
+myBoardScore state =
+  hitsSubtractTakenAfterTime state +
+  hitsDealtToOponent state -
+  hitsTakenByMe state -
+  (zeroIfEnoughEnergy (me state) $ turnsToNextTowerByTurn (me state)) +
+  resultBonus state
 
 resultBonus :: GameState -> Float
 resultBonus state =

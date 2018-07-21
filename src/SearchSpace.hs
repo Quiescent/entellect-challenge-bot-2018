@@ -38,6 +38,8 @@ import Control.Parallel (pseq)
 import Control.Parallel.Strategies (parList, using, rdeepseq)
 import Control.DeepSeq (rnf)
 
+import Debug.Trace
+
 myCells :: V.Vector Coord
 myCells = V.filter cellBelongsToMe $ allCells
 
@@ -148,53 +150,45 @@ search g state = do
             return newBest
   searchIter undefined -- It's not quitting the program here :/
 
-type ItemUnderSearch = (Float, Command)
-
-type ItemsUnderSearch = V.Vector (Float, Command)
-
-maximumByScore :: ItemsUnderSearch -> ItemUnderSearch
-maximumByScore = L.maximumBy ( \ (x, _) (y, _) -> compare x y )
-
 splitNWays :: RandomGen g => g -> Int -> [g]
 splitNWays g 0 = [g]
 splitNWays g n = let (g', g'') = split g
                  in g' : splitNWays g'' (n - 1)
 
 searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
-searchDeeper best g initialState = searchDeeperIter g initialItems
+searchDeeper best g initialState = searchDeeperIter g initialScores
   where
-    searchDeeperIter :: RandomGen g => g -> ItemsUnderSearch -> IO ()
-    searchDeeperIter h items = do
+    searchDeeperIter :: RandomGen g => g -> V.Vector Float -> IO ()
+    searchDeeperIter h scores = do
       putStrLn "Tick"
-      let h':hs     = splitNWays h (length items)
-      let newItems  = V.zipWith (playOnceToEnd initialState) items $ V.fromList hs
-      let bestSoFar = maximumByScore newItems
+      let h':hs            = splitNWays h moveCount
+      let newScores        = V.zipWith3 (playOnceToEnd initialState) scores moves $ V.fromList hs
+      let indexOfBestSoFar = V.maxIndex newScores
+      let bestSoFar        = moves V.! indexOfBestSoFar
       putStrLn $ "Best so far: " ++ (show bestSoFar)
-      putMVar best $ snd $ rnf bestSoFar `pseq` bestSoFar
-      searchDeeperIter h' newItems
-    myMovesToCheck = myAvailableMoves initialState
-    initialItems :: ItemsUnderSearch
-    initialItems = V.zip (V.replicate (length myMovesToCheck) 0) myMovesToCheck
+      putMVar best $ rnf bestSoFar `pseq` bestSoFar
+      searchDeeperIter h' newScores
+    moveCount     = V.length moves
+    moves         = myAvailableMoves initialState
+    initialScores = V.replicate moveCount 0.0
 
-playOnceToEnd :: RandomGen g => GameState -> ItemUnderSearch -> g -> ItemUnderSearch
-playOnceToEnd initialState (score, firstMove) g =
-  (score + endScore, firstMove)
-  where
-    (_, endScore) = playToEnd g initialState firstMove
+playOnceToEnd :: RandomGen g => GameState -> Float -> Command -> g -> Float
+playOnceToEnd initialState score firstMove g =
+  score + playToEnd g initialState firstMove
 
 depth :: Int
 depth = 20
 
-playToEnd :: RandomGen g => g -> GameState -> Command -> (g, Float)
+playToEnd :: RandomGen g => g -> GameState -> Command -> Float
 playToEnd g initialState firstMove =
   let (g', initialMoveMade) = initialAdvanceState g firstMove initialState
   in playToEndIter depth g' initialMoveMade
   where
-    playToEndIter :: RandomGen g => Int -> g -> GameState -> (g, Float)
-    playToEndIter 0 h currentState = (h, fst $ myBoardScore (currentState, undefined))
+    playToEndIter :: RandomGen g => Int -> g -> GameState -> Float
+    playToEndIter 0 h currentState = myBoardScore currentState
     playToEndIter n h currentState =
       if gameOver currentState
-      then (h, fst $ myBoardScore (currentState, undefined))
+      then myBoardScore currentState
       else let (h', newState) = advanceState h currentState
            in playToEndIter (n - 1) h' newState
 
@@ -205,66 +199,57 @@ gameOver (GameState { me      = (Player { health = myHealth }),
 
 initialAdvanceState :: RandomGen g => g -> Command -> GameState -> (g, GameState)
 initialAdvanceState g firstMove gameState =
-  let oponentsCommand = snd $ snd oponentsState
-  in (g', updateMyMove firstMove $ updateOponentsMove oponentsCommand $ tickEngine gameState)
+  (g', updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
   where
-    chooseCandidate gen = chooseOne gen . zipCDF
-    (oponentsState, g') =
-      chooseCandidate g $
+    (oponentsMove, g') =
+      chooseOne g oponentsMoves $
+      cdf $
       invertScores $
-      V.map (myBoardScore) $
-      oponentsMoves gameState
+      V.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+    oponentsMoves = oponentsAvailableMoves gameState
 
 advanceState :: RandomGen g => g -> GameState -> (g, GameState)
 advanceState g gameState =
-  let myCommand       = snd $ snd myState
-      oponentsCommand = snd $ snd oponentsState
-  in (g''', updateMyMove myCommand $ updateOponentsMove oponentsCommand $ tickEngine gameState)
+  (g''', updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
   where
-    chooseCandidate gen = chooseOne gen . zipCDF
     (g', g'') = split g
-    (myState, _)         =
-      chooseCandidate g' $
-      V.map (myBoardScore) $
-      myMoves gameState
-    (oponentsState, g''') =
-      chooseCandidate g'' $
+    (myMove, _)         =
+      chooseOne g' myMoves $
+      cdf $
+      V.map (myBoardScore . (flip updateMyMove gameState)) myMoves
+    myMoves = myAvailableMoves gameState
+    (oponentsMove, g''') =
+      chooseOne g'' oponentsMoves $
+      cdf $
       invertScores $
-      V.map (myBoardScore) $
-      oponentsMoves gameState
+      V.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+    oponentsMoves = oponentsAvailableMoves gameState
 
-myMoves :: GameState -> V.Vector (GameState, Command)
-myMoves state =
-  V.map ( \ move -> (updateMyMove move state, move)) $ myAvailableMoves state
+invertScores :: V.Vector Float -> V.Vector Float
+invertScores = V.map (1.0 /)
 
-oponentsMoves :: GameState -> V.Vector (GameState, Command)
-oponentsMoves state = do
-  V.map ( \ move -> (updateOponentsMove move state, move)) $ oponentsAvailableMoves state
-
-invertScores :: V.Vector (Float, (GameState, a)) -> V.Vector (Float, (GameState, a))
-invertScores = V.map ( \ (score', x) -> (1.0 / score', x))
-
-zipCDF :: V.Vector (Float, (GameState, a)) -> V.Vector (Float, (GameState, a))
-zipCDF xs =
-  V.zipWith ( \ x (_, y) -> (x, y)) normalised descending
+cdf :: V.Vector Float -> V.Vector Float
+cdf xs = normalised
   where
-    descending = V.reverse adjusted
     normalised = V.map (/ (V.head summed)) summed
-    summed     = (V.reverse . V.scanl (+) 0 . V.map fst) adjusted
-    adjusted   = V.map (\ (boardScore, x) -> (minValue + boardScore, x)) xs
-    minValue   = abs $ V.minimum $ V.map fst xs
+    summed     = (V.reverse . V.scanl1 (+)) adjusted
+    adjusted   = V.map (+minValue) xs
+    minValue   = abs $ V.minimum xs
 
-chooseOne :: (RandomGen g) => g -> V.Vector (Float, (GameState, Command)) -> ((Float, (GameState, Command)), g)
-chooseOne g xs =
-  (scanForValue xs, g')
+chooseOne :: (RandomGen g) => g -> V.Vector Command -> V.Vector Float -> (Command, g)
+chooseOne g moves scores =
+  (scanForValue scores, g')
   where
-    (_, max')    = genRange g
-    floatingMax  = fromIntegral max'
-    normalise    = (/ floatingMax) . fromIntegral . abs
-    (value, g')  = next g
-    normalised   = normalise value
-    scanForValue = fromJust . lastIfNothing xs . V.find ((<= normalised) . fst)
+    (_, max')     = genRange g
+    floatingMax   = fromIntegral max'
+    normalise     = (/ floatingMax) . fromIntegral . abs
+    (value, g')   = next g
+    normalised    = normalise value
+    numberOfMoves = V.length moves
+    indexOfLast   = numberOfMoves - 1
+    indexMoves i  = moves V.! (numberOfMoves - i - 1)
+    scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . V.findIndex ((<= normalised))
 
-lastIfNothing :: V.Vector (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command)) -> Maybe (Float, (GameState, Command))
-lastIfNothing _  x@(Just _) = x
-lastIfNothing xs Nothing    = Just $ V.last xs
+lastIfNothing :: Int -> Maybe Int -> Maybe Int
+lastIfNothing _         x@(Just _) = x
+lastIfNothing lastIndex Nothing    = Just lastIndex
