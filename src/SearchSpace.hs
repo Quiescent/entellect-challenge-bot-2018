@@ -23,8 +23,10 @@ import Data.Int
 import System.Clock
 import Data.Maybe
 import System.Random
-import qualified Data.List   as L
-import qualified Data.Vector as V
+import qualified Data.List           as L
+import qualified Data.Vector         as V
+import qualified Data.Vector.Generic as VG
+import qualified Data.Vector.Unboxed as UV
 
 import Control.Concurrent (killThread,
                            tryTakeMVar,
@@ -158,19 +160,19 @@ splitNWays g n = let (g', g'') = split g
 searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
 searchDeeper best g initialState = searchDeeperIter g initialScores
   where
-    searchDeeperIter :: RandomGen g => g -> V.Vector Float -> IO ()
+    searchDeeperIter :: RandomGen g => g -> UV.Vector Float -> IO ()
     searchDeeperIter h scores = do
       putStrLn "Tick"
       let h':hs            = splitNWays h moveCount
-      let newScores        = V.zipWith3 (playOnceToEnd initialState) scores moves $ V.fromList hs
+      let newScores        = V.zipWith3 (playOnceToEnd initialState) (VG.convert scores) moves $ V.fromList hs
       let indexOfBestSoFar = V.maxIndex newScores
       let bestSoFar        = moves V.! indexOfBestSoFar
       putStrLn $ "Best so far: " ++ (show bestSoFar)
       putMVar best $ rnf bestSoFar `pseq` bestSoFar
-      searchDeeperIter h' newScores
+      searchDeeperIter h' $ VG.convert newScores
     moveCount     = V.length moves
     moves         = myAvailableMoves initialState
-    initialScores = V.replicate moveCount 0.0
+    initialScores = UV.replicate moveCount 0.0
 
 playOnceToEnd :: RandomGen g => GameState -> Float -> Command -> g -> Float
 playOnceToEnd initialState score firstMove g =
@@ -205,6 +207,7 @@ initialAdvanceState g firstMove gameState =
       chooseOne g oponentsMoves $
       cdf $
       invertScores $
+      VG.convert $
       V.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
@@ -216,27 +219,29 @@ advanceState g gameState =
     (myMove, _)         =
       chooseOne g' myMoves $
       cdf $
+      VG.convert $
       V.map (myBoardScore . (flip updateMyMove gameState)) myMoves
     myMoves = myAvailableMoves gameState
     (oponentsMove, g''') =
       chooseOne g'' oponentsMoves $
       cdf $
       invertScores $
+      VG.convert $
       V.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
-invertScores :: V.Vector Float -> V.Vector Float
-invertScores = V.map (1.0 /)
+invertScores :: UV.Vector Float -> UV.Vector Float
+invertScores = UV.map (1.0 /)
 
-cdf :: V.Vector Float -> V.Vector Float
+cdf :: UV.Vector Float -> UV.Vector Float
 cdf xs = normalised
   where
-    normalised = V.map (/ (V.head summed)) summed
-    summed     = (V.reverse . V.scanl1 (+)) adjusted
-    adjusted   = V.map (+minValue) xs
-    minValue   = abs $ V.minimum xs
+    normalised = UV.map (/ (UV.head summed)) summed
+    summed     = (UV.reverse . UV.scanl1 (+)) adjusted
+    adjusted   = UV.map (+minValue) xs
+    minValue   = abs $ UV.minimum xs
 
-chooseOne :: (RandomGen g) => g -> V.Vector Command -> V.Vector Float -> (Command, g)
+chooseOne :: (RandomGen g) => g -> V.Vector Command -> UV.Vector Float -> (Command, g)
 chooseOne g moves scores =
   (scanForValue scores, g')
   where
@@ -248,7 +253,7 @@ chooseOne g moves scores =
     numberOfMoves = V.length moves
     indexOfLast   = numberOfMoves - 1
     indexMoves i  = moves V.! (numberOfMoves - i - 1)
-    scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . V.findIndex ((<= normalised))
+    scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . UV.findIndex ((<= normalised))
 
 lastIfNothing :: Int -> Maybe Int -> Maybe Int
 lastIfNothing _         x@(Just _) = x
