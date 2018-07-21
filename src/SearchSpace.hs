@@ -152,30 +152,25 @@ search g state = do
             return newBest
   searchIter undefined -- It's not quitting the program here :/
 
-splitNWays :: RandomGen g => g -> Int -> [g]
-splitNWays g 0 = [g]
-splitNWays g n = let (g', g'') = split g
-                 in g' : splitNWays g'' (n - 1)
-
 searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
 searchDeeper best g initialState = searchDeeperIter g initialScores
   where
     searchDeeperIter :: RandomGen g => g -> UV.Vector Float -> IO ()
     searchDeeperIter h scores = do
       putStrLn "Tick"
-      let h':hs            = splitNWays h moveCount
-      let newScores        = V.zipWith3 (playOnceToEnd initialState) (VG.convert scores) moves $ V.fromList hs
+      let (h', h'')        = split h
+      let newScores        = V.zipWith (playOnceToEnd h' initialState) (VG.convert scores) moves
       let indexOfBestSoFar = V.maxIndex newScores
       let bestSoFar        = moves V.! indexOfBestSoFar
       putStrLn $ "Best so far: " ++ (show bestSoFar)
       putMVar best $ rnf bestSoFar `pseq` bestSoFar
-      searchDeeperIter h' $ VG.convert newScores
+      searchDeeperIter h'' $ VG.convert newScores
     moveCount     = V.length moves
     moves         = myAvailableMoves initialState
     initialScores = UV.replicate moveCount 0.0
 
-playOnceToEnd :: RandomGen g => GameState -> Float -> Command -> g -> Float
-playOnceToEnd initialState score firstMove g =
+playOnceToEnd :: RandomGen g => g -> GameState -> Float -> Command -> Float
+playOnceToEnd g initialState score firstMove =
   score + playToEnd g initialState firstMove
 
 depth :: Int
