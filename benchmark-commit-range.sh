@@ -14,12 +14,12 @@ for commit in $COMMITS; do
     git reset --hard $commit
     echo "sed -i 's/maxSearchTime = 1800000000/maxSearchTime = 60000000000/g' src/SearchSpace.hs"
     sed -i 's/maxSearchTime = 1800000000/maxSearchTime = 60000000000/g' src/SearchSpace.hs
-    echo "stack --nix --profile install --local-bin-path bin"
-    stack --nix --profile install --local-bin-path bin
+    echo "stack --nix install --local-bin-path bin"
+    stack --nix install --local-bin-path bin
     echo "git checkout src/SearchSpace.hs"
     git checkout src/SearchSpace.hs
-    echo "./bin/EntelectChallenge2018-exe +RTS -p -RTS"
-    ./bin/EntelectChallenge2018-exe +RTS -p -RTS
+    echo "./bin/EntelectChallenge2018-exe"
+    ./bin/EntelectChallenge2018-exe
     PROF_DIR=profiling-$commit
     echo "mkdir $PROF_DIR"
     mkdir $PROF_DIR
