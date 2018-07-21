@@ -15,10 +15,19 @@
      It made just about no difference, but it'll make generation a bit
      faster...
    :END:
-** IN_PROGRESS Generate all moves upfront then filter
+** DONE Generate all moves upfront then filter
+   CLOSED: [2018-07-21 Sat 15:09]
    :LOGBOOK:
+   - CLOSING NOTE [2018-07-21 Sat 15:09] \\
+     Made the adjustment but it looks like it's worse and I think that it's
+     because I zip it and reallocate on each evaluation of fitness.
    - State "IN_PROGRESS" from "TODO"       [2018-07-19 Thu 07:21]
    :END:
+** IN_PROGRESS Find the function which is creating Integers
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 15:24]
+   :END:
+** TODO Separate the fitness vector from the move vector
 ** TODO Use an Int for a missile
 ** TODO Use an Int for Each Move
 ** TODO Cache Fitnesses when searching deeper
