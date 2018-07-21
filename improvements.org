@@ -23,16 +23,28 @@
      because I zip it and reallocate on each evaluation of fitness.
    - State "IN_PROGRESS" from "TODO"       [2018-07-19 Thu 07:21]
    :END:
-** IN_PROGRESS Separate the fitness vector from the move vector
+** DONE Separate the fitness vector from the move vector
+   CLOSED: [2018-07-21 Sat 17:05]
    :LOGBOOK:
+   - CLOSING NOTE [2018-07-21 Sat 17:05] \\
+     Worked like a charm with higher order zipWith functions.
    - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 15:41]
    :END:
-** TODO Find the function which is creating Integers
+** DONE Find the function which is creating Integers
+   CLOSED: [2018-07-21 Sat 17:05]
    :LOGBOOK:
+   - CLOSING NOTE [2018-07-21 Sat 17:05] \\
+     This was incidentally fixed when I separated the fitness vector out.
    - Note taken on [2018-07-21 Sat 15:41] \\
      I'm really not sure.  So I'm moving onto something else while I leave
      my brain to figure it all out.
    - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 15:24]
+   :END:
+** DONE Don't split the random gen so much
+   CLOSED: [2018-07-21 Sat 17:05]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-21 Sat 17:05] \\
+     I removed this so that I wouldn't allocate as much.
    :END:
 ** TODO Use an Int for a missile
 ** TODO Use an Int for Each Move
