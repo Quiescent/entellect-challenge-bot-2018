@@ -46,6 +46,13 @@
    - CLOSING NOTE [2018-07-21 Sat 17:05] \\
      I removed this so that I wouldn't allocate as much.
    :END:
+** DONE Remove Generics (they're reportedly slow)
+   CLOSED: [2018-07-21 Sat 21:00]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-21 Sat 21:00] \\
+     Well I've done this and it's made just about no difference
+   - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 21:00]
+   :END:
 ** TODO Use an Int for a missile
 ** TODO Use an Int for Each Move
 ** TODO Cache Fitnesses when searching deeper

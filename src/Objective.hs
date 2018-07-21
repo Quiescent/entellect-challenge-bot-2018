@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Objective (myBoardScore, Move(..))
   where
@@ -12,14 +11,17 @@ import Magic
 
 import qualified Data.List   as L
 import qualified Data.IntMap as M
-import GHC.Generics (Generic(..))
 import Control.DeepSeq
 
 data Move = Move { myMove       :: Command,
                    oponentsMove :: Command }
-          deriving (Show, Generic, Eq)
+          deriving (Show, Eq)
 
-instance NFData Move
+instance NFData Move where
+  rnf (Move myMove' oponentsMove') =
+    (rnf myMove')       `seq`
+    (rnf oponentsMove') `seq`
+    ()
 
 myBoardScore :: GameState -> Float
 myBoardScore state =

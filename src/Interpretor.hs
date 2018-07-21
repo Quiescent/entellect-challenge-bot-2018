@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -28,51 +27,47 @@ import qualified Data.Vector          as V
 import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap          as M
 import qualified Data.List            as L
-import GHC.Generics (Generic(..))
 import Control.DeepSeq
 
 import Buildings
 import Coord
 import Magic
 
-data PlayerType =
-  A | B deriving (Show, Generic, Eq)
-
-instance FromJSON PlayerType
-
 data Missile = Missile { xDisp  :: Int,
                          yDisp  :: Int }
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Eq, Ord)
 
-instance NFData Missile
+instance NFData Missile where
+  rnf missile@(Missile xDisp' yDisp') = xDisp' `seq` yDisp' `seq` ()
 
 data ScratchMissile = ScratchMissile Int
                                      Int
-                                     PlayerType
+                                     String
                                      Int
                                      Int
-  deriving (Show, Generic, Eq)
+  deriving (Show, Eq)
 
 instance FromJSON ScratchMissile where
-  parseJSON = withObject "Missile" $ \ v ->
-    ScratchMissile <$> v.: "damage"
-                   <*> v.: "speed"
-                   <*> v.: "playerType"
-                   <*> v.: "x"
-                   <*> v.: "y"
+  parseJSON = withObject "Missile" $ \ v -> do
+    damage'     <- v.: "damage"
+    speed'      <- v.: "speed"
+    playerType' <- v.: "playerType"
+    x'          <- v.: "x"
+    y'          <- v.: "y"
+    return $ ScratchMissile damage' speed' playerType' x' y'
 
 data BuildingType = DEFENSE | ATTACK | ENERGY | TESLA
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Eq, Ord)
 
-instance NFData BuildingType
-instance FromJSON BuildingType
+instance NFData BuildingType where
+  rnf bt = bt `seq` ()
 
 data ScratchBuilding = ScratchBuilding Int
                                        Int
                                        Int
-                                       BuildingType
-                                       PlayerType
-                deriving (Show, Generic, Eq)
+                                       String
+                                       String
+                deriving (Show, Eq)
 
 instance FromJSON ScratchBuilding where
   parseJSON = withObject "Building" $ \ v -> 
@@ -104,7 +99,7 @@ data Player = Player { energy            :: Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
                        ownedMissiles     :: [Missile] }
-              deriving (Show, Generic)
+              deriving (Show)
 
 -- Allows for built in sorting
 toOrderedBuildingUnderConstruction :: BuildingUnderConstruction -> (Int, Int, Coord, Building)
@@ -126,10 +121,29 @@ instance Eq Player where
       L.sort ownedMissilesA                   == L.sort ownedMissilesB &&
       (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
 
-instance NFData Player
+instance NFData Player where
+  rnf (Player energy'
+              health'
+              hitsTaken'
+              energyGenPerTurn'
+              attackPerRow'
+              defensePerRow'
+              towerMap'
+              constructionQueue'
+              ownedMissiles')
+    = energy'                 `seq`
+      health'                 `seq`
+      hitsTaken'              `seq`
+      energyPerTurn           `seq`
+      (rnf attackPerRow)      `seq`
+      (rnf defensePerRow)     `seq`
+      (rnf towerMap)          `seq`
+      (rnf constructionQueue) `seq`
+      (rnf ownedMissiles)     `seq`
+      ()
 
-data ScratchPlayer = ScratchPlayer PlayerType Int Int Int
-                   deriving (Show, Generic, Eq)
+data ScratchPlayer = ScratchPlayer String Int Int Int
+                   deriving (Show, Eq)
 
 instance FromJSON ScratchPlayer where
   parseJSON = withObject "ScratchPlayer" $ \ v -> do
@@ -144,9 +158,13 @@ instance FromJSON ScratchPlayer where
 
 data GameState = GameState { me       :: Player,
                              oponent  :: Player }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance NFData GameState
+instance NFData GameState where
+  rnf (GameState me' oponent') =
+    (rnf me)      `seq`
+    (rnf oponent) `seq`
+    ()
 
 instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
@@ -172,7 +190,7 @@ extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
   let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players V.! 0
       secondPlayer = players V.! 1
-  in if firstPlayerType == A
+  in if firstPlayerType == "A"
      then (firstPlayer,  secondPlayer)
      else (secondPlayer, firstPlayer)
 
@@ -180,10 +198,10 @@ type TowerMap = M.IntMap Building
 
 data CellStateContainer = CellStateContainer Int
                                              Int
-                                             PlayerType
+                                             String
                                              (V.Vector ScratchBuilding)
                                              (V.Vector ScratchMissile)
-                          deriving (Show, Generic, Eq)
+                          deriving (Show, Eq)
 
 instance FromJSON CellStateContainer where
   parseJSON = withObject "CellStateContainer" $ \ v -> do
@@ -233,7 +251,7 @@ splitMissiles = V.foldr splitMissilesAcc ([], [])
 splitMissilesAcc :: ScratchMissile -> ([Missile], [Missile]) -> ([Missile], [Missile])
 splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles) =
   let missile = (Missile x' y')
-  in if owner' == A
+  in if owner' == "A"
      then (missile : myMissiles, oponentsMissiles)
      else (myMissiles,           missile : oponentsMissiles)
 
@@ -244,15 +262,21 @@ accBuildings x' y' buildings' =
   else id
 
 accBuilding :: Int -> Int -> ScratchBuilding -> GameState -> GameState
-accBuilding x' y' building'@(ScratchBuilding _ _ _ _ A) state =
+accBuilding x' y' building'@(ScratchBuilding _ _ _ _ "A") state =
   state { me = accBuildingToPlayer x' y' building' (me state) }
-accBuilding x' y' building'@(ScratchBuilding _ _ _ _ B) state =
+accBuilding x' y' building'@(ScratchBuilding _ _ _ _ "B") state =
   state { oponent = accBuildingToPlayer x' y' building' (oponent state) }
+
+toBuildingType :: String -> BuildingType
+toBuildingType "DEFENSE" = DEFENSE
+toBuildingType "ATTACK"  = ATTACK
+toBuildingType "ENERGY"  = ENERGY
+toBuildingType "TESLA"   = TESLA
 
 accBuildingToPlayer :: Int -> Int -> ScratchBuilding -> Player -> Player
 accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _) player@(Player { towerMap          = towerMap',
                                                                                constructionQueue = constructionQueue' }) =
-  let building' = chooseBuilding int wctl bt
+  let building' = chooseBuilding int wctl (toBuildingType bt)
   in incrementFitness y' building' $
      if ctl < 0
      then player { towerMap = M.insert (toCoord x' y') building' towerMap' }
@@ -372,9 +396,17 @@ data Command = Build { bCoord   :: Coord,
                        building :: BuildingType }
                | Deconstruct { dCoord :: Coord }
                | NothingCommand
-             deriving (Eq, Generic)
+             deriving (Eq)
 
-instance NFData Command
+instance NFData Command where
+  rnf (Build bCoord' building') =
+    bCoord'   `seq`
+    building' `seq`
+    ()
+  rnf (Deconstruct dCoord') =
+    dCoord' `seq` ()
+  rnf cmd@(NothingCommand) =
+    cmd `seq` ()
 
 instance Show Command where
   show (Build bCoord' building') =
