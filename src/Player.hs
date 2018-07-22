@@ -40,6 +40,7 @@ import BuildingsUnderConstruction
 import Magic
 import Towers
 import Buildings
+import EfficientCommand
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -131,23 +132,16 @@ buildingFromStats buildingType'
   | buildingType' == ENERGY  = energyTower
   | buildingType' == DEFENSE = defense4
 
-updateMove :: Command -> Player -> Player
-updateMove (Deconstruct coord') player' =
-  let maybeBuilding = getAt coord' $ towerMap player'
-      y'            = getY coord'
-  in case maybeBuilding of
-    Just building' ->
-      decrementFitness y' building' $
-      deconstructAt coord' player'
-    Nothing                               ->
-      deconstructAt coord' player'
-updateMove NothingCommand               player' = player'
-updateMove (Build coord' buildingType') player' =
-  let y' = getY coord'
-  in incrementFitness y' building' $ build timeLeft coord' building' player'
+updateMove :: EfficientCommand -> Player -> Player
+-- TODO: Handle deconstruct
+updateMove command player' =
+  incrementFitness y' building' $ buildOnMap timeLeft coord' building' player'
   where
-    timeLeft  = constructionTime buildingType'
-    building' = buildingFromStats buildingType'
+    coord'        = coordOfCommand command
+    y'            = getY coord'
+    buildingType' = buildingTypeOfCommand command
+    timeLeft      = constructionTime buildingType'
+    building'     = buildingFromStats buildingType'
 
 constructionTime :: BuildingType -> Int
 constructionTime TESLA   = teslaTowerConstructionTime
@@ -155,8 +149,8 @@ constructionTime ENERGY  = energyTowerConstructionTime
 constructionTime DEFENSE = defenseTowerConstructionTime
 constructionTime ATTACK  = attackTowerConstructionTime
 
-build :: Int -> Coord -> Building -> Player -> Player
-build timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
+buildOnMap :: Int -> Coord -> Building -> Player -> Player
+buildOnMap timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
                                                 towerMap          = towerMap',
                                                 energy            = energy' }) =
   if definedAt coord towerMap'

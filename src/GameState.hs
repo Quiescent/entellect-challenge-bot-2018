@@ -26,6 +26,7 @@ import Player
 import GameMap
 import BuildingsUnderConstruction
 import Coord
+import EfficientCommand
 
 type MapPlayer = (Player -> Player) -> GameState -> GameState
 
@@ -76,8 +77,8 @@ mapMyMap f = mapMyPlayer (mapMap f)
 mapOponentsMap :: (TowerMap -> TowerMap) -> GameState -> GameState
 mapOponentsMap f = mapOponentsPlayer (mapMap f)
 
-updateMyMove :: Command -> GameState -> GameState
+updateMyMove :: EfficientCommand -> GameState -> GameState
 updateMyMove command = mapMyPlayer (updateMove command)
 
-updateOponentsMove :: Command -> GameState -> GameState
+updateOponentsMove :: EfficientCommand -> GameState -> GameState
 updateOponentsMove command = mapOponentsPlayer (updateMove command)

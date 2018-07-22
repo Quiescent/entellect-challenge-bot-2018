@@ -18,6 +18,7 @@ import Objective
 import BuildingsUnderConstruction
 import Coord
 import Magic
+import EfficientCommand
 
 import Data.Int
 import System.Clock
@@ -42,83 +43,84 @@ import Control.DeepSeq (rnf)
 
 import Debug.Trace
 
-myCells :: V.Vector Coord
-myCells = V.filter cellBelongsToMe $ allCells
+myCells :: UV.Vector Coord
+myCells = UV.filter cellBelongsToMe $ allCells
 
-oponentsCells :: V.Vector Coord
-oponentsCells = V.filter cellBelongsToOponent $ allCells
+oponentsCells :: UV.Vector Coord
+oponentsCells = UV.filter cellBelongsToOponent $ allCells
 
-addNothingCommand :: V.Vector Command -> V.Vector Command
-addNothingCommand = V.cons NothingCommand
+addNothingCommand :: UV.Vector EfficientCommand -> UV.Vector EfficientCommand
+addNothingCommand = UV.cons nothingCommand
 
-allMyEnergyTowerMoves :: V.Vector Command
-allMyEnergyTowerMoves = addNothingCommand $ V.map ((flip Build) ENERGY) myCells
+allMyEnergyTowerMoves :: UV.Vector EfficientCommand
+allMyEnergyTowerMoves = addNothingCommand $ UV.map ((flip build) (buildingTypeToInt ENERGY)) myCells
 
-allOponentsEnergyTowerMoves :: V.Vector Command
-allOponentsEnergyTowerMoves = addNothingCommand $ V.map ((flip Build) ENERGY) oponentsCells
+allOponentsEnergyTowerMoves :: UV.Vector EfficientCommand
+allOponentsEnergyTowerMoves = addNothingCommand $ UV.map ((flip build) (buildingTypeToInt ENERGY)) oponentsCells
 
-optionsWithThirtyEnergy :: V.Vector BuildingType
-optionsWithThirtyEnergy = V.fromList [ENERGY, DEFENSE, ATTACK]
+optionsWithThirtyEnergy :: UV.Vector EfficientBuilding
+optionsWithThirtyEnergy = UV.fromList $ map buildingTypeToInt [ENERGY, DEFENSE, ATTACK]
 
-allMyDefenseAndAttackTowerMoves :: V.Vector Command
-allMyDefenseAndAttackTowerMoves =
-  addNothingCommand $ myCells >>= (\ i -> V.map (Build i) optionsWithThirtyEnergy)
+createOptions :: UV.Vector EfficientBuilding -> UV.Vector Coord -> UV.Vector EfficientCommand
+createOptions buildings cells =
+  addNothingCommand $ UV.foldr ( \ i acc -> acc UV.++ (UV.map (build i) buildings)) UV.empty cells
 
-allOponentsDefenseAndAttackTowerMoves :: V.Vector Command
-allOponentsDefenseAndAttackTowerMoves =
-  addNothingCommand $ oponentsCells >>= (\ i -> V.map (Build i) optionsWithThirtyEnergy)
+allMyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
+allMyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy myCells
 
-optionsWithThreeHundredEnergy :: V.Vector BuildingType
-optionsWithThreeHundredEnergy = V.fromList [ENERGY, DEFENSE, ATTACK, TESLA]
+allOponentsDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
+allOponentsDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy oponentsCells
 
-allMyMoves :: V.Vector Command
-allMyMoves =
-  addNothingCommand $ myCells >>= (\ i -> V.map (Build i) optionsWithThreeHundredEnergy)
+optionsWithThreeHundredEnergy :: UV.Vector EfficientBuilding
+optionsWithThreeHundredEnergy = UV.fromList $ map buildingTypeToInt [ENERGY, DEFENSE, ATTACK, TESLA]
 
-allOponentsMoves :: V.Vector Command
-allOponentsMoves =
-  addNothingCommand $ oponentsCells >>= (\ i -> V.map (Build i) optionsWithThreeHundredEnergy)
+allMyMoves :: UV.Vector EfficientCommand
+allMyMoves = createOptions optionsWithThreeHundredEnergy myCells
+
+allOponentsMoves :: UV.Vector EfficientCommand
+allOponentsMoves = createOptions optionsWithThreeHundredEnergy oponentsCells
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
-switchMovesICanAfford :: Int -> V.Vector Command
+switchMovesICanAfford :: Int -> UV.Vector EfficientCommand
 switchMovesICanAfford energy'
-  | energy' < energyTowerCost = V.singleton NothingCommand
+  | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = allMyEnergyTowerMoves
   | energy' < teslaTowerCost  = allMyDefenseAndAttackTowerMoves
   | otherwise                 = allMyMoves
 
-myAvailableMoves :: GameState -> V.Vector Command
+myAvailableMoves :: GameState -> UV.Vector EfficientCommand
 myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                              energy            = energy',
                                              constructionQueue = constructionQueue' }) }) = do
-  V.filter available affordableMoves
+  UV.filter available affordableMoves
   where
-    available (Build i _)    = notUnderConstruction i && notTaken i
-    available NothingCommand = True
-    notUnderConstruction     = (not . (flip containsSite constructionSites))
-    notTaken                 = (not . (flip definedAt) towerMap')
-    affordableMoves          = switchMovesICanAfford energy'
-    constructionSites        = buildingConstructionSites constructionQueue'
+    -- HERE change to command int
+    available (-1)       = True
+    available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
+    notUnderConstruction = (not . (flip containsSite constructionSites))
+    notTaken             = (not . (flip definedAt) towerMap')
+    affordableMoves      = switchMovesICanAfford energy'
+    constructionSites    = buildingConstructionSites constructionQueue'
 
-switchMovesOponentCanAfford :: Int -> V.Vector Command
+switchMovesOponentCanAfford :: Int -> UV.Vector EfficientCommand
 switchMovesOponentCanAfford energy'
-  | energy' < energyTowerCost = V.singleton NothingCommand
+  | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = allOponentsEnergyTowerMoves
   | energy' < teslaTowerCost  = allOponentsDefenseAndAttackTowerMoves
   | otherwise                 = allOponentsMoves
 
-oponentsAvailableMoves :: GameState -> V.Vector Command
+oponentsAvailableMoves :: GameState -> UV.Vector EfficientCommand
 oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                                    energy            = energy',
                                                    constructionQueue = constructionQueue' }) }) =
-  V.filter available affordableMoves
+  UV.filter available affordableMoves
   where
-    available (Build i _)    = notUnderConstruction i && notTaken i
-    available NothingCommand = True
-    notUnderConstruction     = (not . (flip containsSite constructionSites))
-    notTaken                 = (not . (flip definedAt) towerMap')
-    affordableMoves          = switchMovesOponentCanAfford energy'
-    constructionSites        = buildingConstructionSites constructionQueue'
+    available (-1)       = True
+    available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
+    notUnderConstruction = (not . (flip containsSite constructionSites))
+    notTaken             = (not . (flip definedAt) towerMap')
+    affordableMoves      = switchMovesOponentCanAfford energy'
+    constructionSites    = buildingConstructionSites constructionQueue'
 
 maxSearchTime :: Int64
 maxSearchTime = 1800000000
@@ -159,24 +161,24 @@ searchDeeper best g initialState = searchDeeperIter g initialScores
     searchDeeperIter h scores = do
       putStrLn "Tick"
       let (h', h'')        = split h
-      let newScores        = V.zipWith (playOnceToEnd h' initialState) (VG.convert scores) moves
-      let indexOfBestSoFar = V.maxIndex newScores
-      let bestSoFar        = moves `V.unsafeIndex` indexOfBestSoFar
+      let newScores        = UV.zipWith (playOnceToEnd h' initialState) (VG.convert scores) moves
+      let indexOfBestSoFar = UV.maxIndex newScores
+      let bestSoFar        = toCommand $ moves `UV.unsafeIndex` indexOfBestSoFar
       putStrLn $ "Best so far: " ++ (show bestSoFar)
       putMVar best $ rnf bestSoFar `pseq` bestSoFar
       searchDeeperIter h'' $ VG.convert newScores
-    moveCount     = V.length moves
+    moveCount     = UV.length moves
     moves         = myAvailableMoves initialState
     initialScores = UV.replicate moveCount 0.0
 
-playOnceToEnd :: RandomGen g => g -> GameState -> Float -> Command -> Float
+playOnceToEnd :: RandomGen g => g -> GameState -> Float -> EfficientCommand -> Float
 playOnceToEnd g initialState score firstMove =
   score + playToEnd g initialState firstMove
 
 depth :: Int
 depth = 20
 
-playToEnd :: RandomGen g => g -> GameState -> Command -> Float
+playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> Float
 playToEnd g initialState firstMove =
   let (g', initialMoveMade) = initialAdvanceState g firstMove initialState
   in playToEndIter depth g' initialMoveMade
@@ -194,7 +196,7 @@ gameOver (GameState { me      = (Player { health = myHealth }),
                       oponent = (Player { health = oponentsHealth }) }) =
   myHealth == 0 || oponentsHealth == 0
 
-initialAdvanceState :: RandomGen g => g -> Command -> GameState -> (g, GameState)
+initialAdvanceState :: RandomGen g => g -> EfficientCommand -> GameState -> (g, GameState)
 initialAdvanceState g firstMove gameState =
   (g', updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
   where
@@ -203,7 +205,7 @@ initialAdvanceState g firstMove gameState =
       cdf $
       invertScores $
       VG.convert $
-      V.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+      UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
 advanceState :: RandomGen g => g -> GameState -> (g, GameState)
@@ -215,14 +217,14 @@ advanceState g gameState =
       chooseOne g' myMoves $
       cdf $
       VG.convert $
-      V.map (myBoardScore . (flip updateMyMove gameState)) myMoves
+      UV.map (myBoardScore . (flip updateMyMove gameState)) myMoves
     myMoves = myAvailableMoves gameState
     (oponentsMove, g''') =
       chooseOne g'' oponentsMoves $
       cdf $
       invertScores $
       VG.convert $
-      V.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+      UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
 invertScores :: UV.Vector Float -> UV.Vector Float
@@ -236,7 +238,7 @@ cdf xs = normalised
     adjusted   = UV.map (+minValue) xs
     minValue   = abs $ UV.minimum xs
 
-chooseOne :: (RandomGen g) => g -> V.Vector Command -> UV.Vector Float -> (Command, g)
+chooseOne :: (RandomGen g) => g -> UV.Vector EfficientCommand -> UV.Vector Float -> (EfficientCommand, g)
 chooseOne g moves scores =
   (scanForValue scores, g')
   where
@@ -245,9 +247,9 @@ chooseOne g moves scores =
     normalise     = (/ floatingMax) . fromIntegral . abs
     (value, g')   = next g
     normalised    = normalise value
-    numberOfMoves = V.length moves
+    numberOfMoves = UV.length moves
     indexOfLast   = numberOfMoves - 1
-    indexMoves i  = moves `V.unsafeIndex` (numberOfMoves - i - 1)
+    indexMoves i  = moves `UV.unsafeIndex` (numberOfMoves - i - 1)
     scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . UV.findIndex ((<= normalised))
 
 lastIfNothing :: Int -> Maybe Int -> Maybe Int

@@ -6,10 +6,10 @@ module Cell (allCells,
 import Magic
 import Coord
 
-import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as UV
 
-allCells :: V.Vector Coord
-allCells = V.fromList [toCoord x y | x <- [0..width - 1], y <- [0..height - 1]]
+allCells :: UV.Vector Coord
+allCells = UV.fromList [toCoord x y | x <- [0..width - 1], y <- [0..height - 1]]
 
 halfway :: Int
 halfway = div width 2
