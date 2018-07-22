@@ -86,10 +86,14 @@ resetCooldownAndCreateMissile owner' coord cooldown =
     mapWithResetBuilding   = adjustAt resetBuildingCooldown coord (towerMap owner')
 
 resetBuildingCooldown :: Building -> Building
-resetBuildingCooldown building'
-  | building' == attack0 = attack3
-  | building' == tesla0  = tesla10
-  | otherwise            = building'
+resetBuildingCooldown building' =
+  results `UV.unsafeIndex` building'
+  where
+    results = UV.fromList $ map inner [energyTower..tesla0]
+    inner building''
+      | building'' == attack0 = attack3
+      | building'' == tesla0  = tesla10
+      | otherwise             = building''
 
 addMissile :: Missile -> Player -> Player
 addMissile missile player@(Player { ownedMissiles = missiles' }) =
@@ -169,20 +173,24 @@ decrementCooldown :: Coord -> Player -> Player
 decrementCooldown coord = mapMap (adjustAt decrementCooldownOfBuilding coord)
 
 decrementCooldownOfBuilding :: Building -> Building
-decrementCooldownOfBuilding building'
-  | building' == tesla10 = tesla9
-  | building' == tesla9  = tesla8
-  | building' == tesla8  = tesla7
-  | building' == tesla7  = tesla6
-  | building' == tesla6  = tesla5
-  | building' == tesla5  = tesla4
-  | building' == tesla4  = tesla3
-  | building' == tesla3  = tesla2
-  | building' == tesla2  = tesla1
-  | building' == tesla1  = tesla0
-  | building' == tesla0  = tesla10
-  | building' == attack3 = attack2
-  | building' == attack2 = attack1
-  | building' == attack1 = attack0
-  | building' == attack0 = attack3
-  | otherwise            = building'
+decrementCooldownOfBuilding building' =
+  results `UV.unsafeIndex` building'
+  where
+    results = UV.fromList $ map inner [energyTower..tesla0]
+    inner building''
+      | building'' == tesla10 = tesla9
+      | building'' == tesla9  = tesla8
+      | building'' == tesla8  = tesla7
+      | building'' == tesla7  = tesla6
+      | building'' == tesla6  = tesla5
+      | building'' == tesla5  = tesla4
+      | building'' == tesla4  = tesla3
+      | building'' == tesla3  = tesla2
+      | building'' == tesla2  = tesla1
+      | building'' == tesla1  = tesla0
+      | building'' == tesla0  = tesla10
+      | building'' == attack3 = attack2
+      | building'' == attack2 = attack1
+      | building'' == attack1 = attack0
+      | building'' == attack0 = attack3
+      | otherwise             = building''

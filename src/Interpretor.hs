@@ -358,8 +358,8 @@ decrementFitness y' building'  player@(Player { attackPerRow     = attackPerRow'
   | building' == defense2    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
   | building' == defense1    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
   | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn }
-  | otherwise = player { defensePerRow = M.alter (decrementMaybeInt   teslaTowerHealth)        y' defensePerRow',
-                         attackPerRow  = M.alter (decrementMaybeFloat teslaTowerDamagePerTurn) y' attackPerRow' }
+  | otherwise                = player { defensePerRow = M.alter (decrementMaybeInt   teslaTowerHealth)        y' defensePerRow',
+                                        attackPerRow  = M.alter (decrementMaybeFloat teslaTowerDamagePerTurn) y' attackPerRow' }
 
 decrementMaybeInt :: Int -> Maybe Int -> Maybe Int
 decrementMaybeInt x Nothing  = Just x

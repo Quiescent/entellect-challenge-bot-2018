@@ -63,11 +63,19 @@
    :END:
 ** IN_PROGRESS Use an Int for Each Move
    :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-07-22 Sun 13:00]
    - State "IN_PROGRESS" from "TODO"       [2018-07-22 Sun 12:26]
    :END:
-** TODO Improve the state transition logic
+** DONE Improve the state transition logic
+   CLOSED: [2018-07-22 Sun 12:59]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-22 Sun 12:59] \\
+     Implemented with memoization.
+   - State "IN_PROGRESS" from "TODO"       [2018-07-22 Sun 12:35]
+   :END:
 I should use unboxed vectors or addition and subtraction where
 appropriate.
+** TODO Sum up the fitness of each level instead of just the chosen move
 ** TODO Cache Fitnesses when searching deeper
 ** TODO Use Vector Algorithms binary search for `chooseOne'
 ** TODO Add rewrite rules and always use map* varients of functions

@@ -12,6 +12,8 @@ import BuildingsUnderConstruction
 import Magic
 import Buildings
 
+import qualified Data.Vector as V
+
 tickBuildings :: GameState -> GameState
 tickBuildings = (generateMissilesAndUpdateCooldown) . updateBuildingProgress
 
@@ -45,8 +47,12 @@ updateBuildingProgress' player =
               towerMap          = newTowerMap }
 
 missileDamagesBuilding :: Building -> Maybe Building
-missileDamagesBuilding building'
-  | building' == defense4 = Just defense3
-  | building' == defense3 = Just defense2
-  | building' == defense2 = Just defense1
-  | otherwise             = Nothing
+missileDamagesBuilding building' =
+  results `V.unsafeIndex` building'
+  where
+    results = V.fromList $ map inner [energyTower..tesla0]
+    inner building''
+      | building'' == defense4 = Just defense3
+      | building'' == defense3 = Just defense2
+      | building'' == defense2 = Just defense1
+      | otherwise              = Nothing
