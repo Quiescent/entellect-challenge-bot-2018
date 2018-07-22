@@ -25,7 +25,7 @@ nothingCommand = -1
 type EfficientBuilding = Int
 
 build :: Coord -> EfficientBuilding -> EfficientCommand
-build bCoord buildingType' = buildingType' .|. (bCoord `shiftL` 4)
+build bCoord buildingType' = buildingType' .|. (bCoord `shiftL` 2)
 
 toCommand :: EfficientCommand -> Command
 toCommand (-1) = NothingCommand
@@ -38,4 +38,10 @@ buildingTypeOfCommand :: EfficientCommand -> BuildingType
 buildingTypeOfCommand command = intToBuildingType (command .&. 3)
 
 coordOfCommand :: EfficientCommand -> Int
-coordOfCommand x = x `shiftR` 4
+coordOfCommand x = x `shiftR` 2
+
+-- TODO: handle deconstruct
+toEfficientCommand :: Command -> EfficientCommand
+toEfficientCommand (Deconstruct _)    = -5
+toEfficientCommand (Build coord' bt') = build coord' (buildingTypeToInt bt')
+toEfficientCommand NothingCommand     = nothingCommand

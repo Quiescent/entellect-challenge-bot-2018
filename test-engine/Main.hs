@@ -6,6 +6,8 @@ import Engine
 import GameState
 import Magic
 import Coord
+import EfficientCommand
+
 import Text.Printf
 import System.Environment
 import System.Directory
@@ -29,7 +31,7 @@ main = do
         playerOneMove <- readPlayerCommand $ playerOneDir round'
         playerTwoMove <- fmap transposePlayerTwosMove $ readPlayerCommand $ playerTwoDir round'
         reportedState <- parseState $ playerOneDir (round' + 1)
-        let updatedState = updateMyMove playerOneMove $ updateOponentsMove playerTwoMove $ tickEngine currentState
+        let updatedState = updateMyMove (toEfficientCommand playerOneMove) $ updateOponentsMove (toEfficientCommand playerTwoMove) $ tickEngine currentState
         if reportedState /= updatedState
           then error $ "On round: " ++ show round' ++ "\nExpected:\t" ++ show reportedState ++ "\nGot:\t\t" ++ show updatedState
           else return updatedState
