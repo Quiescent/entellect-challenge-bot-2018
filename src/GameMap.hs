@@ -41,7 +41,7 @@ replaceAt building' = adjustAt (\ _ -> building')
 addAt :: Coord -> Building -> TowerMap -> TowerMap
 addAt coord building' towerMap' = M.insert coord building' towerMap'
 
-type CollisionDetector = (Int, Int) -> TowerMap -> Collision
+type CollisionDetector = Coord -> TowerMap -> Collision
 
 data Collision = HitNothing
                | HitPlayer
@@ -49,34 +49,36 @@ data Collision = HitNothing
   deriving (Show, Eq)
 
 findRightOf :: CollisionDetector
-findRightOf (x', y') towerMap' =
-  case M.lookupLT (toCoord (x' + 2) y') towerMap' of
-    Nothing                ->
-      if x' <= -1
-      then HitPlayer
-      else HitNothing
-    Just (coord, building') ->
-      let (xHit, yHit) = fromCoord coord
-      in if xHit >= x' && yHit == y'
-         then HitBuilding xHit building'
-         else if x' <= -1
-              then HitPlayer
-              else HitNothing
+findRightOf coord towerMap' =
+  let (x', y') = fromCoord coord
+  in case M.lookupLT (toCoord (x' + 2) y') towerMap' of
+       Nothing                ->
+         if x' <= -1
+         then HitPlayer
+         else HitNothing
+       Just (coord, building') ->
+         let (xHit, yHit) = fromCoord coord
+         in if xHit >= x' && yHit == y'
+            then HitBuilding xHit building'
+            else if x' <= -1
+                 then HitPlayer
+                 else HitNothing
 
 findLeftOf :: CollisionDetector
-findLeftOf (x', y') towerMap' =
-  case M.lookupGT (toCoord (x' - 2) y') towerMap' of
-    Nothing                ->
-      if x' >= width
-      then HitPlayer
-      else HitNothing
-    Just (coord, building') ->
-      let (xHit, yHit) = fromCoord coord
-      in if xHit <= x' && yHit == y'
-         then HitBuilding xHit building'
-         else if x' >= width
-              then HitPlayer
-              else HitNothing
+findLeftOf coord towerMap' =
+  let (x', y') = fromCoord coord
+  in case M.lookupGT (toCoord (x' - 2) y') towerMap' of
+       Nothing                ->
+         if x' >= width
+         then HitPlayer
+         else HitNothing
+       Just (coord, building') ->
+         let (xHit, yHit) = fromCoord coord
+         in if xHit <= x' && yHit == y'
+            then HitBuilding xHit building'
+            else if x' >= width
+                 then HitPlayer
+                 else HitNothing
 
 definedAt :: Coord -> TowerMap -> Bool
 definedAt = M.member

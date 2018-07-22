@@ -14,7 +14,8 @@ module Interpretor (repl,
                     GameState(..),
                     TowerMap,
                     BuildingUnderConstruction,
-                    ConstructionQueue)
+                    ConstructionQueue,
+                    Missiles)
   where
 
 import Data.Aeson (decode,
@@ -24,6 +25,7 @@ import Data.Aeson (decode,
                    (.:))
 import qualified Data.PQueue.Min      as PQ
 import qualified Data.Vector          as V
+import qualified Data.Vector.Unboxed  as UV
 import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap.Strict   as M
 import qualified Data.List            as L
@@ -33,12 +35,7 @@ import Buildings
 import Coord
 import Magic
 
-data Missile = Missile { xDisp  :: Int,
-                         yDisp  :: Int }
-  deriving (Show, Eq, Ord)
-
-instance NFData Missile where
-  rnf missile@(Missile xDisp' yDisp') = xDisp' `seq` yDisp' `seq` ()
+type Missile = Coord
 
 data ScratchMissile = ScratchMissile Int
                                      Int
@@ -90,6 +87,8 @@ instance {-# OVERLAPPING #-} Ord BuildingUnderConstruction where
 
 type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
 
+type Missiles = UV.Vector Missile
+
 data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
@@ -98,7 +97,7 @@ data Player = Player { energy            :: Int,
                        defensePerRow     :: M.IntMap Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
-                       ownedMissiles     :: [Missile] }
+                       ownedMissiles     :: Missiles }
               deriving (Show)
 
 -- Allows for built in sorting
@@ -111,14 +110,14 @@ compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstructio
 instance Eq Player where
   (==) (Player energyA healthA hitsTakenA energyGenPerTurnA attackPerRowA defensePerRowA towerMapA constructionQueueA ownedMissilesA)
        (Player energyB healthB hitsTakenB energyGenPerTurnB attackPerRowB defensePerRowB towerMapB constructionQueueB ownedMissilesB)
-    = energyA                                 == energyB &&
-      healthA                                 == healthB &&
-      hitsTakenA                              == hitsTakenB &&
-      energyGenPerTurnA                       == energyGenPerTurnB &&
-      attackPerRowA                           == attackPerRowB &&
-      defensePerRowA                          == defensePerRowB &&
-      towerMapA                               == towerMapB &&
-      L.sort ownedMissilesA                   == L.sort ownedMissilesB &&
+    = energyA                             == energyB &&
+      healthA                             == healthB &&
+      hitsTakenA                          == hitsTakenB &&
+      energyGenPerTurnA                   == energyGenPerTurnB &&
+      attackPerRowA                       == attackPerRowB &&
+      defensePerRowA                      == defensePerRowB &&
+      towerMapA                           == towerMapB &&
+      (L.sort $ UV.toList ownedMissilesA) == (L.sort $ UV.toList ownedMissilesB) &&
       (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
 
 instance NFData Player where
@@ -188,8 +187,8 @@ instance FromJSON GameState where
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
-  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players V.! 0
-      secondPlayer = players V.! 1
+  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players `V.unsafeIndex` 0
+      secondPlayer = players `V.unsafeIndex` 1
   in if firstPlayerType == "A"
      then (firstPlayer,  secondPlayer)
      else (secondPlayer, firstPlayer)
@@ -221,7 +220,7 @@ type DenseMap = V.Vector DenseRow
 type DenseRow = V.Vector CellStateContainer
 
 emptyPlayer :: Player
-emptyPlayer = Player 0 0 0 0 M.empty M.empty M.empty PQ.empty []
+emptyPlayer = Player 0 0 0 0 M.empty M.empty M.empty PQ.empty UV.empty
 
 emptyGameState :: GameState
 emptyGameState = GameState emptyPlayer emptyPlayer
@@ -238,27 +237,27 @@ accCell (CellStateContainer x' y' _ buildings' missiles') =
 
 accMissiles :: V.Vector ScratchMissile -> GameState -> GameState
 accMissiles missiles' gameState@(GameState me' oponent') =
-  gameState { me      = me'      { ownedMissiles = myExistingMissiles       ++ myMissiles },
-              oponent = oponent' { ownedMissiles = oponentsExistingMissiles ++ oponentsMissiles } }
+  gameState { me      = me'      { ownedMissiles = myExistingMissiles       UV.++ myMissiles },
+              oponent = oponent' { ownedMissiles = oponentsExistingMissiles UV.++ oponentsMissiles } }
   where
     myExistingMissiles             = ownedMissiles me'
     oponentsExistingMissiles       = ownedMissiles oponent'
     (myMissiles, oponentsMissiles) = (splitMissiles missiles')
 
-splitMissiles :: V.Vector ScratchMissile -> ([Missile], [Missile])
-splitMissiles = V.foldr splitMissilesAcc ([], [])
+splitMissiles :: V.Vector ScratchMissile -> (Missiles, Missiles)
+splitMissiles = V.foldr splitMissilesAcc (UV.empty, UV.empty)
 
-splitMissilesAcc :: ScratchMissile -> ([Missile], [Missile]) -> ([Missile], [Missile])
+splitMissilesAcc :: ScratchMissile -> (Missiles, Missiles) -> (Missiles, Missiles)
 splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles) =
-  let missile = (Missile x' y')
+  let missile = (toCoord x' y')
   in if owner' == "A"
-     then (missile : myMissiles, oponentsMissiles)
-     else (myMissiles,           missile : oponentsMissiles)
+     then (UV.cons missile myMissiles, oponentsMissiles)
+     else (myMissiles,                 UV.cons missile oponentsMissiles)
 
 accBuildings :: Int -> Int -> V.Vector ScratchBuilding -> GameState -> GameState
 accBuildings x' y' buildings' =
   if not $ V.null buildings'
-  then accBuilding x' y' (buildings' V.! 0)
+  then accBuilding x' y' (buildings' `V.unsafeIndex` 0)
   else id
 
 accBuilding :: Int -> Int -> ScratchBuilding -> GameState -> GameState

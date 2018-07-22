@@ -161,7 +161,7 @@ searchDeeper best g initialState = searchDeeperIter g initialScores
       let (h', h'')        = split h
       let newScores        = V.zipWith (playOnceToEnd h' initialState) (VG.convert scores) moves
       let indexOfBestSoFar = V.maxIndex newScores
-      let bestSoFar        = moves V.! indexOfBestSoFar
+      let bestSoFar        = moves `V.unsafeIndex` indexOfBestSoFar
       putStrLn $ "Best so far: " ++ (show bestSoFar)
       putMVar best $ rnf bestSoFar `pseq` bestSoFar
       searchDeeperIter h'' $ VG.convert newScores
@@ -247,7 +247,7 @@ chooseOne g moves scores =
     normalised    = normalise value
     numberOfMoves = V.length moves
     indexOfLast   = numberOfMoves - 1
-    indexMoves i  = moves V.! (numberOfMoves - i - 1)
+    indexMoves i  = moves `V.unsafeIndex` (numberOfMoves - i - 1)
     scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . UV.findIndex ((<= normalised))
 
 lastIfNothing :: Int -> Maybe Int -> Maybe Int

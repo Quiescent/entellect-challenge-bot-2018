@@ -1,10 +1,13 @@
 module Coord (Coord,
               toCoord,
               fromCoord,
-              getY)
+              getY,
+              getX)
   where
 
 import Magic
+
+import qualified Data.Vector.Unboxed as UV
 
 type Coord = Int
 
@@ -12,10 +15,17 @@ toCoord :: Int -> Int -> Coord
 toCoord x y = y * width + x
 
 fromCoord :: Coord -> (Int, Int)
-fromCoord = flipCoord . (flip divMod) width
+fromCoord coord = (getX coord,
+                   getY coord)
+
+correspondingXs :: UV.Vector Int
+correspondingXs = UV.fromList $ concat $ replicate 8 [0..width - 1]
+
+correspondingYs :: UV.Vector Int
+correspondingYs = UV.fromList $ [0..height - 1] >>= (replicate width)
 
 getY :: Coord -> Int
-getY coord = div coord width
+getY coord = correspondingYs `UV.unsafeIndex` coord
 
-flipCoord :: (Int, Int) -> (Int, Int)
-flipCoord (x, y) = (y, x)
+getX :: Coord -> Int
+getX coord = correspondingXs `UV.unsafeIndex` coord

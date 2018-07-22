@@ -1,4 +1,7 @@
-module Player (updateEnergy,
+module Player (filterMMissiles,
+               consMissile,
+               emptyMissiles,
+               updateEnergy,
                myPlayer,
                oponentsPlayer,
                myEnergy,
@@ -29,13 +32,19 @@ import Interpretor (decrementFitness,
                     Missile(..),
                     Building(..),
                     BuildingType(..),
-                    TowerMap)
+                    TowerMap,
+                    Missiles)
 import Coord
 import GameMap
 import BuildingsUnderConstruction
 import Magic
 import Towers
 import Buildings
+
+import qualified Data.Vector.Unboxed as UV
+
+emptyMissiles :: Missiles
+emptyMissiles = UV.empty
 
 myPlayer :: GameState -> Player
 myPlayer = me
@@ -71,9 +80,8 @@ incrementHitsTaken player'@(Player { hitsTaken = hitsTaken' }) =
 
 resetCooldownAndCreateMissile :: Player -> Coord -> Int -> Player
 resetCooldownAndCreateMissile owner' coord cooldown =
-  addMissile (Missile x' y') ownerWithResetBuilding
+  addMissile coord ownerWithResetBuilding
   where
-    (x', y')               = fromCoord coord
     ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
     mapWithResetBuilding   = adjustAt resetBuildingCooldown coord (towerMap owner')
 
@@ -85,7 +93,14 @@ resetBuildingCooldown building'
 
 addMissile :: Missile -> Player -> Player
 addMissile missile player@(Player { ownedMissiles = missiles' }) =
-  player { ownedMissiles = missile : missiles' }
+  player { ownedMissiles = consMissile missile  missiles' }
+
+consMissile :: Missile -> Missiles -> Missiles
+consMissile = UV.cons
+
+
+filterMMissiles :: Monad m => Monad m => (Missile -> m Bool) -> Missiles -> m Missiles
+filterMMissiles = UV.filterM
 
 mapMap :: (TowerMap -> TowerMap) -> Player -> Player
 mapMap f player@(Player { towerMap = towerMap' }) =
@@ -93,9 +108,9 @@ mapMap f player@(Player { towerMap = towerMap' }) =
 
 mapMissiles :: (Missile -> Missile) -> Player -> Player
 mapMissiles f player@(Player { ownedMissiles = ownedMissiles' }) =
-  player { ownedMissiles = map f ownedMissiles' }
+  player { ownedMissiles = UV.map f ownedMissiles' }
 
-updateMissiles :: [Missile] -> Player -> Player
+updateMissiles :: Missiles -> Player -> Player
 updateMissiles missiles player = player { ownedMissiles = missiles }
 
 updateTowerMap :: TowerMap -> Player -> Player

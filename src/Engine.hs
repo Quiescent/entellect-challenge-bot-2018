@@ -6,7 +6,8 @@ import Interpretor (decrementFitness,
                     BuildingType(..),
                     Player(..),
                     Building(..),
-                    Missile(..))
+                    Missile,
+                    Missiles)
 import Player
 import Missile
 import Building
@@ -14,6 +15,8 @@ import GameMap
 import GameState
 import Magic
 import Coord
+
+import Control.Monad.State.Lazy
 
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickMissiles . tickBuildings
@@ -41,27 +44,31 @@ collideMissiles state =
     oponentsMissiles = ownedMissiles (oponent state)
     myMissiles       = ownedMissiles me'
 
-collideMissiles' :: [Missile] -> Player -> CollisionDetector -> UpdateMissiles -> UpdatePlayer -> GameState -> GameState
+collideMissiles' :: Missiles -> Player -> CollisionDetector -> UpdateMissiles -> UpdatePlayer -> GameState -> GameState
 collideMissiles' missiles player' collisionDetector updateMissiles' updatePlayer =
   updateMissiles' missilesRemaining . updatePlayer updatedPlayer
   where
-    (missilesRemaining, updatedPlayer) = foldr (collideMissile collisionDetector) ([], player') missiles
+    (missilesRemaining, updatedPlayer) = runState (filterMMissiles (collideMissile collisionDetector) missiles) player'
 
-collideMissile :: CollisionDetector -> Missile -> ([Missile], Player) -> ([Missile], Player)
-collideMissile collisionDetector missile@(Missile { xDisp = x', yDisp = y' }) (didntCollide, player') =
-  case collisionDetector (x', y') towerMap' of
-    HitNothing                 -> (missile : didntCollide, player')
-    HitPlayer                  -> (didntCollide,           takeDamage missileDamage player')
+collideMissile :: CollisionDetector -> Missile -> State Player Bool
+collideMissile collisionDetector missile = do
+  player'      <- get
+  let y'        = getY missile
+  let towerMap' = towerMap player'
+  case collisionDetector missile towerMap' of
+    HitNothing                 -> return True
+    HitPlayer                  -> do
+      put $ takeDamage missileDamage player'
+      return False
     HitBuilding xHit building' ->
       let damaged = missileDamagesBuilding building'
       in case damaged of
-           Nothing         ->
-             (didntCollide,
-              decrementFitness y' building' $
-              updateTowerMap (removeAt (toCoord xHit y') towerMap') player')
-           Just building'' ->
-             (didntCollide,
-              decrementFitness y' building' $
-              updateTowerMap (replaceAt building'' (toCoord xHit y') towerMap') player')
-  where
-    towerMap' = towerMap player'
+           Nothing         -> do
+             put $ decrementFitness y' building' $
+                   updateTowerMap (removeAt (toCoord xHit y') towerMap') player'
+             return False
+           Just building'' -> do
+             put (decrementFitness y' building' $
+                  updateTowerMap (replaceAt building'' (toCoord xHit y') towerMap') player')
+             return False
+

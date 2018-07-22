@@ -17,10 +17,11 @@ module GameState (runCommand,
   where
 
 import Interpretor (GameState(..),
-                    Missile(..),
                     Command(..),
                     Player(..),
-                    TowerMap)
+                    TowerMap,
+                    Missile,
+                    Missiles)
 import Player
 import GameMap
 import BuildingsUnderConstruction
@@ -53,7 +54,7 @@ runCommand player (Build coord' buildingType') =
     constructionTime' = constructionTime  buildingType'
     building'         = buildingFromStats buildingType'
 
-type UpdateMissiles = [Missile] -> GameState -> GameState
+type UpdateMissiles = Missiles -> GameState -> GameState
 
 updateMyMissiles :: UpdateMissiles
 updateMyMissiles missiles = mapMyPlayer (updateMissiles missiles)
