@@ -16,7 +16,7 @@ module GameMap (rowAt,
 import Interpretor (Building(..),
                     TowerMap)
 import Magic
-import qualified Data.IntMap as M
+import qualified Data.IntMap.Strict as M
 
 import Coord
 

@@ -9,8 +9,8 @@ import Interpretor (GameState(..),
 import Player
 import Magic
 
-import qualified Data.List   as L
-import qualified Data.IntMap as M
+import qualified Data.List          as L
+import qualified Data.IntMap.Strict as M
 import Control.DeepSeq
 
 data Move = Move { myMove       :: Command,

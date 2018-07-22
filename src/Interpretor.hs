@@ -25,7 +25,7 @@ import Data.Aeson (decode,
 import qualified Data.PQueue.Min      as PQ
 import qualified Data.Vector          as V
 import qualified Data.ByteString.Lazy as B
-import qualified Data.IntMap          as M
+import qualified Data.IntMap.Strict   as M
 import qualified Data.List            as L
 import Control.DeepSeq
 
