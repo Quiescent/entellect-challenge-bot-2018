@@ -53,8 +53,21 @@
      Well I've done this and it's made just about no difference
    - State "IN_PROGRESS" from "TODO"       [2018-07-21 Sat 21:00]
    :END:
-** TODO Use an Int for a missile
-** TODO Use an Int for Each Move
+** DONE Use an Int for a missile
+   CLOSED: [2018-07-22 Sun 12:25]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-22 Sun 12:25] \\
+     I also made their container an unboxed vector and in the process
+     discovered a more efficient and easier to read version of some of my
+     state logic.
+   :END:
+** IN_PROGRESS Use an Int for Each Move
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-07-22 Sun 12:26]
+   :END:
+** TODO Improve the state transition logic
+I should use unboxed vectors or addition and subtraction where
+appropriate.
 ** TODO Cache Fitnesses when searching deeper
 ** TODO Use Vector Algorithms binary search for `chooseOne'
 ** TODO Add rewrite rules and always use map* varients of functions
