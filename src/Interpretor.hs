@@ -6,6 +6,8 @@ module Interpretor (repl,
                     parseStateString,
                     incrementFitness,
                     decrementFitness,
+                    insertMissileSortedForMe,
+                    insertMissileSortedForOponent,
                     Player(..),
                     Missile(..),
                     BuildingType(..),
@@ -246,6 +248,16 @@ accMissiles missiles' gameState@(GameState me' oponent') =
 
 splitMissiles :: V.Vector ScratchMissile -> (Missiles, Missiles)
 splitMissiles = V.foldr splitMissilesAcc (UV.empty, UV.empty)
+
+insertMissileSortedForOponent :: Missile -> Missiles -> Missiles
+insertMissileSortedForOponent missile missiles =
+  let (lte, ge) = UV.span (<= missile) missiles
+  in UV.concat [lte, UV.singleton missile, ge]
+
+insertMissileSortedForMe :: Missile -> Missiles -> Missiles
+insertMissileSortedForMe missile missiles =
+  let (lte, ge) = UV.span (>= missile) missiles
+  in UV.concat [lte, UV.singleton missile, ge]
 
 splitMissilesAcc :: ScratchMissile -> (Missiles, Missiles) -> (Missiles, Missiles)
 splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles) =

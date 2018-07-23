@@ -1,5 +1,4 @@
 module Player (filterMMissiles,
-               consMissile,
                emptyMissiles,
                updateEnergy,
                myPlayer,
@@ -9,7 +8,8 @@ module Player (filterMMissiles,
                constructionTime,
                myHealth,
                oponentsHealth,
-               resetCooldownAndCreateMissile,
+               resetCooldownAndCreateMissileForMe,
+               resetCooldownAndCreateMissileForOponent,
                mapMissiles,
                incrementHitsTaken,
                updateTowerMap,
@@ -24,6 +24,8 @@ module Player (filterMMissiles,
   where
 
 import Interpretor (decrementFitness,
+                    insertMissileSortedForMe,
+                    insertMissileSortedForOponent,
                     incrementFitness,
                     GameState(..),
                     BuildingType(..),
@@ -79,9 +81,16 @@ incrementHitsTaken :: Player -> Player
 incrementHitsTaken player'@(Player { hitsTaken = hitsTaken' }) =
   player' { hitsTaken = hitsTaken' + 1 }
 
-resetCooldownAndCreateMissile :: Player -> Coord -> Int -> Player
-resetCooldownAndCreateMissile owner' coord cooldown =
-  addMissile coord ownerWithResetBuilding
+resetCooldownAndCreateMissileForMe :: Player -> Coord -> Int -> Player
+resetCooldownAndCreateMissileForMe owner' coord cooldown =
+  addMissileForMe coord ownerWithResetBuilding
+  where
+    ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
+    mapWithResetBuilding   = adjustAt resetBuildingCooldown coord (towerMap owner')
+
+resetCooldownAndCreateMissileForOponent :: Player -> Coord -> Int -> Player
+resetCooldownAndCreateMissileForOponent owner' coord cooldown =
+  addMissileForOponent coord ownerWithResetBuilding
   where
     ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
     mapWithResetBuilding   = adjustAt resetBuildingCooldown coord (towerMap owner')
@@ -96,13 +105,13 @@ resetBuildingCooldown building' =
       | building'' == tesla0  = tesla10
       | otherwise             = building''
 
-addMissile :: Missile -> Player -> Player
-addMissile missile player@(Player { ownedMissiles = missiles' }) =
-  player { ownedMissiles = consMissile missile  missiles' }
+addMissileForMe :: Missile -> Player -> Player
+addMissileForMe missile player@(Player { ownedMissiles = missiles' }) =
+  player { ownedMissiles = insertMissileSortedForMe missile  missiles' }
 
-consMissile :: Missile -> Missiles -> Missiles
-consMissile = UV.cons
-
+addMissileForOponent :: Missile -> Player -> Player
+addMissileForOponent missile player@(Player { ownedMissiles = missiles' }) =
+  player { ownedMissiles = insertMissileSortedForOponent missile  missiles' }
 
 filterMMissiles :: Monad m => Monad m => (Missile -> m Bool) -> Missiles -> m Missiles
 filterMMissiles = UV.filterM

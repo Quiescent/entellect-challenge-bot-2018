@@ -19,17 +19,31 @@ tickBuildings = (generateMissilesAndUpdateCooldown) . updateBuildingProgress
 
 generateMissilesAndUpdateCooldown :: GameState -> GameState
 generateMissilesAndUpdateCooldown =
-  mapMyPlayer generateAndUpdateCooldownMissilesOnPlayer . mapOponentsPlayer generateAndUpdateCooldownMissilesOnPlayer
+  mapMyPlayer generateAndUpdateCooldownMissilesOnPlayerForMe . mapOponentsPlayer generateAndUpdateCooldownMissilesOnPlayerForOponent
 
-generateAndUpdateCooldownMissilesOnPlayer ::  Player -> Player
-generateAndUpdateCooldownMissilesOnPlayer player =
-  mapFoldIndexed generateMissilesAndUpdateCooldownForBuilding player playerMap
+generateAndUpdateCooldownMissilesOnPlayerForMe ::  Player -> Player
+generateAndUpdateCooldownMissilesOnPlayerForMe player =
+  mapFoldIndexed generateMissilesAndUpdateCooldownForBuildingForMe player playerMap
   where
     playerMap = towerMap player
 
-generateMissilesAndUpdateCooldownForBuilding :: Int -> Building -> Player -> Player
-generateMissilesAndUpdateCooldownForBuilding coord building' player
-  | building' == attack0 = resetCooldownAndCreateMissile player coord attackTowerCooldownTime
+generateAndUpdateCooldownMissilesOnPlayerForOponent ::  Player -> Player
+generateAndUpdateCooldownMissilesOnPlayerForOponent player =
+  mapFoldIndexed generateMissilesAndUpdateCooldownForBuildingForOponent player playerMap
+  where
+    playerMap = towerMap player
+
+generateMissilesAndUpdateCooldownForBuildingForMe :: Int -> Building -> Player -> Player
+generateMissilesAndUpdateCooldownForBuildingForMe coord building' player
+  | building' == attack0 = resetCooldownAndCreateMissileForMe player coord attackTowerCooldownTime
+  | building' == attack1 = decrementCooldown coord player
+  | building' == attack2 = decrementCooldown coord player
+  | building' == attack3 = decrementCooldown coord player
+  | otherwise = player
+
+generateMissilesAndUpdateCooldownForBuildingForOponent :: Int -> Building -> Player -> Player
+generateMissilesAndUpdateCooldownForBuildingForOponent coord building' player
+  | building' == attack0 = resetCooldownAndCreateMissileForOponent player coord attackTowerCooldownTime
   | building' == attack1 = decrementCooldown coord player
   | building' == attack2 = decrementCooldown coord player
   | building' == attack3 = decrementCooldown coord player

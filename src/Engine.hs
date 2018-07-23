@@ -53,22 +53,20 @@ collideMissiles' missiles player' collisionDetector updateMissiles' updatePlayer
 collideMissile :: CollisionDetector -> Missile -> State Player Bool
 collideMissile collisionDetector missile = do
   player'      <- get
-  let y'        = getY missile
   let towerMap' = towerMap player'
   case collisionDetector missile towerMap' of
     HitNothing                 -> return True
     HitPlayer                  -> do
       put $ takeDamage missileDamage player'
       return False
-    HitBuilding xHit building' ->
+    HitBuilding coordHit building' ->
       let damaged = missileDamagesBuilding building'
       in case damaged of
            Nothing         -> do
-             put $ decrementFitness y' building' $
-                   updateTowerMap (removeAt (toCoord xHit y') towerMap') player'
+             put $ decrementFitness (getY coordHit) building' $
+                   updateTowerMap (removeAt coordHit towerMap') player'
              return False
            Just building'' -> do
-             put (decrementFitness y' building' $
-                  updateTowerMap (replaceAt building'' (toCoord xHit y') towerMap') player')
+             put $ decrementFitness (getY coordHit) building' $
+                   updateTowerMap (replaceAt building'' coordHit towerMap') player'
              return False
-

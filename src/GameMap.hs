@@ -48,37 +48,43 @@ data Collision = HitNothing
                | HitBuilding Int Building
   deriving (Show, Eq)
 
+-- TODO: I don't think that I've accounted for falling off of either edge (!!!)
+-- i.e. < 0 and > 128
+
+-- The rules for wrapping are tricky here.  Rely on the play through
+-- log functionality to test them.
 findRightOf :: CollisionDetector
 findRightOf coord towerMap' =
-  let (x', y') = fromCoord coord
-  in case M.lookupLT (toCoord (x' + 2) y') towerMap' of
-       Nothing                ->
-         if x' <= -1
-         then HitPlayer
-         else HitNothing
-       Just (coord, building') ->
-         let (xHit, yHit) = fromCoord coord
-         in if xHit >= x' && yHit == y'
-            then HitBuilding xHit building'
-            else if x' <= -1
-                 then HitPlayer
-                 else HitNothing
+  let x'             = getX coord
+      startingCoord  = (coord + missileSpeed)
+      playerHitCheck =
+        if coord < 0 || x' >= (width - missileSpeed)
+        then HitPlayer
+        else HitNothing
+  in case M.lookupLT startingCoord towerMap' of
+       Nothing                    -> playerHitCheck
+       Just (coordHit, building') ->
+         if coordHit >= coord
+         then HitBuilding coordHit building'
+         else playerHitCheck
+
+firstOutOfBoundsCoord :: Int
+firstOutOfBoundsCoord = width * height
 
 findLeftOf :: CollisionDetector
 findLeftOf coord towerMap' =
-  let (x', y') = fromCoord coord
-  in case M.lookupGT (toCoord (x' - 2) y') towerMap' of
-       Nothing                ->
-         if x' >= width
-         then HitPlayer
-         else HitNothing
-       Just (coord, building') ->
-         let (xHit, yHit) = fromCoord coord
-         in if xHit <= x' && yHit == y'
-            then HitBuilding xHit building'
-            else if x' >= width
-                 then HitPlayer
-                 else HitNothing
+  let x'             = getX coord
+      startingCoord  = (coord - missileSpeed)
+      playerHitCheck =
+        if coord >= firstOutOfBoundsCoord || x' < missileSpeed
+        then HitPlayer
+        else HitNothing
+  in case M.lookupGT startingCoord towerMap' of
+       Nothing                    -> playerHitCheck
+       Just (coordHit, building') ->
+         if coordHit <= coord
+         then HitBuilding coordHit building'
+         else playerHitCheck
 
 definedAt :: Coord -> TowerMap -> Bool
 definedAt = M.member
