@@ -39,9 +39,12 @@ import Control.Concurrent (killThread,
 
 import Control.Parallel (pseq)
 import Control.Parallel.Strategies (parList, using, rdeepseq)
-import Control.DeepSeq (rnf)
+import Control.Exception (evaluate)
+import Control.DeepSeq (rnf, deepseq)
 
 import Debug.Trace
+
+data FloatEvaluator = FloatEvaluator !Float
 
 myCells :: UV.Vector Coord
 myCells = UV.filter cellBelongsToMe $ allCells
@@ -154,6 +157,9 @@ search g state = do
             return newBest
   searchIter undefined -- It's not quitting the program here :/
 
+unwrapEvaluator :: FloatEvaluator -> Float
+unwrapEvaluator (FloatEvaluator x) = x
+
 searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
 searchDeeper best g initialState = searchDeeperIter g initialScores
   where
@@ -161,33 +167,33 @@ searchDeeper best g initialState = searchDeeperIter g initialScores
     searchDeeperIter h scores = do
       putStrLn "Tick"
       let (h', h'')        = split h
-      let newScores        = UV.zipWith (playOnceToEnd h' initialState) (VG.convert scores) moves
+      let newScores        = UV.zipWith (playOnceToEnd h' initialState) scores moves
       let indexOfBestSoFar = UV.maxIndex newScores
-      let bestSoFar        = toCommand $ moves `UV.unsafeIndex` indexOfBestSoFar
-      putStrLn $ "Best so far: " ++ (show bestSoFar)
-      putMVar best $ rnf bestSoFar `pseq` bestSoFar
-      searchDeeperIter h'' $ VG.convert newScores
+      let bestSoFarThunk   = toCommand (moves `UV.unsafeIndex` indexOfBestSoFar)
+      bestSoFar           <- evaluate (bestSoFarThunk `using` rdeepseq)
+      putMVar best $ (bestSoFar `deepseq` bestSoFar)
+      searchDeeperIter h'' newScores
     moveCount     = UV.length moves
     moves         = myAvailableMoves initialState
     initialScores = UV.replicate moveCount 0.0
 
 playOnceToEnd :: RandomGen g => g -> GameState -> Float -> EfficientCommand -> Float
 playOnceToEnd g initialState score firstMove =
-  score + playToEnd g initialState firstMove
+  score + (unwrapEvaluator $ playToEnd g initialState firstMove)
 
 depth :: Int
 depth = 20
 
-playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> Float
+playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> FloatEvaluator
 playToEnd g initialState firstMove =
   let (g', initialMoveMade) = initialAdvanceState g firstMove initialState
   in playToEndIter depth g' initialMoveMade
   where
-    playToEndIter :: RandomGen g => Int -> g -> GameState -> Float
-    playToEndIter 0 h currentState = myBoardScore currentState
+    playToEndIter :: RandomGen g => Int -> g -> GameState -> FloatEvaluator
+    playToEndIter 0 h currentState = FloatEvaluator $ myBoardScore currentState
     playToEndIter n h currentState =
       if gameOver currentState
-      then myBoardScore currentState
+      then FloatEvaluator $ myBoardScore currentState
       else let (h', newState) = advanceState h currentState
            in playToEndIter (n - 1) h' newState
 
@@ -204,7 +210,6 @@ initialAdvanceState g firstMove gameState =
       chooseOne g oponentsMoves $
       cdf $
       invertScores $
-      VG.convert $
       UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
@@ -216,14 +221,12 @@ advanceState g gameState =
     (myMove, _)         =
       chooseOne g' myMoves $
       cdf $
-      VG.convert $
       UV.map (myBoardScore . (flip updateMyMove gameState)) myMoves
     myMoves = myAvailableMoves gameState
     (oponentsMove, g''') =
       chooseOne g'' oponentsMoves $
       cdf $
       invertScores $
-      VG.convert $
       UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
