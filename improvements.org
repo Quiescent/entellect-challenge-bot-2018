@@ -61,8 +61,12 @@
      discovered a more efficient and easier to read version of some of my
      state logic.
    :END:
-** IN_PROGRESS Use an Int for Each Move
+** DONE Use an Int for Each Move
+   CLOSED: [2018-07-24 Tue 07:31]
    :LOGBOOK:
+   - CLOSING NOTE [2018-07-24 Tue 07:31] \\
+     This has allowed for everything to be an unboxed vector and given me
+     incredible memory performance.
    - State "IN_PROGRESS" from "TODO"       [2018-07-22 Sun 13:00]
    - State "IN_PROGRESS" from "TODO"       [2018-07-22 Sun 12:26]
    :END:
