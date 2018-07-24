@@ -186,48 +186,58 @@ depth = 20
 
 playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> FloatEvaluator
 playToEnd g initialState firstMove =
-  let (g', initialMoveMade) = initialAdvanceState g firstMove initialState
-  in playToEndIter depth g' initialMoveMade
+  let (g', initialScore, initialMoveMade) = initialAdvanceState g firstMove initialState
+  in playToEndIter depth initialScore g' initialMoveMade
   where
-    playToEndIter :: RandomGen g => Int -> g -> GameState -> FloatEvaluator
-    playToEndIter 0 h currentState = FloatEvaluator $ myBoardScore currentState
-    playToEndIter n h currentState =
+    playToEndIter :: RandomGen g => Int -> Float -> g -> GameState -> FloatEvaluator
+    playToEndIter 0 score! h currentState = FloatEvaluator $ score +  myBoardScore currentState
+    playToEndIter n score! h currentState =
       if gameOver currentState
       then FloatEvaluator $ myBoardScore currentState
-      else let (h', newState) = advanceState h currentState
-           in playToEndIter (n - 1) h' newState
+      else let (h', score', newState) = advanceState h currentState
+           in playToEndIter (n - 1) (score + score') h' newState
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth }),
                       oponent = (Player { health = oponentsHealth }) }) =
   myHealth == 0 || oponentsHealth == 0
 
-initialAdvanceState :: RandomGen g => g -> EfficientCommand -> GameState -> (g, GameState)
+initialAdvanceState :: RandomGen g => g -> EfficientCommand -> GameState -> (g, Float, GameState)
 initialAdvanceState g firstMove gameState =
-  (g', updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
+  (g',
+   (myBoardScore $ updateMyMove firstMove gameState) - oponentsAverageScore,
+   updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
   where
+    oponentsAverageScore = ((UV.sum oponentsScores) / (fromIntegral $ UV.length oponentsMoves))
     (oponentsMove, g') =
       chooseOne g oponentsMoves $
       cdf $
       invertScores $
-      UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+      oponentsScores
+    oponentsScores = UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
-advanceState :: RandomGen g => g -> GameState -> (g, GameState)
+advanceState :: RandomGen g => g -> GameState -> (g, Float, GameState)
 advanceState g gameState =
-  (g''', updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
+  (g''',
+   myAverageScore - oponentsAverageScore,
+   updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
   where
     (g', g'') = split g
+    myAverageScore = ((UV.sum myScores) / (fromIntegral $ UV.length myMoves))
     (myMove, _)         =
       chooseOne g' myMoves $
       cdf $
-      UV.map (myBoardScore . (flip updateMyMove gameState)) myMoves
+      myScores
+    myScores = UV.map (myBoardScore . (flip updateMyMove gameState)) myMoves
     myMoves = myAvailableMoves gameState
+    oponentsAverageScore = ((UV.sum oponentsScores) / (fromIntegral $ UV.length oponentsMoves))
     (oponentsMove, g''') =
       chooseOne g'' oponentsMoves $
       cdf $
       invertScores $
-      UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+      oponentsScores
+    oponentsScores = UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
 invertScores :: UV.Vector Float -> UV.Vector Float
