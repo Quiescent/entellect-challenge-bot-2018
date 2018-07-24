@@ -25,10 +25,10 @@ instance NFData Move where
 
 myBoardScore :: GameState -> Float
 myBoardScore state =
-  hitsSubtractTakenAfterTime state +
-  hitsDealtToOponent state -
-  hitsTakenByMe state -
-  (zeroIfEnoughEnergy (me state) $ turnsToNextTowerByTurn (me state)) +
+  energyProductionDeficitScore state +
+  turnsToMostExpensiveByMostExpensive (me state) +
+  hitsDealtToOponent state +
+  hitsTakenByMe state +
   resultBonus state
 
 resultBonus :: GameState -> Float
@@ -46,50 +46,26 @@ hitsDealtToOponent :: GameState -> Float
 hitsDealtToOponent = normaliseByHitsTaken . fromIntegral . hitsTaken . oponentsPlayer
 
 hitsTakenByMe :: GameState -> Float
-hitsTakenByMe = normaliseByHitsTaken . fromIntegral . hitsTaken . myPlayer
+hitsTakenByMe = (1 -) . normaliseByHitsTaken . fromIntegral . hitsTaken . myPlayer
 
-normaliseHitsTakenAfterTime :: Float -> Float
-normaliseHitsTakenAfterTime = (/ (2.0 * (fromIntegral height)))
-
-hitsSubtractTakenAfterTime :: GameState -> Float
-hitsSubtractTakenAfterTime (GameState me' oponent') =
-  normaliseHitsTakenAfterTime $
-  L.foldl' (accDamageAndDefense me' oponent') 0 [0..height]
-
-accDamageAndDefense :: Player -> Player -> Float -> Int -> Float
-accDamageAndDefense me' oponent' acc y' =
-  acc + matchDefenseToAttack (healthAndDamageOfRow y' me') (healthAndDamageOfRow y' oponent')
-
-matchDefenseToAttack :: (Float, Float) -> (Float, Float) -> Float
-matchDefenseToAttack (myAttackPerTurn, myDefense) (oponentsAttackPerTurn, oponentsDefense) =
-  (oponentBreakThroughScore / oponentsAttackingMod) + myBreakThroughScore
-  where
-    myBreakThroughScore      = 1.0 - (normaliseByMaxTurns $ oponentsDefense / (oneIfZero myAttackPerTurn))
-    oponentsAttackingMod     = if oponentsAttackPerTurn == 0 then maxTurnsToBreakThrough else 1
-    oponentBreakThroughScore = normaliseByMaxTurns        $ myDefense       / (oneIfZero oponentsAttackPerTurn)
-
-normaliseByMaxTurns :: Float -> Float
-normaliseByMaxTurns = (/ maxTurnsToBreakThrough)
-
-maxTurnsToBreakThrough :: Float
-maxTurnsToBreakThrough =
-  (fromIntegral (width * defenseTowerHealth4)) / (fromIntegral missileDamage)
-
-oneIfZero :: Float -> Float
-oneIfZero 0 = 1
-oneIfZero x = x
-
-healthAndDamageOfRow :: Int -> Player -> (Float, Float)
-healthAndDamageOfRow y' (Player { attackPerRow  = attackPerRow',
-                                  defensePerRow = defensePerRow' }) =
-  (fromIntegral $ M.findWithDefault 0 y' defensePerRow',
-   M.findWithDefault 0 y' attackPerRow')
+energyProductionDeficitScore :: GameState -> Float
+energyProductionDeficitScore (GameState (Player { energyGenPerTurn = myEnergyPerTurn })
+                                        (Player { energyGenPerTurn = oponentsEnergyPerTurn })) =
+  let deficit = myEnergyPerTurn - oponentsEnergyPerTurn
+  in if deficit <= -6
+     then 0
+     else if deficit >= 6
+          then 1
+          else case deficit of
+                 -3 -> 0.25
+                 0  -> 0.5
+                 3  -> 0.75
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
 
-asFractionOfMaximumTurns :: Float -> Float
-asFractionOfMaximumTurns myEnergyPerTurn =
+minBetweenEnergyPerTurnAndMostExpensive :: Float -> Float
+minBetweenEnergyPerTurnAndMostExpensive myEnergyPerTurn =
   if myEnergyPerTurn >= mostExpensiveTower
   then 0
   else (mostExpensiveTower / myEnergyPerTurn) / maxTurnsToNextTower
@@ -97,15 +73,9 @@ asFractionOfMaximumTurns myEnergyPerTurn =
 maxTurnsToNextTower :: Float
 maxTurnsToNextTower = mostExpensiveTower / (fromIntegral energyPerTurn)
 
-turnsToNextTowerByTurn :: Player -> Float
-turnsToNextTowerByTurn =
-  asFractionOfMaximumTurns .
+turnsToMostExpensiveByMostExpensive :: Player -> Float
+turnsToMostExpensiveByMostExpensive =
+  minBetweenEnergyPerTurnAndMostExpensive .
   (+ (fromIntegral energyPerTurn)) .
   fromIntegral .
   energyGenPerTurn
-
-zeroIfEnoughEnergy :: Player -> Float -> Float
-zeroIfEnoughEnergy (Player { energy = energy' }) x =
-  if (fromIntegral energy') >= mostExpensiveTower
-  then 0
-  else x
