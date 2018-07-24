@@ -51,15 +51,7 @@ hitsTakenByMe = (1 -) . normaliseByHitsTaken . fromIntegral . hitsTaken . myPlay
 energyProductionDeficitScore :: GameState -> Float
 energyProductionDeficitScore (GameState (Player { energyGenPerTurn = myEnergyPerTurn })
                                         (Player { energyGenPerTurn = oponentsEnergyPerTurn })) =
-  let deficit = myEnergyPerTurn - oponentsEnergyPerTurn
-  in if deficit <= -6
-     then 0
-     else if deficit >= 6
-          then 1
-          else case deficit of
-                 -3 -> 0.25
-                 0  -> 0.5
-                 3  -> 0.75
+  (mostExpensiveTower + (fromIntegral (myEnergyPerTurn - oponentsEnergyPerTurn))) / (2 * mostExpensiveTower)
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
