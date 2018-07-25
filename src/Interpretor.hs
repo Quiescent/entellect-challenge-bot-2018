@@ -95,6 +95,7 @@ data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
                        energyGenPerTurn  :: Int,
+                       energyTowerCount  :: Int,
                        attackPower       :: Int,
                        towerCount        :: Int,
                        towerMap          :: TowerMap,
@@ -110,12 +111,13 @@ compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderCon
 compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
 
 instance Eq Player where
-  (==) (Player energyA healthA hitsTakenA energyGenPerTurnA attackPowerA towerCountA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB hitsTakenB energyGenPerTurnB attackPowerB towerCountB towerMapB constructionQueueB ownedMissilesB)
+  (==) (Player energyA healthA hitsTakenA energyGenPerTurnA energyTowerCountA attackPowerA towerCountA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB hitsTakenB energyGenPerTurnB energyTowerCountB attackPowerB towerCountB towerMapB constructionQueueB ownedMissilesB)
     = energyA                             == energyB &&
       healthA                             == healthB &&
       hitsTakenA                          == hitsTakenB &&
       energyGenPerTurnA                   == energyGenPerTurnB &&
+      energyTowerCountA                   == energyTowerCountB &&
       attackPowerA                        == attackPowerB &&
       towerCountA                         == towerCountB &&
       towerMapA                           == towerMapB &&
@@ -127,6 +129,7 @@ instance NFData Player where
               health'
               hitsTaken'
               energyGenPerTurn'
+              energyTowerCount'
               attackPower'
               towerCount'
               towerMap'
@@ -136,6 +139,7 @@ instance NFData Player where
       health'                  `seq`
       hitsTaken'               `seq`
       energyGenPerTurn'        `seq`
+      energyTowerCount'        `seq`
       attackPower'             `seq`
       towerCount'              `seq`
       (rnf towerMap')          `seq`
@@ -222,7 +226,7 @@ type DenseMap = V.Vector DenseRow
 type DenseRow = V.Vector CellStateContainer
 
 emptyPlayer :: Player
-emptyPlayer = Player 0 0 0 0 0 0 M.empty PQ.empty UV.empty
+emptyPlayer = Player 0 0 0 0 0 0 0 M.empty PQ.empty UV.empty
 
 emptyGameState :: GameState
 emptyGameState = GameState emptyPlayer emptyPlayer
@@ -327,6 +331,7 @@ teslaTowerDamagePerTurn = (fromIntegral teslaTowerMaximumHitDamage) / (fromInteg
 
 incrementFitness :: Int -> Building -> Player -> Player
 incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn',
+                                                energyTowerCount = energyTowerCount',
                                                 attackPower      = attackPower',
                                                 towerCount       = towerCount' })
   | building' == attack3     = player { attackPower = attackPower' + missileDamage,
@@ -342,13 +347,15 @@ incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerT
   | building' == defense2    = player { towerCount  = towerCount'  + 1 }
   | building' == defense1    = player { towerCount  = towerCount'  + 1 }
   | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
-                                        towerCount       = towerCount' + 1 }
+                                        towerCount       = towerCount' + 1,
+                                        energyTowerCount = energyTowerCount' + 1 }
   -- TODO: Come up with something reasonable here
   | otherwise                = player { attackPower = attackPower' + teslaTowerDamagePerHit,
                                         towerCount  = towerCount'  + 1 }
 
 decrementFitness :: Int -> Building -> Player -> Player
 decrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn',
+                                                energyTowerCount = energyTowerCount',
                                                 attackPower      = attackPower',
                                                 towerCount       = towerCount' })
   | building' == attack3     = player { attackPower = attackPower' - missileDamage,
@@ -366,7 +373,8 @@ decrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerT
   | building' == defense2    = player
   | building' == defense1    = player { towerCount  = towerCount'  - 1 }
   | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
-                                        towerCount       = towerCount' - 1 }
+                                        towerCount       = towerCount' - 1,
+                                        energyTowerCount = energyTowerCount' - 1 }
   -- TODO: Come up with something reasonable here
   | otherwise                = player { attackPower = attackPower' - teslaTowerDamagePerHit,
                                         towerCount  = towerCount'  - 1 }
