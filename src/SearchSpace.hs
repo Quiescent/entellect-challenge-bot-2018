@@ -210,7 +210,9 @@ playToEnd g initialState firstMove =
     playToEndIter 0 score! h currentState = FloatEvaluator $ score +  myFinalBoardScore currentState
     playToEndIter n score! h currentState =
       if gameOver currentState
-      then FloatEvaluator $ myFinalBoardScore currentState
+      then FloatEvaluator $ if iWon currentState
+                            then myFinalBoardScore currentState + score
+                            else 0
       else let (h', score', newState) = advanceState h currentState
            in playToEndIter (n - 1) (score + score') h' newState
 
@@ -218,6 +220,11 @@ gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth }),
                       oponent = (Player { health = oponentsHealth }) }) =
   myHealth <= 0 || oponentsHealth <= 0
+
+iWon :: GameState -> Bool
+iWon (GameState { me      = (Player { health = myHealth }),
+                  oponent = (Player { health = oponentsHealth }) }) =
+  oponentsHealth <= 0 && myHealth > 0
 
 initialAdvanceState :: RandomGen g => g -> EfficientCommand -> GameState -> (g, Float, GameState)
 initialAdvanceState g firstMove gameState =
