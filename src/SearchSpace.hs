@@ -61,6 +61,9 @@ allMyEnergyTowerMoves = addNothingCommand $ UV.map ((flip build) (buildingTypeTo
 allOponentsEnergyTowerMoves :: UV.Vector EfficientCommand
 allOponentsEnergyTowerMoves = addNothingCommand $ UV.map ((flip build) (buildingTypeToInt ENERGY)) oponentsCells
 
+optionsWithThirtyEnergyGeneration :: UV.Vector EfficientBuilding
+optionsWithThirtyEnergyGeneration = UV.fromList $ map buildingTypeToInt [DEFENSE, ATTACK]
+
 optionsWithThirtyEnergy :: UV.Vector EfficientBuilding
 optionsWithThirtyEnergy = UV.fromList $ map buildingTypeToInt [ENERGY, DEFENSE, ATTACK]
 
@@ -69,10 +72,16 @@ createOptions buildings cells =
   addNothingCommand $ UV.foldr ( \ i acc -> acc UV.++ (UV.map (build i) buildings)) UV.empty cells
 
 allMyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
-allMyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy myCells
+allMyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergyGeneration myCells
 
 allOponentsDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
-allOponentsDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy oponentsCells
+allOponentsDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergyGeneration oponentsCells
+
+allMyEnergyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
+allMyEnergyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy myCells
+
+allOponentsEnergyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
+allOponentsEnergyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy oponentsCells
 
 optionsWithThreeHundredEnergy :: UV.Vector EfficientBuilding
 optionsWithThreeHundredEnergy = UV.fromList $ map buildingTypeToInt [ENERGY, DEFENSE, ATTACK, TESLA]
@@ -84,37 +93,45 @@ allOponentsMoves :: UV.Vector EfficientCommand
 allOponentsMoves = createOptions optionsWithThreeHundredEnergy oponentsCells
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
-switchMovesICanAfford :: Int -> UV.Vector EfficientCommand
-switchMovesICanAfford energy'
+switchMovesICanAfford :: Int -> Int -> UV.Vector EfficientCommand
+switchMovesICanAfford energy' energyGenPerTurn'
   | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = allMyEnergyTowerMoves
-  | energy' < teslaTowerCost  = allMyDefenseAndAttackTowerMoves
+  -- Seems to have done nothing :/
+  | energy' < teslaTowerCost  =
+    if energyGenPerTurn' > attackTowerCost
+    then allMyDefenseAndAttackTowerMoves
+    else allMyEnergyDefenseAndAttackTowerMoves
   | otherwise                 = allMyMoves
 
 myAvailableMoves :: GameState -> UV.Vector EfficientCommand
 myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                              energy            = energy',
+                                             energyGenPerTurn  = energyGenPerTurn',
                                              constructionQueue = constructionQueue' }) }) = do
   UV.filter available affordableMoves
   where
-    -- HERE change to command int
     available (-1)       = True
     available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
     notUnderConstruction = (not . (flip containsSite constructionSites))
     notTaken             = (not . (flip definedAt) towerMap')
-    affordableMoves      = switchMovesICanAfford energy'
+    affordableMoves      = switchMovesICanAfford energy' energyGenPerTurn'
     constructionSites    = buildingConstructionSites constructionQueue'
 
-switchMovesOponentCanAfford :: Int -> UV.Vector EfficientCommand
-switchMovesOponentCanAfford energy'
+switchMovesOponentCanAfford :: Int -> Int -> UV.Vector EfficientCommand
+switchMovesOponentCanAfford energy' energyGenPerTurn'
   | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = allOponentsEnergyTowerMoves
-  | energy' < teslaTowerCost  = allOponentsDefenseAndAttackTowerMoves
+  | energy' < teslaTowerCost  =
+    if energyGenPerTurn' >= attackTowerCost
+    then allOponentsDefenseAndAttackTowerMoves
+    else allOponentsEnergyDefenseAndAttackTowerMoves
   | otherwise                 = allOponentsMoves
 
 oponentsAvailableMoves :: GameState -> UV.Vector EfficientCommand
 oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                                    energy            = energy',
+                                                   energyGenPerTurn  = energyGenPerTurn',
                                                    constructionQueue = constructionQueue' }) }) =
   UV.filter available affordableMoves
   where
@@ -122,7 +139,7 @@ oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap'
     available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
     notUnderConstruction = (not . (flip containsSite constructionSites))
     notTaken             = (not . (flip definedAt) towerMap')
-    affordableMoves      = switchMovesOponentCanAfford energy'
+    affordableMoves      = switchMovesOponentCanAfford energy' energyGenPerTurn'
     constructionSites    = buildingConstructionSites constructionQueue'
 
 maxSearchTime :: Int64
@@ -182,7 +199,7 @@ playOnceToEnd g initialState score firstMove =
   score + (unwrapEvaluator $ playToEnd g initialState firstMove)
 
 depth :: Int
-depth = 20
+depth = 50
 
 playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> FloatEvaluator
 playToEnd g initialState firstMove =
@@ -190,22 +207,22 @@ playToEnd g initialState firstMove =
   in playToEndIter depth initialScore g' initialMoveMade
   where
     playToEndIter :: RandomGen g => Int -> Float -> g -> GameState -> FloatEvaluator
-    playToEndIter 0 score! h currentState = FloatEvaluator $ score +  myBoardScore currentState
+    playToEndIter 0 score! h currentState = FloatEvaluator $ score +  myFinalBoardScore currentState
     playToEndIter n score! h currentState =
       if gameOver currentState
-      then FloatEvaluator $ myBoardScore currentState
+      then FloatEvaluator $ myFinalBoardScore currentState
       else let (h', score', newState) = advanceState h currentState
            in playToEndIter (n - 1) (score + score') h' newState
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth }),
                       oponent = (Player { health = oponentsHealth }) }) =
-  myHealth == 0 || oponentsHealth == 0
+  myHealth <= 0 || oponentsHealth <= 0
 
 initialAdvanceState :: RandomGen g => g -> EfficientCommand -> GameState -> (g, Float, GameState)
 initialAdvanceState g firstMove gameState =
   (g',
-   (myBoardScore $ updateMyMove firstMove gameState) - oponentsAverageScore,
+   (myIntermediateBoardScore $ updateMyMove firstMove gameState) - oponentsAverageScore,
    updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
   where
     oponentsAverageScore = ((UV.sum oponentsScores) / (fromIntegral $ UV.length oponentsMoves))
@@ -214,7 +231,7 @@ initialAdvanceState g firstMove gameState =
       cdf $
       invertScores $
       oponentsScores
-    oponentsScores = UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+    oponentsScores = UV.map (myIntermediateBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
 advanceState :: RandomGen g => g -> GameState -> (g, Float, GameState)
@@ -229,7 +246,7 @@ advanceState g gameState =
       chooseOne g' myMoves $
       cdf $
       myScores
-    myScores = UV.map (myBoardScore . (flip updateMyMove gameState)) myMoves
+    myScores = UV.map (myIntermediateBoardScore . (flip updateMyMove gameState)) myMoves
     myMoves = myAvailableMoves gameState
     oponentsAverageScore = ((UV.sum oponentsScores) / (fromIntegral $ UV.length oponentsMoves))
     (oponentsMove, g''') =
@@ -237,7 +254,7 @@ advanceState g gameState =
       cdf $
       invertScores $
       oponentsScores
-    oponentsScores = UV.map (myBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
+    oponentsScores = UV.map (myIntermediateBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
     oponentsMoves = oponentsAvailableMoves gameState
 
 invertScores :: UV.Vector Float -> UV.Vector Float

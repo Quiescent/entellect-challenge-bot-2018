@@ -95,9 +95,8 @@ data Player = Player { energy            :: Int,
                        health            :: Int,
                        hitsTaken         :: Int,
                        energyGenPerTurn  :: Int,
-                       energyPerRow      :: M.IntMap Int,
-                       attackPerRow      :: M.IntMap Float,
-                       defensePerRow     :: M.IntMap Int,
+                       attackPower       :: Int,
+                       towerCount        :: Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
                        ownedMissiles     :: Missiles }
@@ -111,15 +110,14 @@ compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderCon
 compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
 
 instance Eq Player where
-  (==) (Player energyA healthA hitsTakenA energyGenPerTurnA energyPerRowA attackPerRowA defensePerRowA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB hitsTakenB energyGenPerTurnB energyPerRowB attackPerRowB defensePerRowB towerMapB constructionQueueB ownedMissilesB)
+  (==) (Player energyA healthA hitsTakenA energyGenPerTurnA attackPowerA towerCountA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB hitsTakenB energyGenPerTurnB attackPowerB towerCountB towerMapB constructionQueueB ownedMissilesB)
     = energyA                             == energyB &&
       healthA                             == healthB &&
       hitsTakenA                          == hitsTakenB &&
       energyGenPerTurnA                   == energyGenPerTurnB &&
-      energyPerRowA                       == energyPerRowB &&
-      attackPerRowA                       == attackPerRowB &&
-      defensePerRowA                      == defensePerRowB &&
+      attackPowerA                        == attackPowerB &&
+      towerCountA                         == towerCountB &&
       towerMapA                           == towerMapB &&
       (L.sort $ UV.toList ownedMissilesA) == (L.sort $ UV.toList ownedMissilesB) &&
       (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
@@ -129,9 +127,8 @@ instance NFData Player where
               health'
               hitsTaken'
               energyGenPerTurn'
-              energyPerRow'
-              attackPerRow'
-              defensePerRow'
+              attackPower'
+              towerCount'
               towerMap'
               constructionQueue'
               ownedMissiles')
@@ -139,9 +136,8 @@ instance NFData Player where
       health'                  `seq`
       hitsTaken'               `seq`
       energyGenPerTurn'        `seq`
-      (rnf energyPerRow')      `seq`
-      (rnf attackPerRow')      `seq`
-      (rnf defensePerRow')     `seq`
+      attackPower'             `seq`
+      towerCount'              `seq`
       (rnf towerMap')          `seq`
       (rnf constructionQueue') `seq`
       (rnf ownedMissiles')     `seq`
@@ -226,7 +222,7 @@ type DenseMap = V.Vector DenseRow
 type DenseRow = V.Vector CellStateContainer
 
 emptyPlayer :: Player
-emptyPlayer = Player 0 0 0 0 M.empty M.empty M.empty M.empty PQ.empty UV.empty
+emptyPlayer = Player 0 0 0 0 0 0 M.empty PQ.empty UV.empty
 
 emptyGameState :: GameState
 emptyGameState = GameState emptyPlayer emptyPlayer
@@ -330,72 +326,50 @@ teslaTowerDamagePerTurn :: Float
 teslaTowerDamagePerTurn = (fromIntegral teslaTowerMaximumHitDamage) / (fromIntegral teslaTowerCooldownTime)
 
 incrementFitness :: Int -> Building -> Player -> Player
-incrementFitness y' building'  player@(Player { attackPerRow     = attackPerRow',
-                                                defensePerRow    = defensePerRow',
-                                                energyPerRow     = energyPerRow',
-                                                energyGenPerTurn = energyGenPerTurn' })
-  | building' == attack3     = player { attackPerRow  = M.alter (incrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (incrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == attack2     = player { attackPerRow  = M.alter (incrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (incrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == attack1     = player { attackPerRow  = M.alter (incrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (incrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == attack0     = player { attackPerRow  = M.alter (incrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (incrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == defense4    = player { defensePerRow = M.alter (incrementMaybeInt defenseTowerHealth4) y' defensePerRow' }
-  | building' == defense3    = player { defensePerRow = M.alter (incrementMaybeInt defenseTowerHealth3) y' defensePerRow' }
-  | building' == defense2    = player { defensePerRow = M.alter (incrementMaybeInt defenseTowerHealth2) y' defensePerRow' }
-  | building' == defense1    = player { defensePerRow = M.alter (incrementMaybeInt defenseTowerHealth1) y' defensePerRow' }
+incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn',
+                                                attackPower      = attackPower',
+                                                towerCount       = towerCount' })
+  | building' == attack3     = player { attackPower = attackPower' + missileDamage,
+                                        towerCount  = towerCount'  + 1 }
+  | building' == attack2     = player { attackPower = attackPower' + missileDamage,
+                                        towerCount  = towerCount'  + 1 }
+  | building' == attack1     = player { attackPower = attackPower' + missileDamage,
+                                        towerCount  = towerCount'  + 1 }
+  | building' == attack0     = player { attackPower = attackPower' + missileDamage,
+                                        towerCount  = towerCount'  + 1 }
+  | building' == defense4    = player { towerCount  = towerCount'  + 1 }
+  | building' == defense3    = player { towerCount  = towerCount'  + 1 }
+  | building' == defense2    = player { towerCount  = towerCount'  + 1 }
+  | building' == defense1    = player { towerCount  = towerCount'  + 1 }
   | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
-                                        energyPerRow     = M.alter (incrementMaybeInt energyTowerEnergyGeneratedPerTurn) y' energyPerRow' }
-  | otherwise                = player { defensePerRow = M.alter (incrementMaybeInt   teslaTowerHealth)        y' defensePerRow',
-                                        attackPerRow  = M.alter (incrementMaybeFloat teslaTowerDamagePerTurn) y' attackPerRow' }
-
-incrementMaybeInt :: Int -> Maybe Int -> Maybe Int
-incrementMaybeInt x Nothing  = Just x
-incrementMaybeInt x (Just y) = Just $ x + y
-
-incrementMaybeFloat :: Float -> Maybe Float -> Maybe Float
-incrementMaybeFloat x Nothing  = Just x
-incrementMaybeFloat x (Just y) = Just $ x + y
+                                        towerCount       = towerCount' + 1 }
+  -- TODO: Come up with something reasonable here
+  | otherwise                = player { attackPower = attackPower' + teslaTowerDamagePerHit,
+                                        towerCount  = towerCount'  + 1 }
 
 decrementFitness :: Int -> Building -> Player -> Player
-decrementFitness y' building'  player@(Player { attackPerRow     = attackPerRow',
-                                                defensePerRow    = defensePerRow',
-                                                energyPerRow     = energyPerRow',
-                                                energyGenPerTurn = energyGenPerTurn' })
-  | building' == attack3     = player { attackPerRow  = M.alter (decrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (decrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == attack2     = player { attackPerRow  = M.alter (decrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (decrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == attack1     = player { attackPerRow  = M.alter (decrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (decrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == attack0     = player { attackPerRow  = M.alter (decrementMaybeFloat missileDamagePerTurn) y' attackPerRow',
-                                        defensePerRow = M.alter (decrementMaybeInt attackTowerHealth)      y' defensePerRow' }
-  | building' == defense4    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
-  | building' == defense3    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
-  | building' == defense2    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
-  | building' == defense1    = player { defensePerRow = M.alter (decrementMaybeInt missileDamage) y' defensePerRow' }
+decrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn',
+                                                attackPower      = attackPower',
+                                                towerCount       = towerCount' })
+  | building' == attack3     = player { attackPower = attackPower' - missileDamage,
+                                        towerCount  = towerCount'  - 1 }
+  | building' == attack2     = player { attackPower = attackPower' - missileDamage,
+                                        towerCount  = towerCount'  - 1 }
+  | building' == attack1     = player { attackPower = attackPower' - missileDamage,
+                                        towerCount  = towerCount'  - 1 }
+  | building' == attack0     = player { attackPower = attackPower' - missileDamage,
+                                        towerCount  = towerCount'  - 1 }
+  -- You don't lose a tower when taking a hit on a defense tower
+  -- except for the last
+  | building' == defense4    = player
+  | building' == defense3    = player
+  | building' == defense2    = player
+  | building' == defense1    = player { towerCount  = towerCount'  - 1 }
   | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
-                                        energyPerRow     = M.alter (decrementMaybeInt energyTowerEnergyGeneratedPerTurn) y' energyPerRow'}
-  | otherwise                = player { defensePerRow = M.alter (decrementMaybeInt   teslaTowerHealth)        y' defensePerRow',
-                                        attackPerRow  = M.alter (decrementMaybeFloat teslaTowerDamagePerTurn) y' attackPerRow' }
-
-decrementMaybeInt :: Int -> Maybe Int -> Maybe Int
-decrementMaybeInt x Nothing  = Just x
-decrementMaybeInt x (Just y) =
-  let result = y - x
-  in if result == 0
-     then Nothing
-     else Just $ y - x
-
-decrementMaybeFloat :: Float -> Maybe Float -> Maybe Float
-decrementMaybeFloat x Nothing  = Just x
-decrementMaybeFloat x (Just y) =
-  let result = y - x
-  in if result == 0
-     then Nothing
-     else Just $ y - x
+                                        towerCount       = towerCount' - 1 }
+  -- TODO: Come up with something reasonable here
+  | otherwise                = player { attackPower = attackPower' - teslaTowerDamagePerHit,
+                                        towerCount  = towerCount'  - 1 }
 
 stateFilePath :: String
 stateFilePath = "state.json"
