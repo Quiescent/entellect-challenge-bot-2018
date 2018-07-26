@@ -27,6 +27,7 @@ instance NFData Move where
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
+  enemyEnergyTowerCountScore state +
   energyProductionDeficitScore state +
   attackPowerDeficitScore state +
   towerCountDeficitScore state +
@@ -39,11 +40,10 @@ myFinalBoardScore state =
   hitsTakenByMe state +
   resultBonus state
 
--- Use 12 because that's twice the maximum achievable score
 resultBonus :: GameState -> Float
 resultBonus state =
   if myHealth state       == 0 then 0 else 0 +
-  if oponentsHealth state == 0 then 12  else 0
+  if oponentsHealth state == 0 then 8  else 0
 
 maxHitsTaken :: Float
 maxHitsTaken = (fromIntegral startingHealth) / (fromIntegral missileDamage)
@@ -64,6 +64,10 @@ deficitScopeCalculation deficit scope =
   else if deficit >= scope
        then 1
        else (scope + deficit)  / (2 * scope)
+
+enemyEnergyTowerCountScore :: GameState -> Float
+enemyEnergyTowerCountScore (GameState { oponent = (Player { energyTowerCount = energyTowerCount' }) }) =
+  (((fromIntegral width) / 2.0) * (fromIntegral height) - (fromIntegral energyTowerCount')) / towerCountScope
 
 attackPowerScope :: Float
 attackPowerScope = 5 * (fromIntegral missileDamage)
