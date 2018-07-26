@@ -199,7 +199,7 @@ playOnceToEnd g initialState score firstMove =
   score + (unwrapEvaluator $ playToEnd g initialState firstMove)
 
 depth :: Int
-depth = 50
+depth = 100
 
 playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> FloatEvaluator
 playToEnd g initialState firstMove =
