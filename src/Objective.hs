@@ -36,8 +36,8 @@ myIntermediateBoardScore state =
 myFinalBoardScore :: GameState -> Float
 myFinalBoardScore state =
   myIntermediateBoardScore state +
-  hitsDealtToOponent state +
-  hitsTakenByMe state +
+  -- hitsDealtToOponent state +
+  -- hitsTakenByMe state +
   resultBonus state
 
 resultBonus :: GameState -> Float
