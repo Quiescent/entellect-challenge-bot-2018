@@ -46,65 +46,104 @@ import Debug.Trace
 
 data FloatEvaluator = FloatEvaluator !Float
 
-myCells :: UV.Vector Coord
+xPredicate :: (Int -> Bool) -> Coord -> Bool
+xPredicate p coord =
+  let x = getX coord
+  in p x
+
+type Cells = UV.Vector Coord
+
+myCells :: Cells
 myCells = UV.filter cellBelongsToMe $ allCells
 
-oponentsCells :: UV.Vector Coord
+myFrontCells :: Cells
+myFrontCells = UV.filter (xPredicate (== 7)) myCells
+
+myForwardCells :: Cells
+myForwardCells = UV.filter (xPredicate (>= 6)) myCells
+
+myMidToFrontCells :: Cells
+myMidToFrontCells = UV.filter (xPredicate (>= 2)) myCells
+
+myBackCells :: Cells
+myBackCells = UV.filter (xPredicate (<= 1)) myCells
+
+oponentsCells :: Cells
 oponentsCells = UV.filter cellBelongsToOponent $ allCells
 
-addNothingCommand :: UV.Vector EfficientCommand -> UV.Vector EfficientCommand
+oponentsFrontCells :: Cells
+oponentsFrontCells = UV.filter (xPredicate (== 8)) oponentsCells
+
+oponentsForwardCells :: Cells
+oponentsForwardCells = UV.filter (xPredicate (<= 9)) $ oponentsCells
+
+oponentsMidToFrontCells :: Cells
+oponentsMidToFrontCells = UV.filter (xPredicate (<= 13)) oponentsCells
+
+oponentsBackCells :: Cells
+oponentsBackCells = UV.filter (xPredicate (>= 14)) oponentsCells
+
+type Moves = UV.Vector EfficientCommand
+
+addNothingCommand :: Moves -> Moves
 addNothingCommand = UV.cons nothingCommand
 
-allMyEnergyTowerMoves :: UV.Vector EfficientCommand
-allMyEnergyTowerMoves = addNothingCommand $ UV.map ((flip build) (buildingTypeToInt ENERGY)) myCells
+allMovesOfType :: BuildingType -> Cells -> Moves
+allMovesOfType buildingType' cells' =
+  UV.map ((flip build) (buildingTypeToInt buildingType')) cells'
 
-allOponentsEnergyTowerMoves :: UV.Vector EfficientCommand
-allOponentsEnergyTowerMoves = addNothingCommand $ UV.map ((flip build) (buildingTypeToInt ENERGY)) oponentsCells
+allMyBackEnergyTowerMoves :: Moves
+allMyBackEnergyTowerMoves = allMovesOfType ENERGY myBackCells
 
-optionsWithThirtyEnergyGeneration :: UV.Vector EfficientBuilding
-optionsWithThirtyEnergyGeneration = UV.fromList $ map buildingTypeToInt [DEFENSE, ATTACK]
+allMyForwardDefenseTowerMoves :: Moves
+allMyForwardDefenseTowerMoves = allMovesOfType DEFENSE myForwardCells
 
-optionsWithThirtyEnergy :: UV.Vector EfficientBuilding
-optionsWithThirtyEnergy = UV.fromList $ map buildingTypeToInt [ENERGY, DEFENSE, ATTACK]
+allMyMidToFrontAttackTowerMoves :: Moves
+allMyMidToFrontAttackTowerMoves = allMovesOfType ATTACK myMidToFrontCells
 
-createOptions :: UV.Vector EfficientBuilding -> UV.Vector Coord -> UV.Vector EfficientCommand
-createOptions buildings cells =
-  addNothingCommand $ UV.foldr ( \ i acc -> acc UV.++ (UV.map (build i) buildings)) UV.empty cells
+allMyFrontTeslaTowerMoves ::  Moves
+allMyFrontTeslaTowerMoves = allMovesOfType TESLA myFrontCells
 
-allMyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
-allMyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergyGeneration myCells
+allOponentsBackEnergyTowerMoves :: Moves
+allOponentsBackEnergyTowerMoves = allMovesOfType ENERGY oponentsBackCells
 
-allOponentsDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
-allOponentsDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergyGeneration oponentsCells
+allOponentsForwardDefenseTowerMoves :: Moves
+allOponentsForwardDefenseTowerMoves = allMovesOfType DEFENSE oponentsForwardCells
 
-allMyEnergyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
-allMyEnergyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy myCells
+allOponentsMidToFrontAttackTowerMoves :: Moves
+allOponentsMidToFrontAttackTowerMoves = allMovesOfType ATTACK oponentsMidToFrontCells
 
-allOponentsEnergyDefenseAndAttackTowerMoves :: UV.Vector EfficientCommand
-allOponentsEnergyDefenseAndAttackTowerMoves = createOptions optionsWithThirtyEnergy oponentsCells
+allOponentsFrontTeslaTowerMoves ::  Moves
+allOponentsFrontTeslaTowerMoves = allMovesOfType TESLA oponentsFrontCells
 
-optionsWithThreeHundredEnergy :: UV.Vector EfficientBuilding
-optionsWithThreeHundredEnergy = UV.fromList $ map buildingTypeToInt [ENERGY, DEFENSE, ATTACK, TESLA]
-
-allMyMoves :: UV.Vector EfficientCommand
-allMyMoves = createOptions optionsWithThreeHundredEnergy myCells
-
-allOponentsMoves :: UV.Vector EfficientCommand
-allOponentsMoves = createOptions optionsWithThreeHundredEnergy oponentsCells
+switchAffordableMoves :: Moves -> Moves -> Moves -> Moves -> Int -> Int -> Moves
+switchAffordableMoves energyTowerMoves
+                      defenseTowerMoves
+                      attackTowerMoves
+                      teslaTowerMoves
+                      energy'
+                      energyPerTurn'
+  | energy' < energyTowerCost = UV.singleton nothingCommand
+  | energy' < attackTowerCost = addNothingCommand $ energyTowerMoves
+  | energy' < teslaTowerCost  = addNothingCommand $
+    if energyPerTurn' > attackTowerCost
+    then attackTowerMoves UV.++ defenseTowerMoves
+    else attackTowerMoves UV.++ defenseTowerMoves UV.++ energyTowerMoves
+  | otherwise                 = addNothingCommand $
+    attackTowerMoves UV.++
+    defenseTowerMoves UV.++
+    energyTowerMoves UV.++
+    teslaTowerMoves
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
-switchMovesICanAfford :: Int -> Int -> UV.Vector EfficientCommand
-switchMovesICanAfford energy' energyGenPerTurn'
-  | energy' < energyTowerCost = UV.singleton nothingCommand
-  | energy' < attackTowerCost = allMyEnergyTowerMoves
-  -- Seems to have done nothing :/
-  | energy' < teslaTowerCost  =
-    if energyGenPerTurn' > attackTowerCost
-    then allMyDefenseAndAttackTowerMoves
-    else allMyEnergyDefenseAndAttackTowerMoves
-  | otherwise                 = allMyMoves
+switchMovesICanAfford :: Int -> Int -> Moves
+switchMovesICanAfford =
+  switchAffordableMoves allMyBackEnergyTowerMoves
+                        allMyForwardDefenseTowerMoves
+                        allMyMidToFrontAttackTowerMoves
+                        allMyFrontTeslaTowerMoves
 
-myAvailableMoves :: GameState -> UV.Vector EfficientCommand
+myAvailableMoves :: GameState -> Moves
 myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                              energy            = energy',
                                              energyGenPerTurn  = energyGenPerTurn',
@@ -118,17 +157,14 @@ myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
     affordableMoves      = switchMovesICanAfford energy' energyGenPerTurn'
     constructionSites    = buildingConstructionSites constructionQueue'
 
-switchMovesOponentCanAfford :: Int -> Int -> UV.Vector EfficientCommand
-switchMovesOponentCanAfford energy' energyGenPerTurn'
-  | energy' < energyTowerCost = UV.singleton nothingCommand
-  | energy' < attackTowerCost = allOponentsEnergyTowerMoves
-  | energy' < teslaTowerCost  =
-    if energyGenPerTurn' >= attackTowerCost
-    then allOponentsDefenseAndAttackTowerMoves
-    else allOponentsEnergyDefenseAndAttackTowerMoves
-  | otherwise                 = allOponentsMoves
+switchMovesOponentCanAfford :: Int -> Int -> Moves
+switchMovesOponentCanAfford =
+  switchAffordableMoves allOponentsBackEnergyTowerMoves
+                        allOponentsForwardDefenseTowerMoves
+                        allOponentsMidToFrontAttackTowerMoves
+                        allOponentsFrontTeslaTowerMoves
 
-oponentsAvailableMoves :: GameState -> UV.Vector EfficientCommand
+oponentsAvailableMoves :: GameState -> Moves
 oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                                    energy            = energy',
                                                    energyGenPerTurn  = energyGenPerTurn',
@@ -275,7 +311,7 @@ cdf xs = normalised
     adjusted   = UV.map (+minValue) xs
     minValue   = abs $ UV.minimum xs
 
-chooseOne :: (RandomGen g) => g -> UV.Vector EfficientCommand -> UV.Vector Float -> (EfficientCommand, g)
+chooseOne :: (RandomGen g) => g -> Moves -> UV.Vector Float -> (EfficientCommand, g)
 chooseOne g moves scores =
   (scanForValue scores, g')
   where
