@@ -79,8 +79,19 @@
    :END:
 I should use unboxed vectors or addition and subtraction where
 appropriate.
-** TODO Sum up the fitness of each level instead of just the chosen move
+** DONE Sum up the fitness of each level instead of just the chosen move
+   CLOSED: [2018-07-27 Fri 19:35]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-07-27 Fri 19:35] \\
+     I think that this made the bot a bit more predictable, but it makes
+     very wierd decisions now.
+   :END:
 ** TODO Cache Fitnesses when searching deeper
+** TODO Implement "True" Monte-Carlo Search
+** TODO Use Mutable Vectors at the Top Level
+** TODO Use a faster PRNG
+** TODO Disuade the bot from looking at hits taken
+** TODO Use a deficit algorithm for the hits taken rather than absolute
 ** TODO Use Vector Algorithms binary search for `chooseOne'
 ** TODO Add rewrite rules and always use map* varients of functions
 ** TODO Make a type for each row state
