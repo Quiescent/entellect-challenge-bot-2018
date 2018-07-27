@@ -32,6 +32,7 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.IntMap.Strict   as M
 import qualified Data.List            as L
 import Control.DeepSeq
+import VectorIndex
 
 import Buildings
 import Coord
@@ -193,8 +194,8 @@ instance FromJSON GameState where
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
-  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players `V.unsafeIndex` 0
-      secondPlayer = players `V.unsafeIndex` 1
+  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players `vectorIndex` 0
+      secondPlayer = players `vectorIndex` 1
   in if firstPlayerType == "A"
      then (firstPlayer,  secondPlayer)
      else (secondPlayer, firstPlayer)
@@ -273,7 +274,7 @@ splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles
 accBuildings :: Int -> Int -> V.Vector ScratchBuilding -> GameState -> GameState
 accBuildings x' y' buildings' =
   if not $ V.null buildings'
-  then accBuilding x' y' (buildings' `V.unsafeIndex` 0)
+  then accBuilding x' y' (buildings' `vectorIndex` 0)
   else id
 
 accBuilding :: Int -> Int -> ScratchBuilding -> GameState -> GameState

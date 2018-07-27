@@ -5,6 +5,7 @@ import Interpretor (Building(..),
                     BuildingType(..))
 import Magic
 import Buildings
+import VectorIndex
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -22,7 +23,7 @@ teslaTowerCostWithType = (teslaTowerCost, TESLA)
 
 towerCost :: Building -> Int
 towerCost building' =
-  results `UV.unsafeIndex` building'
+  results `uVectorIndex` building'
   where
     results = UV.fromList $ map inner [energyTower..tesla0]
     inner building''

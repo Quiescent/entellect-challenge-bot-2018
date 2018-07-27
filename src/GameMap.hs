@@ -8,7 +8,6 @@ module GameMap (rowAt,
                 addAt,
                 findRightOf,
                 findLeftOf,
-                getAt,
                 CollisionDetector,
                 Collision(..))
   where
@@ -88,9 +87,6 @@ findLeftOf coord towerMap' =
 
 definedAt :: Coord -> TowerMap -> Bool
 definedAt = M.member
-
-getAt :: Coord -> TowerMap -> Maybe Building
-getAt = M.lookup
 
 removeAt :: Coord -> TowerMap -> TowerMap
 removeAt = M.delete

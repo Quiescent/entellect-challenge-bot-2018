@@ -19,11 +19,15 @@ import BuildingsUnderConstruction
 import Coord
 import Magic
 import EfficientCommand
+import VectorIndex
+import qualified GameTree    as M
+import qualified Data.IntMap as IM
 
 import Data.Int
 import System.Clock
 import Data.Maybe
 import System.Random
+import Control.Monad.State.Lazy
 import qualified Data.List           as L
 import qualified Data.Vector         as V
 import qualified Data.Vector.Generic as VG
@@ -187,7 +191,7 @@ timeToNanos time = ((sec time) * 1000000000) + nsec time
 delayTime :: Int
 delayTime = 10
 
-search :: RandomGen g => g -> GameState -> IO Command
+search :: StdGen -> GameState -> IO Command
 search g state = do
   let clock          = Realtime
   startTime         <- getTime clock
@@ -213,44 +217,68 @@ search g state = do
 unwrapEvaluator :: FloatEvaluator -> Float
 unwrapEvaluator (FloatEvaluator x) = x
 
-searchDeeper :: RandomGen g => MVar Command -> g -> GameState -> IO ()
-searchDeeper best g initialState = searchDeeperIter g initialScores
+searchDeeper :: MVar Command -> StdGen -> GameState -> IO ()
+searchDeeper best g initialState = searchDeeperIter g initialScores M.empty
   where
-    searchDeeperIter :: RandomGen g => g -> UV.Vector Float -> IO ()
-    searchDeeperIter h scores = do
+    searchDeeperIter :: StdGen -> UV.Vector Float -> M.GameTree -> IO ()
+    searchDeeperIter h scores searchTree = do
       putStrLn "Tick"
-      let (h', h'')        = split h
-      let newScores        = UV.zipWith (playOnceToEnd h' initialState) scores moves
-      let indexOfBestSoFar = UV.maxIndex newScores
-      let bestSoFarThunk   = toCommand (moves `UV.unsafeIndex` indexOfBestSoFar)
-      bestSoFar           <- evaluate (bestSoFarThunk `using` rdeepseq)
+      let (h', h'')                = split h
+      let (newScores, searchTree') = runState (UV.zipWithM (playOnceToEnd h' initialState) scores moves) searchTree
+      let indexOfBestSoFar         = UV.maxIndex newScores
+      let bestSoFarThunk           = toCommand (moves `uVectorIndex` indexOfBestSoFar)
+      bestSoFar                   <- evaluate (bestSoFarThunk `using` rdeepseq)
       putMVar best $ (bestSoFar `deepseq` bestSoFar)
-      searchDeeperIter h'' newScores
+      searchDeeperIter h'' newScores searchTree'
     moveCount     = UV.length moves
     moves         = myAvailableMoves initialState
     initialScores = UV.replicate moveCount 0.0
 
-playOnceToEnd :: RandomGen g => g -> GameState -> Float -> EfficientCommand -> Float
-playOnceToEnd g initialState score firstMove =
-  score + (unwrapEvaluator $ playToEnd g initialState firstMove)
+playOnceToEnd :: StdGen -> GameState -> Float -> EfficientCommand -> State M.GameTree Float
+playOnceToEnd g initialState score firstMove = playToEnd g initialState firstMove
 
 depth :: Int
 depth = 100
 
-playToEnd :: RandomGen g => g -> GameState -> EfficientCommand -> FloatEvaluator
+type AdvanceStateResult = (StdGen, [EfficientCommand], Float, GameState)
+
+playToEnd :: StdGen -> GameState -> EfficientCommand -> State M.GameTree Float
 playToEnd g initialState firstMove =
-  let (g', initialScore, initialMoveMade) = initialAdvanceState g firstMove initialState
-  in playToEndIter depth initialScore g' initialMoveMade
+  (initialAdvanceState (g, [firstMove], 0, initialState)) >>= playToEndIter depth
   where
-    playToEndIter :: RandomGen g => Int -> Float -> g -> GameState -> FloatEvaluator
-    playToEndIter 0 score! h currentState = FloatEvaluator $ score +  myFinalBoardScore currentState
-    playToEndIter n score! h currentState =
+    playToEndIter :: Int -> AdvanceStateResult -> State M.GameTree Float
+    playToEndIter 0 (_, _, score, currentState) = return (score +  myFinalBoardScore currentState)
+    playToEndIter n advanceStateResult@(_, _, score, currentState) =
       if gameOver currentState
-      then FloatEvaluator $ if iWon currentState
-                            then myFinalBoardScore currentState + score
-                            else 0
-      else let (h', score', newState) = advanceState h currentState
-           in playToEndIter (n - 1) (score + score') h' newState
+      then if iWon currentState
+           then updateLoss advanceStateResult >> return (myFinalBoardScore currentState + score)
+           else updateWin  advanceStateResult >> return 0
+      else advanceState advanceStateResult >>= playToEndIter (n - 1)
+
+updateLoss :: AdvanceStateResult -> State M.GameTree ()
+updateLoss (_, moves, _, _) = do
+  incrementTreeFitness moves
+  return ()
+
+incrementTreeFitness :: [EfficientCommand] -> State M.GameTree ()
+incrementTreeFitness moves = do
+  gameTree <- get
+  -- TODO: update it!
+  return ()
+
+winLossModifier :: Float
+winLossModifier = 1.0
+
+updateWin :: AdvanceStateResult -> State M.GameTree ()
+updateWin (g, moves, score, state) = do
+  incrementTreeFitness moves
+  return ()
+
+decrementTreeFitness :: [EfficientCommand] -> State M.GameTree ()
+decrementTreeFitness moves = do
+  gameTree <- get
+  -- TODO: update it
+  return ()
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth }),
@@ -262,43 +290,71 @@ iWon (GameState { me      = (Player { health = myHealth }),
                   oponent = (Player { health = oponentsHealth }) }) =
   oponentsHealth <= 0 && myHealth > 0
 
-initialAdvanceState :: RandomGen g => g -> EfficientCommand -> GameState -> (g, Float, GameState)
-initialAdvanceState g firstMove gameState =
-  (g',
-   (myIntermediateBoardScore $ updateMyMove firstMove gameState) - oponentsAverageScore,
-   updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
-  where
-    oponentsAverageScore = ((UV.sum oponentsScores) / (fromIntegral $ UV.length oponentsMoves))
-    (oponentsMove, g') =
-      chooseOne g oponentsMoves $
-      cdf $
-      invertScores $
-      oponentsScores
-    oponentsScores = UV.map (myIntermediateBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
-    oponentsMoves = oponentsAvailableMoves gameState
+-- Note: I'll never need to worry about populating the moves up to a
+-- point, becuase we always explore from a previously explored state,
+-- or the empty tree.
+initialAdvanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult 
+initialAdvanceState (g, movesSoFar@(firstMove:moves), score, currentState) = do
+  gameTree          <- get
+  let ourNode        = M.subTree movesSoFar gameTree
+  let isEmpty        = isNothing ourNode
+  let oponentsMoves  = oponentsAvailableMoves currentState
+  let oponentsScores =
+        if isEmpty
+        then UV.map
+             ((1.0 /) . myIntermediateBoardScore . (flip updateOponentsMove currentState))
+             oponentsMoves
+        else M.oponentsScores $ fromJust ourNode
+  when isEmpty (do
+    put $ M.addAt movesSoFar (M.GameTree UV.empty IM.empty oponentsScores) gameTree)
+  let (oponentsMove, g') =
+        chooseOne g oponentsMoves $
+        cdf $
+        oponentsScores
+  return (g',
+          oponentsMove:firstMove:moves,
+          (myIntermediateBoardScore $ updateMyMove firstMove currentState),
+          updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine currentState)
 
-advanceState :: RandomGen g => g -> GameState -> (g, Float, GameState)
-advanceState g gameState =
-  (g''',
-   myAverageScore - oponentsAverageScore,
-   updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine gameState)
-  where
-    (g', g'') = split g
-    myAverageScore = ((UV.sum myScores) / (fromIntegral $ UV.length myMoves))
-    (myMove, _)         =
-      chooseOne g' myMoves $
-      cdf $
-      myScores
-    myScores = UV.map (myIntermediateBoardScore . (flip updateMyMove gameState)) myMoves
-    myMoves = myAvailableMoves gameState
-    oponentsAverageScore = ((UV.sum oponentsScores) / (fromIntegral $ UV.length oponentsMoves))
-    (oponentsMove, g''') =
-      chooseOne g'' oponentsMoves $
-      cdf $
-      invertScores $
-      oponentsScores
-    oponentsScores = UV.map (myIntermediateBoardScore . (flip updateOponentsMove gameState)) oponentsMoves
-    oponentsMoves = oponentsAvailableMoves gameState
+firstElem :: IM.IntMap a -> a
+firstElem = head . IM.elems
+
+advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
+advanceState (g, moves, score, currentState) = do
+  gameTree          <- get
+  let ourNode        = M.subTree moves gameTree
+  let isEmpty        = isNothing ourNode
+  let myMoves        = myAvailableMoves currentState
+  let oponentsMoves  = oponentsAvailableMoves currentState
+  let oponentsScores =
+        if isEmpty
+        then UV.map
+             ((1.0 /) . myIntermediateBoardScore . (flip updateOponentsMove currentState))
+             oponentsMoves
+        else M.oponentsScores $ fromJust ourNode
+  let myScores =
+        if isEmpty
+        then UV.map
+             (myIntermediateBoardScore . (flip updateMyMove currentState))
+             myMoves
+        else M.myScores $ fromJust ourNode
+  when isEmpty $
+    put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
+  let (g', g'') = split g
+  let (myMove, _)         =
+        chooseOne g' myMoves $
+        cdf $
+        myScores
+  let myScores = UV.map (myIntermediateBoardScore . (flip updateMyMove currentState)) myMoves
+      (oponentsMove, g''') =
+        chooseOne g'' oponentsMoves $
+        cdf $
+        oponentsScores
+  let nextState = updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine currentState
+  return (g''',
+          oponentsMove:myMove:moves,
+          myIntermediateBoardScore nextState,
+          nextState)
 
 invertScores :: UV.Vector Float -> UV.Vector Float
 invertScores = UV.map (1.0 /)
@@ -322,7 +378,7 @@ chooseOne g moves scores =
     normalised    = normalise value
     numberOfMoves = UV.length moves
     indexOfLast   = numberOfMoves - 1
-    indexMoves i  = moves `UV.unsafeIndex` (numberOfMoves - i - 1)
+    indexMoves i  = moves `uVectorIndex` (numberOfMoves - i - 1)
     scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . UV.findIndex ((<= normalised))
 
 lastIfNothing :: Int -> Maybe Int -> Maybe Int

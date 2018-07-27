@@ -6,5 +6,5 @@ import Interpretor (GameState(..),
 import SearchSpace
 import System.Random
 
-decide :: RandomGen g => g -> GameState -> IO Command
+decide :: StdGen -> GameState -> IO Command
 decide = search

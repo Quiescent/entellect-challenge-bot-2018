@@ -90,6 +90,7 @@ appropriate.
 ** TODO Implement "True" Monte-Carlo Search
 ** TODO Use Mutable Vectors at the Top Level
 ** TODO Use a faster PRNG
+Investigate: http://hackage.haskell.org/package/mwc-random
 ** TODO Disuade the bot from looking at hits taken
 ** TODO Use a deficit algorithm for the hits taken rather than absolute
 ** TODO Use Vector Algorithms binary search for `chooseOne'

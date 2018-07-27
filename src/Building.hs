@@ -11,6 +11,7 @@ import GameState
 import BuildingsUnderConstruction
 import Magic
 import Buildings
+import VectorIndex
 
 import qualified Data.Vector as V
 
@@ -62,7 +63,7 @@ updateBuildingProgress' player =
 
 missileDamagesBuilding :: Building -> Maybe Building
 missileDamagesBuilding building' =
-  results `V.unsafeIndex` building'
+  results `vectorIndex` building'
   where
     results = V.fromList $ map inner [energyTower..tesla0]
     inner building''

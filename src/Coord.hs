@@ -6,6 +6,7 @@ module Coord (Coord,
   where
 
 import Magic
+import VectorIndex
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -25,7 +26,7 @@ correspondingYs :: UV.Vector Int
 correspondingYs = UV.fromList $ [0..height - 1] >>= (replicate width)
 
 getY :: Coord -> Int
-getY coord = correspondingYs `UV.unsafeIndex` coord
+getY coord = correspondingYs `uVectorIndex` coord
 
 getX :: Coord -> Int
-getX coord = correspondingXs `UV.unsafeIndex` coord
+getX coord = correspondingXs `uVectorIndex` coord

@@ -43,6 +43,7 @@ import Magic
 import Towers
 import Buildings
 import EfficientCommand
+import VectorIndex
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -97,7 +98,7 @@ resetCooldownAndCreateMissileForOponent owner' coord cooldown =
 
 resetBuildingCooldown :: Building -> Building
 resetBuildingCooldown building' =
-  results `UV.unsafeIndex` building'
+  results `uVectorIndex` building'
   where
     results = UV.fromList $ map inner [energyTower..tesla0]
     inner building''
@@ -163,10 +164,8 @@ buildOnMap :: Int -> Coord -> Building -> Player -> Player
 buildOnMap timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
                                                 towerMap          = towerMap',
                                                 energy            = energy' }) =
-  if definedAt coord towerMap'
-  then player
-  else player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue',
-                energy            = energy' - towerCost building' }
+  player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue',
+           energy            = energy' - towerCost building' }
   where
     buildingUnderConstruction = createBuildingUnderConstruction (timeLeft - 1) coord building'
 
@@ -178,7 +177,7 @@ decrementCooldown coord = mapMap (adjustAt decrementCooldownOfBuilding coord)
 
 decrementCooldownOfBuilding :: Building -> Building
 decrementCooldownOfBuilding building' =
-  results `UV.unsafeIndex` building'
+  results `uVectorIndex` building'
   where
     results = UV.fromList $ map inner [energyTower..tesla0]
     inner building''
