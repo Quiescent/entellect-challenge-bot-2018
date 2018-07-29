@@ -14,6 +14,6 @@ for tag in $TAGS; do
     BOT_DIR="$tag"
     echo emacs --batch --no-init -Q $CONFIG_FILE --eval "(progn (goto-char (point-min)) (search-forward \"working-binaries/\") (zap-to-char 1 ?\") (insert \"$BOT_DIR\\\"\") (save-buffer))"
     emacs --batch --no-init -Q $CONFIG_FILE --eval "(progn (goto-char (point-min)) (search-forward \"working-binaries/\") (zap-to-char 1 ?\") (insert \"$BOT_DIR\\\"\") (save-buffer))"
-    echo "cd starter-pack/ && java -jar tower-defence-runner-2.0.1.jar"
-    cd starter-pack/ && java -jar tower-defence-runner-2.0.1.jar && cd ..
+    echo "cd starter-pack/ && java -jar tower-defence-runner-2.0.3.jar"
+    cd starter-pack/ && java -jar tower-defence-runner-2.0.3.jar && cd ..
 done
