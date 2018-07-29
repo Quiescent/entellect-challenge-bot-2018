@@ -263,7 +263,7 @@ updateLoss (_, moves, _, _) = do
 incrementTreeFitness :: [EfficientCommand] -> State M.GameTree ()
 incrementTreeFitness moves = do
   gameTree <- get
-  -- TODO: update it!
+  put $ M.incrementDecrementBy moves winLossModifier gameTree
   return ()
 
 winLossModifier :: Float
@@ -277,7 +277,7 @@ updateWin (g, moves, score, state) = do
 decrementTreeFitness :: [EfficientCommand] -> State M.GameTree ()
 decrementTreeFitness moves = do
   gameTree <- get
-  -- TODO: update it
+  put $ M.incrementDecrementBy moves (-winLossModifier) gameTree
   return ()
 
 gameOver :: GameState -> Bool

@@ -5,15 +5,15 @@ module GameTree (GameTree(..),
                  hasNoBranches,
                  myScores,
                  oponentsScores,
-                 setMyScoresAt,
-                 setOponentsScoresAt)
+                 incrementDecrementBy)
   where
 
 import EfficientCommand
 
 import Data.Maybe
-import qualified Data.IntMap         as M
-import qualified Data.Vector.Unboxed as UV
+import qualified Data.IntMap                 as M
+import qualified Data.Vector.Unboxed         as UV
+import qualified Data.Vector.Unboxed.Mutable as MVector
 
 data GameTree = GameTree (UV.Vector Float) (M.IntMap GameTree) (UV.Vector Float)
 
@@ -22,19 +22,18 @@ subTree []           tree = Just tree
 subTree (move:moves) (GameTree _ branches _) =
   M.lookup move branches >>= subTree moves
 
-setOponentsScoresAt :: [EfficientCommand] -> UV.Vector Float -> GameTree -> GameTree
-setOponentsScoresAt []           scores (GameTree myMoveScores branches _) =
-  GameTree myMoveScores branches scores
-setOponentsScoresAt (move:moves) scores (GameTree myMoveScores branches oponentsMoveScores) =
-  let updatedSubTree = M.adjust (setOponentsScoresAt moves scores) move branches
-  in GameTree myMoveScores updatedSubTree oponentsMoveScores
-
-setMyScoresAt :: [EfficientCommand] -> UV.Vector Float -> GameTree -> GameTree
-setMyScoresAt []           scores (GameTree _ branches oponentsMoveScores) =
-  GameTree scores branches oponentsMoveScores
-setMyScoresAt (move:moves) scores (GameTree myMoveScores branches oponentsMoveScores) =
-  let updatedSubTree = M.adjust (setMyScoresAt moves scores) move branches
-  in GameTree myMoveScores updatedSubTree oponentsMoveScores
+incrementDecrementBy :: [EfficientCommand] -> Float -> GameTree -> GameTree
+incrementDecrementBy []           x tree = tree
+incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
+  let updatedSubTree = M.adjust (incrementDecrementBy moves x) move branches
+  in GameTree (UV.modify increment myMoveScores) branches (UV.modify decrement oponentsMoveScores)
+  where
+    increment scores = do
+      myOldScore <- MVector.read scores move
+      MVector.write scores move (myOldScore + x)
+    decrement scores = do
+      oponentsOldScore <- MVector.read scores move
+      MVector.write scores move (oponentsOldScore - x)
 
 addAt :: [EfficientCommand] -> GameTree -> GameTree -> GameTree
 addAt (move:[])    subTreeToAdd (GameTree myMoveScores branches oponentsMoveScores) =
