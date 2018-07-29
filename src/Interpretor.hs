@@ -335,13 +335,13 @@ incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerT
                                                 energyTowerCount = energyTowerCount',
                                                 attackPower      = attackPower',
                                                 towerCount       = towerCount' })
-  | building' == attack3     = player { attackPower = attackPower' + missileDamage,
+  | building' == attack3     = player { attackPower = attackPower' + 1,
                                         towerCount  = towerCount'  + 1 }
-  | building' == attack2     = player { attackPower = attackPower' + missileDamage,
+  | building' == attack2     = player { attackPower = attackPower' + 1,
                                         towerCount  = towerCount'  + 1 }
-  | building' == attack1     = player { attackPower = attackPower' + missileDamage,
+  | building' == attack1     = player { attackPower = attackPower' + 1,
                                         towerCount  = towerCount'  + 1 }
-  | building' == attack0     = player { attackPower = attackPower' + missileDamage,
+  | building' == attack0     = player { attackPower = attackPower' + 1,
                                         towerCount  = towerCount'  + 1 }
   | building' == defense4    = player { towerCount  = towerCount'  + 1 }
   | building' == defense3    = player { towerCount  = towerCount'  + 1 }
@@ -359,13 +359,13 @@ decrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerT
                                                 energyTowerCount = energyTowerCount',
                                                 attackPower      = attackPower',
                                                 towerCount       = towerCount' })
-  | building' == attack3     = player { attackPower = attackPower' - missileDamage,
+  | building' == attack3     = player { attackPower = attackPower' - 1,
                                         towerCount  = towerCount'  - 1 }
-  | building' == attack2     = player { attackPower = attackPower' - missileDamage,
+  | building' == attack2     = player { attackPower = attackPower' - 1,
                                         towerCount  = towerCount'  - 1 }
-  | building' == attack1     = player { attackPower = attackPower' - missileDamage,
+  | building' == attack1     = player { attackPower = attackPower' - 1,
                                         towerCount  = towerCount'  - 1 }
-  | building' == attack0     = player { attackPower = attackPower' - missileDamage,
+  | building' == attack0     = player { attackPower = attackPower' - 1,
                                         towerCount  = towerCount'  - 1 }
   -- You don't lose a tower when taking a hit on a defense tower
   -- except for the last

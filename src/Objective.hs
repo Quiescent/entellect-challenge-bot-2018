@@ -1,7 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
 module Objective (myIntermediateBoardScore,
-                  myFinalBoardScore,
                   resultBonusScore,
                   Move(..))
   where
@@ -11,6 +10,7 @@ import Interpretor (GameState(..),
                     Player(..))
 import Player
 import Magic
+import Engine
 
 import qualified Data.List          as L
 import qualified Data.IntMap.Strict as M
@@ -28,75 +28,37 @@ instance NFData Move where
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
-  (1 - hitsDealtToOponent state) +
-  (enemyEnergyTowerCountScore state) +
-  energyProductionDeficitScore state +
-  attackPowerDeficitScore state +
-  towerCountDeficitScore state +
-  turnsToMostExpensiveByMostExpensive state
+  let futureState = advanceToFutureState state
+  in energyTowersDestroyed state futureState +
+     attackPowerDestroyed state futureState +
+     turnsToMostExpensiveByMostExpensive state
 
-myFinalBoardScore :: GameState -> Float
-myFinalBoardScore state =
-  myIntermediateBoardScore state +
-  hitsDealtToOponent state +
-  hitsTakenByMe state +
-  resultBonus state
+-- Unrolled for the compiler to optimise (there are 10 right now)
+advanceToFutureState :: GameState -> GameState
+advanceToFutureState =
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine
 
 resultBonusScore :: Float
 resultBonusScore = 9
 
-resultBonus :: GameState -> Float
-resultBonus state =
-  if myHealth state       == 0 then 0                else 0 +
-  if oponentsHealth state == 0 then resultBonusScore else 0
+energyTowersDestroyed :: GameState -> GameState -> Float
+energyTowersDestroyed (GameState { oponent = (Player { energyTowerCount = initialEnergyTowerCount }) })
+                      (GameState { oponent = (Player { energyTowerCount = energyTowerCountAfter }) }) =
+  fromIntegral $ initialEnergyTowerCount - energyTowerCountAfter
 
-maxHitsTaken :: Float
-maxHitsTaken = (fromIntegral startingHealth) / (fromIntegral missileDamage)
-
-normaliseByMaxHitsTaken :: Float -> Float
-normaliseByMaxHitsTaken = (/ maxHitsTaken)
-
-hitsDealtToOponent :: GameState -> Float
-hitsDealtToOponent = normaliseByMaxHitsTaken . fromIntegral . hitsTaken . oponentsPlayer
-
-hitsTakenByMe :: GameState -> Float
-hitsTakenByMe = (1 -) . normaliseByMaxHitsTaken . fromIntegral . hitsTaken . myPlayer
-
-deficitScopeCalculation :: Float -> Float -> Float
-deficitScopeCalculation deficit scope =
-  if deficit <= (-scope)
-  then 0
-  else if deficit >= scope
-       then 1
-       else (scope + deficit)  / (2 * scope)
-
-enemyEnergyTowerCountScore :: GameState -> Float
-enemyEnergyTowerCountScore (GameState { oponent = (Player { energyTowerCount = energyTowerCount' }) }) =
-  (((fromIntegral width) / 2.0) * (fromIntegral height) - (fromIntegral energyTowerCount')) / towerCountScope
-
-attackPowerScope :: Float
-attackPowerScope = 5 * (fromIntegral missileDamage)
-
-attackPowerDeficitScore :: GameState -> Float
-attackPowerDeficitScore (GameState (Player { attackPower = myAttackPower })
-                                   (Player { attackPower = oponentsAttackPower })) =
-  deficitScopeCalculation (fromIntegral (myAttackPower - oponentsAttackPower)) attackPowerScope
-
-towerCountScope :: Float
-towerCountScope = ((fromIntegral width) / 2.0) * (fromIntegral height)
-
-towerCountDeficitScore :: GameState -> Float
-towerCountDeficitScore (GameState (Player { towerCount = myTowerCount })
-                                  (Player { towerCount = oponentsTowerCount })) =
-  deficitScopeCalculation (fromIntegral (myTowerCount - oponentsTowerCount)) towerCountScope
-
-energyDeficitScope :: Float
-energyDeficitScope = 2 * (fromIntegral energyTowerEnergyGeneratedPerTurn)
-
-energyProductionDeficitScore :: GameState -> Float
-energyProductionDeficitScore (GameState (Player { energyGenPerTurn = myEnergyPerTurn })
-                                        (Player { energyGenPerTurn = oponentsEnergyPerTurn })) =
-  deficitScopeCalculation (fromIntegral (myEnergyPerTurn - oponentsEnergyPerTurn)) energyDeficitScope
+attackPowerDestroyed :: GameState -> GameState -> Float
+attackPowerDestroyed (GameState { oponent = (Player { attackPower = initialAttackPower }) })
+                     (GameState { oponent = (Player { attackPower = attackPowerAfter }) }) =
+  fromIntegral $ initialAttackPower - attackPowerAfter
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
@@ -104,8 +66,8 @@ mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, 
 minBetweenEnergyPerTurnAndMostExpensive :: Float -> Float
 minBetweenEnergyPerTurnAndMostExpensive myEnergyPerTurn =
   if myEnergyPerTurn >= mostExpensiveTower
-  then 0
-  else (mostExpensiveTower / myEnergyPerTurn) / maxTurnsToNextTower
+  then maxTurnsToNextTower
+  else maxTurnsToNextTower - (mostExpensiveTower / myEnergyPerTurn)
 
 maxTurnsToNextTower :: Float
 maxTurnsToNextTower = mostExpensiveTower / (fromIntegral energyPerTurn)

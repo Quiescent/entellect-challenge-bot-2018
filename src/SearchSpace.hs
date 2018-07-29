@@ -220,7 +220,7 @@ searchDeeper best g initialState = searchDeeperIter g M.empty
   where
     searchDeeperIter :: StdGen -> M.GameTree -> IO ()
     searchDeeperIter h searchTree = do
-      --putStrLn "Tick"
+      putStrLn "Tick"
       let (h', h'')        = split h
       let searchTree'      = playToEnd h' initialState searchTree
       -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
