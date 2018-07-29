@@ -16,26 +16,30 @@ import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as MVector
 
 data GameTree = GameTree (UV.Vector Float) (M.IntMap GameTree) (UV.Vector Float)
+  deriving (Show)
 
-subTree :: [EfficientCommand] -> GameTree -> Maybe GameTree
-subTree []           tree = Just tree
+subTree :: [PackedCommand] -> GameTree -> Maybe GameTree
+subTree []           tree                    = Just tree
 subTree (move:moves) (GameTree _ branches _) =
   M.lookup move branches >>= subTree moves
 
-incrementDecrementBy :: [EfficientCommand] -> Float -> GameTree -> GameTree
+incrementDecrementBy :: [PackedCommand] -> Float -> GameTree -> GameTree
 incrementDecrementBy []           x tree = tree
 incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
-  let updatedSubTree = M.adjust (incrementDecrementBy moves x) move branches
+  let updatedSubTree          = M.adjust (incrementDecrementBy moves x) move branches
   in GameTree (UV.modify increment myMoveScores) branches (UV.modify decrement oponentsMoveScores)
   where
-    increment scores = do
-      myOldScore <- MVector.read scores move
-      MVector.write scores move (myOldScore + x)
-    decrement scores = do
-      oponentsOldScore <- MVector.read scores move
-      MVector.write scores move (oponentsOldScore - x)
+    (myMove, oponentsMove) = unpackPackedCommand move
+    increment scores       = do
+      myOldScore <- MVector.read scores myMove
+      MVector.write scores myMove (myOldScore + x)
+    decrement scores       = do
+      oponentsOldScore <- MVector.read scores oponentsMove
+      MVector.write scores oponentsMove (oponentsOldScore - x)
 
-addAt :: [EfficientCommand] -> GameTree -> GameTree -> GameTree
+addAt :: [PackedCommand] -> GameTree -> GameTree -> GameTree
+addAt []           subTreeToAdd _                                                   =
+  subTreeToAdd
 addAt (move:[])    subTreeToAdd (GameTree myMoveScores branches oponentsMoveScores) =
   let updatedSubTree = M.insert move subTreeToAdd branches
   in GameTree myMoveScores updatedSubTree oponentsMoveScores

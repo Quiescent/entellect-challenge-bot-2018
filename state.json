@@ -1,27 +1,38 @@
 {
   "gameDetails": {
-    "round": 11,
+    "round": 8,
     "maxRounds": 400,
     "mapWidth": 16,
     "mapHeight": 8,
     "roundIncomeEnergy": 5,
     "buildingPrices": {
-      "TESLA": 300,
-      "DEFENSE": 30,
+      "ENERGY": 20,
       "ATTACK": 30,
-      "ENERGY": 20
+      "DEFENSE": 30,
+      "TESLA": 300
     },
     "buildingsStats": {
-      "TESLA": {
+      "ENERGY": {
         "health": 5,
-        "constructionTime": 11,
-        "price": 300,
-        "weaponDamage": 20,
+        "constructionTime": 2,
+        "price": 20,
+        "weaponDamage": 0,
         "weaponSpeed": 0,
-        "weaponCooldownPeriod": 10,
+        "weaponCooldownPeriod": 0,
+        "energyGeneratedPerTurn": 3,
+        "destroyMultiplier": 1,
+        "constructionScore": 3
+      },
+      "ATTACK": {
+        "health": 5,
+        "constructionTime": 2,
+        "price": 30,
+        "weaponDamage": 5,
+        "weaponSpeed": 2,
+        "weaponCooldownPeriod": 3,
         "energyGeneratedPerTurn": 0,
         "destroyMultiplier": 1,
-        "constructionScore": 1
+        "constructionScore": 4
       },
       "DEFENSE": {
         "health": 20,
@@ -32,46 +43,35 @@
         "weaponCooldownPeriod": 0,
         "energyGeneratedPerTurn": 0,
         "destroyMultiplier": 1,
-        "constructionScore": 1
+        "constructionScore": 10
       },
-      "ATTACK": {
+      "TESLA": {
         "health": 5,
-        "constructionTime": 2,
-        "price": 30,
-        "weaponDamage": 5,
-        "weaponSpeed": 1,
-        "weaponCooldownPeriod": 3,
-        "energyGeneratedPerTurn": 0,
-        "destroyMultiplier": 1,
-        "constructionScore": 1
-      },
-      "ENERGY": {
-        "health": 5,
-        "constructionTime": 2,
-        "price": 20,
-        "weaponDamage": 0,
+        "constructionTime": 11,
+        "price": 300,
+        "weaponDamage": 20,
         "weaponSpeed": 0,
-        "weaponCooldownPeriod": 0,
-        "energyGeneratedPerTurn": 3,
-        "destroyMultiplier": 1,
-        "constructionScore": 1
+        "weaponCooldownPeriod": 10,
+        "energyGeneratedPerTurn": 0,
+        "destroyMultiplier": 10,
+        "constructionScore": 20
       }
     }
   },
   "players": [
     {
       "playerType": "A",
-      "energy": 37,
-      "health": 30,
-      "hitsTaken": 14,
-      "score": 451
+      "energy": 33,
+      "health": 100,
+      "hitsTaken": 0,
+      "score": 82
     },
     {
       "playerType": "B",
-      "energy": 53,
+      "energy": 19,
       "health": 100,
       "hitsTaken": 0,
-      "score": 2093
+      "score": 91
     }
   ],
   "gameMap": [
@@ -79,132 +79,10 @@
       {
         "x": 0,
         "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 1,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 2,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 3,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 4,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 5,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 6,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 7,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 8,
-        "y": 0,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 8,
-            "y": 0,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 9,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 10,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 11,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 12,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 13,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 14,
-        "y": 0,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 15,
-        "y": 0,
         "buildings": [
           {
             "health": 5,
-            "constructionTimeLeft": -1,
+            "constructionTimeLeft": -7,
             "price": 20,
             "weaponDamage": 0,
             "weaponSpeed": 0,
@@ -213,35 +91,11 @@
             "destroyMultiplier": 1,
             "constructionScore": 3,
             "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
             "buildingType": "ENERGY",
-            "x": 15,
-            "y": 0,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      }
-    ],
-    [
-      {
-        "x": 0,
-        "y": 1,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": 1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
+            "energyPerShot": 0,
             "x": 0,
-            "y": 1,
+            "y": 0,
             "playerType": "A"
           }
         ],
@@ -250,25 +104,122 @@
       },
       {
         "x": 1,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 3,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 5,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 6,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 7,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 9,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 10,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 11,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 12,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 13,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 14,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 15,
+        "y": 0,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      }
+    ],
+    [
+      {
+        "x": 0,
         "y": 1,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 1,
-            "y": 1,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
@@ -282,96 +233,28 @@
       {
         "x": 3,
         "y": 1,
-        "buildings": [
-          {
-            "health": 10,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 3,
-            "y": 1,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
       {
         "x": 4,
         "y": 1,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 4,
-            "y": 1,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
       {
         "x": 5,
         "y": 1,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 5,
-            "y": 1,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
       {
         "x": 6,
         "y": 1,
-        "buildings": [
-          {
-            "health": 10,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 6,
-            "y": 1,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
@@ -392,7 +275,26 @@
       {
         "x": 9,
         "y": 1,
-        "buildings": [],
+        "buildings": [
+          {
+            "health": 5,
+            "constructionTimeLeft": -7,
+            "price": 20,
+            "weaponDamage": 0,
+            "weaponSpeed": 0,
+            "weaponCooldownTimeLeft": 0,
+            "weaponCooldownPeriod": 0,
+            "destroyMultiplier": 1,
+            "constructionScore": 3,
+            "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
+            "buildingType": "ENERGY",
+            "energyPerShot": 0,
+            "x": 9,
+            "y": 1,
+            "playerType": "B"
+          }
+        ],
         "missiles": [],
         "cellOwner": "B"
       },
@@ -400,15 +302,7 @@
         "x": 10,
         "y": 1,
         "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 10,
-            "y": 1,
-            "playerType": "B"
-          }
-        ],
+        "missiles": [],
         "cellOwner": "B"
       },
       {
@@ -435,48 +329,14 @@
       {
         "x": 14,
         "y": 1,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 2,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 14,
-            "y": 1,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
       {
         "x": 15,
         "y": 1,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 15,
-            "y": 1,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       }
@@ -492,24 +352,7 @@
       {
         "x": 1,
         "y": 2,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 1,
-            "y": 2,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
@@ -531,15 +374,7 @@
         "x": 4,
         "y": 2,
         "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 4,
-            "y": 2,
-            "playerType": "B"
-          }
-        ],
+        "missiles": [],
         "cellOwner": "A"
       },
       {
@@ -566,24 +401,7 @@
       {
         "x": 8,
         "y": 2,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 8,
-            "y": 2,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
@@ -612,15 +430,7 @@
         "x": 12,
         "y": 2,
         "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 12,
-            "y": 2,
-            "playerType": "B"
-          }
-        ],
+        "missiles": [],
         "cellOwner": "B"
       },
       {
@@ -633,48 +443,14 @@
       {
         "x": 14,
         "y": 2,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 3,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 14,
-            "y": 2,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
       {
         "x": 15,
         "y": 2,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 15,
-            "y": 2,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       }
@@ -686,7 +462,7 @@
         "buildings": [
           {
             "health": 5,
-            "constructionTimeLeft": -1,
+            "constructionTimeLeft": -3,
             "price": 20,
             "weaponDamage": 0,
             "weaponSpeed": 0,
@@ -695,7 +471,9 @@
             "destroyMultiplier": 1,
             "constructionScore": 3,
             "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
             "buildingType": "ENERGY",
+            "energyPerShot": 0,
             "x": 0,
             "y": 3,
             "playerType": "A"
@@ -735,24 +513,7 @@
       {
         "x": 5,
         "y": 3,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 5,
-            "y": 3,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
@@ -766,52 +527,14 @@
       {
         "x": 7,
         "y": 3,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": 0,
-            "price": 300,
-            "weaponDamage": 20,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 10,
-            "destroyMultiplier": 1,
-            "constructionScore": 1,
-            "energyGeneratedPerTurn": 0,
-            "maxRange": 9,
-            "buildingType": "TESLA",
-            "energyPerShot": 100,
-            "x": 7,
-            "y": 3,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
       {
         "x": 8,
         "y": 3,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": 1,
-            "price": 300,
-            "weaponDamage": 20,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 10,
-            "destroyMultiplier": 1,
-            "constructionScore": 1,
-            "energyGeneratedPerTurn": 0,
-            "maxRange": 9,
-            "buildingType": "TESLA",
-            "energyPerShot": 100,
-            "x": 8,
-            "y": 3,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
@@ -846,24 +569,10 @@
       {
         "x": 13,
         "y": 3,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 14,
-        "y": 3,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 15,
-        "y": 3,
         "buildings": [
           {
             "health": 5,
-            "constructionTimeLeft": -1,
+            "constructionTimeLeft": -4,
             "price": 20,
             "weaponDamage": 0,
             "weaponSpeed": 0,
@@ -872,445 +581,11 @@
             "destroyMultiplier": 1,
             "constructionScore": 3,
             "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
             "buildingType": "ENERGY",
-            "x": 15,
-            "y": 3,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      }
-    ],
-    [
-      {
-        "x": 0,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 1,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 2,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 3,
-        "y": 4,
-        "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 3,
-            "y": 4,
-            "playerType": "B"
-          }
-        ],
-        "cellOwner": "A"
-      },
-      {
-        "x": 4,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 5,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 6,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 7,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 8,
-        "y": 4,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 8,
-            "y": 4,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 9,
-        "y": 4,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 1,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 9,
-            "y": 4,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 10,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 11,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 12,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 13,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 14,
-        "y": 4,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 15,
-        "y": 4,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 15,
-            "y": 4,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      }
-    ],
-    [
-      {
-        "x": 0,
-        "y": 5,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 1,
-        "y": 5,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 2,
-        "y": 5,
-        "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 2,
-            "y": 5,
-            "playerType": "B"
-          },
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 2,
-            "y": 5,
-            "playerType": "B"
-          },
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 2,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "cellOwner": "A"
-      },
-      {
-        "x": 3,
-        "y": 5,
-        "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 3,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "cellOwner": "A"
-      },
-      {
-        "x": 4,
-        "y": 5,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 5,
-        "y": 5,
-        "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 5,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "cellOwner": "A"
-      },
-      {
-        "x": 6,
-        "y": 5,
-        "buildings": [],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 7,
-        "y": 5,
-        "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 7,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "cellOwner": "A"
-      },
-      {
-        "x": 8,
-        "y": 5,
-        "buildings": [
-          {
-            "health": 15,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 8,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 9,
-        "y": 5,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 1,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 9,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 10,
-        "y": 5,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 10,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 10,
-            "y": 5,
-            "playerType": "B"
-          },
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 10,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "cellOwner": "B"
-      },
-      {
-        "x": 11,
-        "y": 5,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 2,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 11,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 12,
-        "y": 5,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 3,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 12,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
-        "missiles": [],
-        "cellOwner": "B"
-      },
-      {
-        "x": 13,
-        "y": 5,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
+            "energyPerShot": 0,
             "x": 13,
-            "y": 5,
+            "y": 3,
             "playerType": "B"
           }
         ],
@@ -1319,49 +594,281 @@
       },
       {
         "x": 14,
-        "y": 5,
+        "y": 3,
         "buildings": [
           {
             "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 2,
-            "weaponCooldownPeriod": 3,
+            "constructionTimeLeft": -2,
+            "price": 20,
+            "weaponDamage": 0,
+            "weaponSpeed": 0,
+            "weaponCooldownTimeLeft": 0,
+            "weaponCooldownPeriod": 0,
             "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
+            "constructionScore": 3,
+            "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
+            "buildingType": "ENERGY",
+            "energyPerShot": 0,
             "x": 14,
+            "y": 3,
+            "playerType": "B"
+          }
+        ],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 15,
+        "y": 3,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 1,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 7,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 8,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 9,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 10,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 11,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 12,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 13,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 14,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 15,
+        "y": 4,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 1,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 2,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 3,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 4,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 5,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 6,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 7,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 8,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 9,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 10,
+        "y": 5,
+        "buildings": [
+          {
+            "health": 5,
+            "constructionTimeLeft": 0,
+            "price": 20,
+            "weaponDamage": 0,
+            "weaponSpeed": 0,
+            "weaponCooldownTimeLeft": 0,
+            "weaponCooldownPeriod": 0,
+            "destroyMultiplier": 1,
+            "constructionScore": 3,
+            "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
+            "buildingType": "ENERGY",
+            "energyPerShot": 0,
+            "x": 10,
             "y": 5,
             "playerType": "B"
           }
         ],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 11,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 12,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 13,
+        "y": 5,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "B"
+      },
+      {
+        "x": 14,
+        "y": 5,
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
       {
         "x": 15,
         "y": 5,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 15,
-            "y": 5,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       }
@@ -1420,86 +927,27 @@
         "x": 7,
         "y": 6,
         "buildings": [],
-        "missiles": [
-          {
-            "damage": 5,
-            "speed": 2,
-            "x": 7,
-            "y": 6,
-            "playerType": "B"
-          }
-        ],
+        "missiles": [],
         "cellOwner": "A"
       },
       {
         "x": 8,
         "y": 6,
-        "buildings": [
-          {
-            "health": 20,
-            "constructionTimeLeft": 0,
-            "price": 30,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 10,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "DEFENSE",
-            "x": 8,
-            "y": 6,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
       {
         "x": 9,
         "y": 6,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 3,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 9,
-            "y": 6,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
       {
         "x": 10,
         "y": 6,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": 0,
-            "price": 30,
-            "weaponDamage": 5,
-            "weaponSpeed": 2,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 3,
-            "destroyMultiplier": 1,
-            "constructionScore": 15,
-            "energyGeneratedPerTurn": 0,
-            "buildingType": "ATTACK",
-            "x": 10,
-            "y": 6,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       },
@@ -1534,24 +982,7 @@
       {
         "x": 15,
         "y": 6,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 15,
-            "y": 6,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       }
@@ -1560,6 +991,13 @@
       {
         "x": 0,
         "y": 7,
+        "buildings": [],
+        "missiles": [],
+        "cellOwner": "A"
+      },
+      {
+        "x": 1,
+        "y": 7,
         "buildings": [
           {
             "health": 5,
@@ -1572,19 +1010,14 @@
             "destroyMultiplier": 1,
             "constructionScore": 3,
             "energyGeneratedPerTurn": 3,
+            "maxRange": 0,
             "buildingType": "ENERGY",
-            "x": 0,
+            "energyPerShot": 0,
+            "x": 1,
             "y": 7,
             "playerType": "A"
           }
         ],
-        "missiles": [],
-        "cellOwner": "A"
-      },
-      {
-        "x": 1,
-        "y": 7,
-        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
@@ -1612,24 +1045,7 @@
       {
         "x": 5,
         "y": 7,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 5,
-            "y": 7,
-            "playerType": "A"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "A"
       },
@@ -1699,108 +1115,11 @@
       {
         "x": 15,
         "y": 7,
-        "buildings": [
-          {
-            "health": 5,
-            "constructionTimeLeft": -1,
-            "price": 20,
-            "weaponDamage": 0,
-            "weaponSpeed": 0,
-            "weaponCooldownTimeLeft": 0,
-            "weaponCooldownPeriod": 0,
-            "destroyMultiplier": 1,
-            "constructionScore": 3,
-            "energyGeneratedPerTurn": 3,
-            "buildingType": "ENERGY",
-            "x": 15,
-            "y": 7,
-            "playerType": "B"
-          }
-        ],
+        "buildings": [],
         "missiles": [],
         "cellOwner": "B"
       }
     ]
   ],
-  "teslaHitList": [
-    [
-      {
-        "x": 7,
-        "y": 2,
-        "playerType": "A"
-      },
-      {
-        "x": 5,
-        "y": 2,
-        "playerType": "A"
-      },
-      {
-        "x": 4,
-        "y": 4,
-        "playerType": "A"
-      },
-      {
-        "x": 3,
-        "y": 2,
-        "playerType": "A"
-      },
-      {
-        "x": 0,
-        "y": 3,
-        "playerType": "A"
-      },
-      {
-        "x": 8,
-        "y": 3,
-        "playerType": "B"
-      }
-    ],
-    [
-      {
-        "x": 8,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 9,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 10,
-        "y": 3,
-        "playerType": "B"
-      },
-      {
-        "x": 11,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 12,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 13,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 14,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 15,
-        "y": 2,
-        "playerType": "B"
-      },
-      {
-        "x": 7,
-        "y": 3,
-        "playerType": "A"
-      }
-    ]
-  ]
+  "teslaHitList": []
 }

@@ -144,7 +144,7 @@ buildingFromStats buildingType'
 
 updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
-updateMove (-1)    player' = player'
+updateMove 0       player' = player'
 updateMove command player' =
   incrementFitness y' building' $ buildOnMap timeLeft coord' building' player'
   where

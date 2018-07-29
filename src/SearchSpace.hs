@@ -154,7 +154,7 @@ myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
                                              constructionQueue = constructionQueue' }) }) = do
   UV.filter available affordableMoves
   where
-    available (-1)       = True
+    available 0          = True
     available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
     notUnderConstruction = (not . (flip containsSite constructionSites))
     notTaken             = (not . (flip definedAt) towerMap')
@@ -175,7 +175,7 @@ oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap'
                                                    constructionQueue = constructionQueue' }) }) =
   UV.filter available affordableMoves
   where
-    available (-1)       = True
+    available 0          = True
     available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
     notUnderConstruction = (not . (flip containsSite constructionSites))
     notTaken             = (not . (flip definedAt) towerMap')
@@ -183,7 +183,7 @@ oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap'
     constructionSites    = buildingConstructionSites constructionQueue'
 
 maxSearchTime :: Int64
-maxSearchTime = 1800000000
+maxSearchTime = 10000000000 -- 1800000000
 
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time
@@ -218,67 +218,61 @@ unwrapEvaluator :: FloatEvaluator -> Float
 unwrapEvaluator (FloatEvaluator x) = x
 
 searchDeeper :: MVar Command -> StdGen -> GameState -> IO ()
-searchDeeper best g initialState = searchDeeperIter g initialScores M.empty
+searchDeeper best g initialState = searchDeeperIter g M.empty
   where
-    searchDeeperIter :: StdGen -> UV.Vector Float -> M.GameTree -> IO ()
-    searchDeeperIter h scores searchTree = do
+    searchDeeperIter :: StdGen -> M.GameTree -> IO ()
+    searchDeeperIter h searchTree = do
       putStrLn "Tick"
-      let (h', h'')                = split h
-      let (newScores, searchTree') = runState (UV.zipWithM (playOnceToEnd h' initialState) scores moves) searchTree
-      let indexOfBestSoFar         = UV.maxIndex newScores
-      let bestSoFarThunk           = toCommand (moves `uVectorIndex` indexOfBestSoFar)
-      bestSoFar                   <- evaluate (bestSoFarThunk `using` rdeepseq)
+      let (h', h'')        = split h
+      let searchTree'      = playToEnd h' initialState searchTree
+      -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ L.sortOn fst $ zip (UV.toList newScores) (UV.toList moves)
+      let scores           = M.myScores searchTree'
+      let indexOfBestSoFar = UV.maxIndex scores
+      let bestSoFarThunk   = toCommand (moves `uVectorIndex` indexOfBestSoFar)
+      bestSoFar           <- evaluate (bestSoFarThunk `using` rdeepseq)
       putMVar best $ (bestSoFar `deepseq` bestSoFar)
-      searchDeeperIter h'' newScores searchTree'
-    moveCount     = UV.length moves
-    moves         = myAvailableMoves initialState
-    initialScores = UV.replicate moveCount 0.0
-
-playOnceToEnd :: StdGen -> GameState -> Float -> EfficientCommand -> State M.GameTree Float
-playOnceToEnd g initialState score firstMove = playToEnd g initialState firstMove
+      searchDeeperIter h'' searchTree'
+    moves = myAvailableMoves initialState
 
 depth :: Int
 depth = 100
 
-type AdvanceStateResult = (StdGen, [EfficientCommand], Float, GameState)
+type AdvanceStateResult = (StdGen, [PackedCommand], GameState)
 
-playToEnd :: StdGen -> GameState -> EfficientCommand -> State M.GameTree Float
-playToEnd g initialState firstMove =
-  (initialAdvanceState (g, [firstMove], 0, initialState)) >>= playToEndIter depth
+playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
+playToEnd g initialState gameTree =
+  playToEndIter depth (g, [], initialState) gameTree
   where
-    playToEndIter :: Int -> AdvanceStateResult -> State M.GameTree Float
-    playToEndIter 0 (_, _, score, currentState) = return (score +  myFinalBoardScore currentState)
-    playToEndIter n advanceStateResult@(_, _, score, currentState) =
+    playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
+    playToEndIter 0 advanceStateResult                      gameTree' = gameTree'
+    playToEndIter n advanceStateResult@(_, _, currentState) gameTree' =
       if gameOver currentState
       then if iWon currentState
-           then updateLoss advanceStateResult >> return (myFinalBoardScore currentState + score)
-           else updateWin  advanceStateResult >> return 0
-      else advanceState advanceStateResult >>= playToEndIter (n - 1)
-
-updateLoss :: AdvanceStateResult -> State M.GameTree ()
-updateLoss (_, moves, _, _) = do
-  incrementTreeFitness moves
-  return ()
-
-incrementTreeFitness :: [EfficientCommand] -> State M.GameTree ()
-incrementTreeFitness moves = do
-  gameTree <- get
-  put $ M.incrementDecrementBy moves winLossModifier gameTree
-  return ()
+           then updateWin  advanceStateResult gameTree'
+           else updateLoss advanceStateResult gameTree'
+      else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
+           in  playToEndIter (n - 1) advanceStateResult' gameTree''
 
 winLossModifier :: Float
 winLossModifier = 1.0
 
-updateWin :: AdvanceStateResult -> State M.GameTree ()
-updateWin (g, moves, score, state) = do
-  incrementTreeFitness moves
-  return ()
+-- Moves are added to an accumulater by consing onto the front; thus,
+-- they are reversed when we arrive here.
+updateWin :: AdvanceStateResult -> M.GameTree -> M.GameTree
+updateWin (_, moves, _) gameTree =
+  incrementTreeFitness (reverse moves) gameTree
 
-decrementTreeFitness :: [EfficientCommand] -> State M.GameTree ()
-decrementTreeFitness moves = do
-  gameTree <- get
-  put $ M.incrementDecrementBy moves (-winLossModifier) gameTree
-  return ()
+incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
+incrementTreeFitness moves gameTree =
+  M.incrementDecrementBy moves winLossModifier gameTree
+
+updateLoss :: AdvanceStateResult -> M.GameTree -> M.GameTree
+updateLoss (_, moves, _) gameTree =
+  decrementTreeFitness (reverse moves) gameTree
+
+decrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
+decrementTreeFitness moves gameTree =
+  M.incrementDecrementBy moves (-winLossModifier) gameTree
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth }),
@@ -290,70 +284,44 @@ iWon (GameState { me      = (Player { health = myHealth }),
                   oponent = (Player { health = oponentsHealth }) }) =
   oponentsHealth <= 0 && myHealth > 0
 
--- Note: I'll never need to worry about populating the moves up to a
--- point, becuase we always explore from a previously explored state,
--- or the empty tree.
-initialAdvanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult 
-initialAdvanceState (g, movesSoFar@(firstMove:moves), score, currentState) = do
-  gameTree          <- get
-  let ourNode        = M.subTree movesSoFar gameTree
-  let isEmpty        = isNothing ourNode
-  let oponentsMoves  = oponentsAvailableMoves currentState
-  let oponentsScores =
-        if isEmpty
-        then UV.map
-             ((1.0 /) . myIntermediateBoardScore . (flip updateOponentsMove currentState))
-             oponentsMoves
-        else M.oponentsScores $ fromJust ourNode
-  when isEmpty (do
-    put $ M.addAt movesSoFar (M.GameTree UV.empty IM.empty oponentsScores) gameTree)
-  let (oponentsMove, g') =
-        chooseOne g oponentsMoves $
-        cdf $
-        oponentsScores
-  return (g',
-          oponentsMove:firstMove:moves,
-          (myIntermediateBoardScore $ updateMyMove firstMove currentState),
-          updateMyMove firstMove $ updateOponentsMove oponentsMove $ tickEngine currentState)
-
-firstElem :: IM.IntMap a -> a
-firstElem = head . IM.elems
+probe message x = trace (message ++ show x) x
 
 advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
-advanceState (g, moves, score, currentState) = do
-  gameTree          <- get
-  let ourNode        = M.subTree moves gameTree
-  let isEmpty        = isNothing ourNode
-  let myMoves        = myAvailableMoves currentState
-  let oponentsMoves  = oponentsAvailableMoves currentState
-  let oponentsScores =
-        if isEmpty
+advanceState (g, moves, currentState) = do
+  gameTree                  <- get
+  let ourNode                = M.subTree moves gameTree
+  let isEmpty                = isNothing ourNode
+  let myScoresAreEmpty       = isEmpty || (UV.null $ M.myScores       $ fromJust ourNode)
+  let oponentsScoresAreEmpty = isEmpty || (UV.null $ M.oponentsScores $ fromJust ourNode)
+  let myMoves                = myAvailableMoves currentState
+  let oponentsMoves          = oponentsAvailableMoves currentState
+  let oponentsScores         =
+        if oponentsScoresAreEmpty
         then UV.map
              ((1.0 /) . myIntermediateBoardScore . (flip updateOponentsMove currentState))
              oponentsMoves
         else M.oponentsScores $ fromJust ourNode
   let myScores =
-        if isEmpty
+        if myScoresAreEmpty
         then UV.map
              (myIntermediateBoardScore . (flip updateMyMove currentState))
              myMoves
         else M.myScores $ fromJust ourNode
-  when isEmpty $
+  when (isEmpty || myScoresAreEmpty || oponentsScoresAreEmpty) $
     put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
   let (g', g'') = split g
-  let (myMove, _)         =
+  let (indexOfMyMove, myMove, _)         =
         chooseOne g' myMoves $
         cdf $
         myScores
   let myScores = UV.map (myIntermediateBoardScore . (flip updateMyMove currentState)) myMoves
-      (oponentsMove, g''') =
+  let (indexOfOponentsMove, oponentsMove, g''') =
         chooseOne g'' oponentsMoves $
         cdf $
         oponentsScores
   let nextState = updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine currentState
   return (g''',
-          oponentsMove:myMove:moves,
-          myIntermediateBoardScore nextState,
+          (combineCommands indexOfMyMove indexOfOponentsMove):moves,
           nextState)
 
 invertScores :: UV.Vector Float -> UV.Vector Float
@@ -367,9 +335,9 @@ cdf xs = normalised
     adjusted   = UV.map (+minValue) xs
     minValue   = abs $ UV.minimum xs
 
-chooseOne :: (RandomGen g) => g -> Moves -> UV.Vector Float -> (EfficientCommand, g)
+chooseOne :: (RandomGen g) => g -> Moves -> UV.Vector Float -> (Int, EfficientCommand, g)
 chooseOne g moves scores =
-  (scanForValue scores, g')
+  (indexOfMove, scanForValue , g')
   where
     (_, max')     = genRange g
     floatingMax   = fromIntegral max'
@@ -378,8 +346,13 @@ chooseOne g moves scores =
     normalised    = normalise value
     numberOfMoves = UV.length moves
     indexOfLast   = numberOfMoves - 1
+    indexOfMove   =
+      fromJust $
+      lastIfNothing indexOfLast $
+      fmap ( \ x -> x - 1) $
+      UV.findIndex ((<= normalised)) scores
+    scanForValue  = indexMoves indexOfMove
     indexMoves i  = moves `uVectorIndex` (numberOfMoves - i - 1)
-    scanForValue  = indexMoves . fromJust . lastIfNothing indexOfLast . fmap ( \ x -> x - 1) . UV.findIndex ((<= normalised))
 
 lastIfNothing :: Int -> Maybe Int -> Maybe Int
 lastIfNothing _         x@(Just _) = x

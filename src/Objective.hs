@@ -27,7 +27,8 @@ instance NFData Move where
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
-  enemyEnergyTowerCountScore state +
+  (1 - hitsDealtToOponent state) +
+  (enemyEnergyTowerCountScore state) +
   energyProductionDeficitScore state +
   attackPowerDeficitScore state +
   towerCountDeficitScore state +
@@ -36,14 +37,17 @@ myIntermediateBoardScore state =
 myFinalBoardScore :: GameState -> Float
 myFinalBoardScore state =
   myIntermediateBoardScore state +
-  -- hitsDealtToOponent state +
-  -- hitsTakenByMe state +
+  hitsDealtToOponent state +
+  hitsTakenByMe state +
   resultBonus state
+
+resultBonusScore :: Float
+resultBonusScore = 8
 
 resultBonus :: GameState -> Float
 resultBonus state =
-  if myHealth state       == 0 then 0 else 0 +
-  if oponentsHealth state == 0 then 8  else 0
+  if myHealth state       == 0 then 0                else 0 +
+  if oponentsHealth state == 0 then resultBonusScore else 0
 
 maxHitsTaken :: Float
 maxHitsTaken = (fromIntegral startingHealth) / (fromIntegral missileDamage)
