@@ -46,8 +46,6 @@ import Control.Parallel.Strategies (parList, using, rdeepseq)
 import Control.Exception (evaluate)
 import Control.DeepSeq (rnf, deepseq)
 
-import Debug.Trace
-
 data FloatEvaluator = FloatEvaluator !Float
 
 xPredicate :: (Int -> Bool) -> Coord -> Bool
@@ -183,7 +181,7 @@ oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap'
     constructionSites    = buildingConstructionSites constructionQueue'
 
 maxSearchTime :: Int64
-maxSearchTime = 10000000000 -- 1800000000
+maxSearchTime = 1900000000
 
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time
@@ -222,10 +220,10 @@ searchDeeper best g initialState = searchDeeperIter g M.empty
   where
     searchDeeperIter :: StdGen -> M.GameTree -> IO ()
     searchDeeperIter h searchTree = do
-      putStrLn "Tick"
+      --putStrLn "Tick"
       let (h', h'')        = split h
       let searchTree'      = playToEnd h' initialState searchTree
-      -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ L.sortOn fst $ zip (UV.toList newScores) (UV.toList moves)
+      -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
       let scores           = M.myScores searchTree'
       let indexOfBestSoFar = UV.maxIndex scores
       let bestSoFarThunk   = toCommand (moves `uVectorIndex` indexOfBestSoFar)
@@ -235,7 +233,7 @@ searchDeeper best g initialState = searchDeeperIter g M.empty
     moves = myAvailableMoves initialState
 
 depth :: Int
-depth = 100
+depth = 50
 
 type AdvanceStateResult = (StdGen, [PackedCommand], GameState)
 
@@ -244,7 +242,7 @@ playToEnd g initialState gameTree =
   playToEndIter depth (g, [], initialState) gameTree
   where
     playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
-    playToEndIter 0 advanceStateResult                      gameTree' = gameTree'
+    playToEndIter 0 (_, _, currentState)                      gameTree' = gameTree'
     playToEndIter n advanceStateResult@(_, _, currentState) gameTree' =
       if gameOver currentState
       then if iWon currentState
@@ -254,7 +252,7 @@ playToEnd g initialState gameTree =
            in  playToEndIter (n - 1) advanceStateResult' gameTree''
 
 winLossModifier :: Float
-winLossModifier = 1.0
+winLossModifier = resultBonusScore
 
 -- Moves are added to an accumulater by consing onto the front; thus,
 -- they are reversed when we arrive here.
@@ -283,8 +281,6 @@ iWon :: GameState -> Bool
 iWon (GameState { me      = (Player { health = myHealth }),
                   oponent = (Player { health = oponentsHealth }) }) =
   oponentsHealth <= 0 && myHealth > 0
-
-probe message x = trace (message ++ show x) x
 
 advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
 advanceState (g, moves, currentState) = do
@@ -319,7 +315,9 @@ advanceState (g, moves, currentState) = do
         chooseOne g'' oponentsMoves $
         cdf $
         oponentsScores
-  let nextState = updateMyMove myMove $ updateOponentsMove oponentsMove $ tickEngine currentState
+  let nextState = updateMyMove myMove $
+        updateOponentsMove oponentsMove $
+        tickEngine currentState
   return (g''',
           (combineCommands indexOfMyMove indexOfOponentsMove):moves,
           nextState)

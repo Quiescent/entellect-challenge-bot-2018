@@ -2,6 +2,7 @@
 
 module Objective (myIntermediateBoardScore,
                   myFinalBoardScore,
+                  resultBonusScore,
                   Move(..))
   where
 
@@ -42,7 +43,7 @@ myFinalBoardScore state =
   resultBonus state
 
 resultBonusScore :: Float
-resultBonusScore = 8
+resultBonusScore = 9
 
 resultBonus :: GameState -> Float
 resultBonus state =
