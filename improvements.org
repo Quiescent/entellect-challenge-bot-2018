@@ -87,6 +87,8 @@ appropriate.
      very wierd decisions now.
    :END:
 ** TODO Cache Fitnesses when searching deeper
+** TODO At a certain energy, go for the kill
+** TODO Try out the DPH compiler optimisations
 ** TODO Implement "True" Monte-Carlo Search
 ** TODO Use Mutable Vectors at the Top Level
 ** TODO Use a faster PRNG
