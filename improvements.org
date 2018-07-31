@@ -86,6 +86,10 @@ appropriate.
      I think that this made the bot a bit more predictable, but it makes
      very wierd decisions now.
    :END:
+** IN_PROGRESS Get the Old Tests Working Again
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-07-31 Tue 07:49]
+   :END:
 ** TODO Cache Fitnesses when searching deeper
 ** TODO At a certain energy, go for the kill
 ** TODO Try out the DPH compiler optimisations
