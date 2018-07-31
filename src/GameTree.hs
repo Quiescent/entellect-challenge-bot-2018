@@ -16,7 +16,7 @@ import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as MVector
 
 data GameTree = GameTree (UV.Vector Float) (M.IntMap GameTree) (UV.Vector Float)
-  deriving (Show)
+  deriving (Show, Eq)
 
 subTree :: [PackedCommand] -> GameTree -> Maybe GameTree
 subTree []           tree                    = Just tree
