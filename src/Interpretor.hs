@@ -94,11 +94,7 @@ type Missiles = UV.Vector Missile
 
 data Player = Player { energy            :: Int,
                        health            :: Int,
-                       hitsTaken         :: Int,
                        energyGenPerTurn  :: Int,
-                       energyTowerCount  :: Int,
-                       attackPower       :: Int,
-                       towerCount        :: Int,
                        towerMap          :: TowerMap,
                        constructionQueue :: ConstructionQueue,
                        ownedMissiles     :: Missiles }
@@ -112,15 +108,11 @@ compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderCon
 compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
 
 instance Eq Player where
-  (==) (Player energyA healthA hitsTakenA energyGenPerTurnA energyTowerCountA attackPowerA towerCountA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB hitsTakenB energyGenPerTurnB energyTowerCountB attackPowerB towerCountB towerMapB constructionQueueB ownedMissilesB)
+  (==) (Player energyA healthA  energyGenPerTurnA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB energyGenPerTurnB towerMapB constructionQueueB ownedMissilesB)
     = energyA                             == energyB &&
       healthA                             == healthB &&
-      hitsTakenA                          == hitsTakenB &&
       energyGenPerTurnA                   == energyGenPerTurnB &&
-      energyTowerCountA                   == energyTowerCountB &&
-      attackPowerA                        == attackPowerB &&
-      towerCountA                         == towerCountB &&
       towerMapA                           == towerMapB &&
       (L.sort $ UV.toList ownedMissilesA) == (L.sort $ UV.toList ownedMissilesB) &&
       (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
@@ -128,27 +120,19 @@ instance Eq Player where
 instance NFData Player where
   rnf (Player energy'
               health'
-              hitsTaken'
               energyGenPerTurn'
-              energyTowerCount'
-              attackPower'
-              towerCount'
               towerMap'
               constructionQueue'
               ownedMissiles')
     = energy'                  `seq`
       health'                  `seq`
-      hitsTaken'               `seq`
       energyGenPerTurn'        `seq`
-      energyTowerCount'        `seq`
-      attackPower'             `seq`
-      towerCount'              `seq`
       (rnf towerMap')          `seq`
       (rnf constructionQueue') `seq`
       (rnf ownedMissiles')     `seq`
       ()
 
-data ScratchPlayer = ScratchPlayer String Int Int Int
+data ScratchPlayer = ScratchPlayer String Int Int
                    deriving (Show, Eq)
 
 instance FromJSON ScratchPlayer where
@@ -156,11 +140,9 @@ instance FromJSON ScratchPlayer where
     playerType' <- v .: "playerType"
     energy''    <- v .: "energy"
     health''    <- v .: "health"
-    hitsTaken'' <- v .: "hitsTaken"
     return $ ScratchPlayer playerType'
                            energy''
                            health''
-                           hitsTaken''
 
 data GameState = GameState { me       :: Player,
                              oponent  :: Player }
@@ -179,22 +161,18 @@ instance FromJSON GameState where
     let (GameState me' oponent') = convertDenseMap denseGameMap
     let (((ScratchPlayer _
                          aEnergy
-                         aHealth
-                         aHitsTaken),
+                         aHealth),
            (ScratchPlayer _
                           bEnergy
-                          bHealth
-                          bHitsTaken))) = extractPlayers players'
+                          bHealth))) = extractPlayers players'
     return (GameState me' { energy    = aEnergy,
-                            health    = aHealth,
-                            hitsTaken = aHitsTaken }
+                            health    = aHealth }
                       oponent' { energy    = bEnergy,
-                                 health    = bHealth,
-                                 hitsTaken = bHitsTaken })
+                                 health    = bHealth })
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
-  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _)  = players `vectorIndex` 0
+  let firstPlayer@(ScratchPlayer firstPlayerType _ _)  = players `vectorIndex` 0
       secondPlayer = players `vectorIndex` 1
   in if firstPlayerType == "A"
      then (firstPlayer,  secondPlayer)
@@ -227,7 +205,7 @@ type DenseMap = V.Vector DenseRow
 type DenseRow = V.Vector CellStateContainer
 
 emptyPlayer :: Player
-emptyPlayer = Player 0 0 0 0 0 0 0 M.empty PQ.empty UV.empty
+emptyPlayer = Player 0 0 0 M.empty PQ.empty UV.empty
 
 emptyGameState :: GameState
 emptyGameState = GameState emptyPlayer emptyPlayer
@@ -331,54 +309,31 @@ teslaTowerDamagePerTurn :: Float
 teslaTowerDamagePerTurn = (fromIntegral teslaTowerMaximumHitDamage) / (fromIntegral teslaTowerCooldownTime)
 
 incrementFitness :: Int -> Building -> Player -> Player
-incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn',
-                                                energyTowerCount = energyTowerCount',
-                                                attackPower      = attackPower',
-                                                towerCount       = towerCount' })
-  | building' == attack3     = player { attackPower = attackPower' + 1,
-                                        towerCount  = towerCount'  + 1 }
-  | building' == attack2     = player { attackPower = attackPower' + 1,
-                                        towerCount  = towerCount'  + 1 }
-  | building' == attack1     = player { attackPower = attackPower' + 1,
-                                        towerCount  = towerCount'  + 1 }
-  | building' == attack0     = player { attackPower = attackPower' + 1,
-                                        towerCount  = towerCount'  + 1 }
-  | building' == defense4    = player { towerCount  = towerCount'  + 1 }
-  | building' == defense3    = player { towerCount  = towerCount'  + 1 }
-  | building' == defense2    = player { towerCount  = towerCount'  + 1 }
-  | building' == defense1    = player { towerCount  = towerCount'  + 1 }
-  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
-                                        towerCount       = towerCount' + 1,
-                                        energyTowerCount = energyTowerCount' + 1 }
-  -- TODO: Come up with something reasonable here
-  | otherwise                = player { attackPower = attackPower' + teslaTowerDamagePerHit,
-                                        towerCount  = towerCount'  + 1 }
-
-decrementFitness :: Int -> Building -> Player -> Player
-decrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn',
-                                                energyTowerCount = energyTowerCount',
-                                                attackPower      = attackPower',
-                                                towerCount       = towerCount' })
-  | building' == attack3     = player { attackPower = attackPower' - 1,
-                                        towerCount  = towerCount'  - 1 }
-  | building' == attack2     = player { attackPower = attackPower' - 1,
-                                        towerCount  = towerCount'  - 1 }
-  | building' == attack1     = player { attackPower = attackPower' - 1,
-                                        towerCount  = towerCount'  - 1 }
-  | building' == attack0     = player { attackPower = attackPower' - 1,
-                                        towerCount  = towerCount'  - 1 }
-  -- You don't lose a tower when taking a hit on a defense tower
-  -- except for the last
+incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn' })
+  | building' == attack3     = player
+  | building' == attack2     = player
+  | building' == attack1     = player
+  | building' == attack0     = player
   | building' == defense4    = player
   | building' == defense3    = player
   | building' == defense2    = player
-  | building' == defense1    = player { towerCount  = towerCount'  - 1 }
-  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
-                                        towerCount       = towerCount' - 1,
-                                        energyTowerCount = energyTowerCount' - 1 }
+  | building' == defense1    = player
+  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn }
   -- TODO: Come up with something reasonable here
-  | otherwise                = player { attackPower = attackPower' - teslaTowerDamagePerHit,
-                                        towerCount  = towerCount'  - 1 }
+  | otherwise                = player
+
+decrementFitness :: Int -> Building -> Player -> Player
+decrementFitness y' building' player@(Player { energyGenPerTurn = energyGenPerTurn' })
+  | building' == attack3     = player
+  | building' == attack2     = player
+  | building' == attack1     = player
+  | building' == attack0     = player
+  | building' == defense4    = player
+  | building' == defense3    = player
+  | building' == defense2    = player
+  | building' == defense1    = player
+  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn  }
+  | otherwise                = player
 
 stateFilePath :: String
 stateFilePath = "state.json"

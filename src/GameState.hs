@@ -9,8 +9,6 @@ module GameState (runCommand,
                   mapOponentsMap,
                   updateMe,
                   updateOponent,
-                  incrementMyHitsTaken,
-                  incrementOponentsHitsTaken,
                   Command(..),
                   updateMyMove,
                   updateOponentsMove)
@@ -29,12 +27,6 @@ import Coord
 import EfficientCommand
 
 type MapPlayer = (Player -> Player) -> GameState -> GameState
-
-incrementMyHitsTaken :: GameState -> GameState
-incrementMyHitsTaken = mapMyPlayer incrementHitsTaken
-
-incrementOponentsHitsTaken :: GameState -> GameState
-incrementOponentsHitsTaken = mapOponentsPlayer incrementHitsTaken
 
 mapMyPlayer :: MapPlayer
 mapMyPlayer f state@(GameState { me = me' }) =

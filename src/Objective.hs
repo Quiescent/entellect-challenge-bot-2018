@@ -29,9 +29,7 @@ instance NFData Move where
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
   let futureState = advanceToFutureState state
-  in energyTowersDestroyed state futureState +
-     attackPowerDestroyed state futureState +
-     turnsToMostExpensiveByMostExpensive state
+  in turnsToMostExpensiveByMostExpensive state
 
 -- Unrolled for the compiler to optimise (there are 10 right now)
 advanceToFutureState :: GameState -> GameState
@@ -49,16 +47,6 @@ advanceToFutureState =
 
 resultBonusScore :: Float
 resultBonusScore = 9
-
-energyTowersDestroyed :: GameState -> GameState -> Float
-energyTowersDestroyed (GameState { oponent = (Player { energyTowerCount = initialEnergyTowerCount }) })
-                      (GameState { oponent = (Player { energyTowerCount = energyTowerCountAfter }) }) =
-  fromIntegral $ initialEnergyTowerCount - energyTowerCountAfter
-
-attackPowerDestroyed :: GameState -> GameState -> Float
-attackPowerDestroyed (GameState { oponent = (Player { attackPower = initialAttackPower }) })
-                     (GameState { oponent = (Player { attackPower = attackPowerAfter }) }) =
-  fromIntegral $ initialAttackPower - attackPowerAfter
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]

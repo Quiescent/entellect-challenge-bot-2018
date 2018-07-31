@@ -11,7 +11,6 @@ module Player (filterMMissiles,
                resetCooldownAndCreateMissileForMe,
                resetCooldownAndCreateMissileForOponent,
                mapMissiles,
-               incrementHitsTaken,
                updateTowerMap,
                takeDamage,
                buildingFromStats,
@@ -78,10 +77,6 @@ updateEnergy :: Int -> Player -> Player
 updateEnergy energyToAdd player@(Player { energy = energy' }) =
   player { energy = energy' + energyToAdd }
 
-incrementHitsTaken :: Player -> Player
-incrementHitsTaken player'@(Player { hitsTaken = hitsTaken' }) =
-  player' { hitsTaken = hitsTaken' + 1 }
-
 resetCooldownAndCreateMissileForMe :: Player -> Coord -> Int -> Player
 resetCooldownAndCreateMissileForMe owner' coord cooldown =
   addMissileForMe coord ownerWithResetBuilding
@@ -132,8 +127,8 @@ updateTowerMap :: TowerMap -> Player -> Player
 updateTowerMap towerMap' player' = player' { towerMap = towerMap' }
 
 takeDamage :: Int -> Player -> Player
-takeDamage damage' player'@(Player { health = health', hitsTaken = hitsTaken' }) =
-  player' { health = health' - damage', hitsTaken = hitsTaken' + 1 }
+takeDamage damage' player'@(Player { health = health' }) =
+  player' { health = health' - damage' }
 
 buildingFromStats :: BuildingType -> Building
 buildingFromStats buildingType'
