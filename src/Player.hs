@@ -157,8 +157,8 @@ constructionTime ATTACK  = attackTowerConstructionTime
 
 buildOnMap :: Int -> Coord -> Building -> Player -> Player
 buildOnMap timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
-                                                towerMap          = towerMap',
-                                                energy            = energy' }) =
+                                                     towerMap          = towerMap',
+                                                     energy            = energy' }) =
   player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue',
            energy            = energy' - towerCost building' }
   where
