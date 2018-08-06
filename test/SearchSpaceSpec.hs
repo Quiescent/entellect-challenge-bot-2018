@@ -3,3 +3,6 @@ module SearchSpaceSpec
 
 import Test.Hspec
 
+spec :: Spec
+spec = do
+  return ()

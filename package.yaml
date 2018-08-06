@@ -34,6 +34,7 @@ dependencies:
 - mtl >= 2.2.2
 - mwc-random >= 0.13.6.0
 - hspec >= 2.5.3
+- QuickCheck >= 2.11.3
 
 library:
   source-dirs: src
