@@ -21,7 +21,13 @@ spec =
   addAtSpec
 
 simpleSubTree :: GameTree
-simpleSubTree = (GameTree (UV.fromList [1..2]) M.empty (UV.fromList [1..3]))
+simpleSubTree = GameTree (UV.fromList [1..2]) M.empty (UV.fromList [1..3])
+
+incrementDecrementedSimpleSubTree :: GameTree
+incrementDecrementedSimpleSubTree = GameTree (UV.fromList [2, 2]) M.empty (UV.fromList [0, 2, 3])
+
+secondIncrementDecrementedSimpleSubTree :: GameTree
+secondIncrementDecrementedSimpleSubTree = GameTree (UV.fromList [1, 3]) M.empty (UV.fromList [1, 1, 3])
 
 zeroZeroTree :: GameTree
 zeroZeroTree =
@@ -84,8 +90,35 @@ subTreeSpec = do
 incrementDecrementBySpec :: Spec
 incrementDecrementBySpec = do
   describe "incrementDecrementBy" $ do
-    it "should be implemented!" $
-      True == True
+    it "should do nothing with an empty list of moves" $
+      incrementDecrementBy [] 1 simpleSubTree == simpleSubTree
+    it "should increment the fitness of the first move given 0 and decrement the corresponding oponent move" $
+      incrementDecrementBy [0] 1 simpleSubTree == incrementDecrementedSimpleSubTree
+    it "should increment the fitness of the second move given 1 and decrement the corresponding oponent move" $
+      incrementDecrementBy [513] 1 simpleSubTree == secondIncrementDecrementedSimpleSubTree
+    it "should increment the fitness of moves two deep" $
+      incrementDecrementBy [512, 1] 1 unincrementedZeroOneTree == incrementedZeroOneTree
+
+unincrementedZeroOneTree :: GameTree
+unincrementedZeroOneTree =
+  GameTree
+  (UV.fromList [0, 1, 2, 3, 4])
+  (M.fromList [(512, (GameTree
+                       (UV.fromList [1, 2, 3, 4, 5, 6])
+                       M.empty
+                       (UV.fromList [2, 3, 4, 5, 6, 7])))])
+  (UV.fromList [1, 2, 3, 4, 5])
+
+incrementedZeroOneTree :: GameTree
+incrementedZeroOneTree =
+  GameTree
+  (UV.fromList [1, 1, 2, 3, 4])
+  (M.fromList [(512, (GameTree
+                       (UV.fromList [1, 3, 3, 4, 5, 6])
+                       M.empty
+                       (UV.fromList [1, 3, 4, 5, 6, 7])))])
+  (UV.fromList [1, 1, 3, 4, 5])
+
 
 emptyZeroOneTree :: GameTree
 emptyZeroOneTree = GameTree

@@ -26,8 +26,8 @@ subTree (move:moves) (GameTree _ branches _) =
 incrementDecrementBy :: [PackedCommand] -> Float -> GameTree -> GameTree
 incrementDecrementBy []           x tree = tree
 incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
-  let updatedSubTree          = M.adjust (incrementDecrementBy moves x) move branches
-  in GameTree (UV.modify increment myMoveScores) branches (UV.modify decrement oponentsMoveScores)
+  let updatedSubTree = M.adjust (incrementDecrementBy moves x) move branches
+  in GameTree (UV.modify increment myMoveScores) updatedSubTree (UV.modify decrement oponentsMoveScores)
   where
     (myMove, oponentsMove) = unpackPackedCommand move
     increment scores       = do
