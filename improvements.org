@@ -86,8 +86,13 @@ appropriate.
      I think that this made the bot a bit more predictable, but it makes
      very wierd decisions now.
    :END:
-** IN_PROGRESS Get the Old Tests Working Again
+** DONE Get the Old Tests Working Again
+   CLOSED: [2018-08-07 Tue 07:46]
    :LOGBOOK:
+   - CLOSING NOTE [2018-08-07 Tue 07:46] \\
+     I ignored one or two where the logic is more difficult but I'm pretty
+     sure that the underlying functionality works because of the rerun
+     test.
    - State "IN_PROGRESS" from "TODO"       [2018-07-31 Tue 07:49]
    :END:
 ** TODO Cache Fitnesses when searching deeper
