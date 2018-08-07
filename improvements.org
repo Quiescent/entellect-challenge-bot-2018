@@ -95,17 +95,47 @@ appropriate.
      test.
    - State "IN_PROGRESS" from "TODO"       [2018-07-31 Tue 07:49]
    :END:
-** TODO Cache Fitnesses when searching deeper
+** DONE Cache Fitnesses when searching deeper
+   CLOSED: [2018-08-07 Tue 07:47]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-07 Tue 07:47] \\
+     This is done by virtue of the game tree structure
+   :END:
+** DONE Implement "True" Monte-Carlo Search
+   CLOSED: [2018-08-07 Tue 07:48]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-07 Tue 07:48] \\
+     Implemented for the last round and (with a bug in the implementation)
+     I did pretty well anyway.
+   :END:
+** DONE Use Mutable Vectors at the Top Level
+   CLOSED: [2018-08-07 Tue 07:48]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-07 Tue 07:48] \\
+     I have this in the tree data structure.  It'll do the mutation if it's
+     safe.
+   :END:
+** DONE Dissuade the bot from looking at hits taken
+   CLOSED: [2018-08-07 Tue 07:48]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-07 Tue 07:48] \\
+     The last heuristic looked purely at the damage I dealt to the opponents
+     energy and attack towers and was very effective.
+   :END:
+** TODO Implement a dot-product version of the heuristic
+** TODO Implement a bitset version of the engine
+** TODO Use Accelerate for the top-level vector calculations
 ** TODO At a certain energy, go for the kill
-** TODO Try out the DPH compiler optimisations
-** TODO Implement "True" Monte-Carlo Search
-** TODO Use Mutable Vectors at the Top Level
 ** TODO Use a faster PRNG
 Investigate: http://hackage.haskell.org/package/mwc-random
-** TODO Disuade the bot from looking at hits taken
-** TODO Use a deficit algorithm for the hits taken rather than absolute
 ** TODO Use Vector Algorithms binary search for `chooseOne'
 ** TODO Add rewrite rules and always use map* varients of functions
 ** TODO Make a type for each row state
 ** TODO Do some maths!!!
-** TODO Check for collision with the player when there are no towers on the row
+** ABANDONED  Use a deficit algorithm for the hits taken rather than absolute
+   :LOGBOOK:
+   - Note taken on [2018-08-07 Tue 07:49] \\
+     I don't want to track hits taken anymore because it's a poor predictor
+     of success early on.
+   :END:
+** ABANDONED  Try out the DPH compiler optimisations (too old and defunct)
