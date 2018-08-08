@@ -25,12 +25,13 @@ import Data.Aeson (decode,
                    parseJSON,
                    withObject,
                    (.:))
-import qualified Data.PQueue.Min      as PQ
-import qualified Data.Vector          as V
-import qualified Data.Vector.Unboxed  as UV
-import qualified Data.ByteString.Lazy as B
-import qualified Data.IntMap.Strict   as M
-import qualified Data.List            as L
+import qualified Data.PQueue.Min             as PQ
+import qualified Data.Vector                 as V
+import qualified Data.Vector.Unboxed         as UV
+import qualified Data.ByteString.Lazy        as B
+import qualified Data.IntMap.Strict          as M
+import qualified Data.List                   as L
+import qualified Data.Vector.Unboxed.Mutable as MVector
 import Control.DeepSeq
 import VectorIndex
 
@@ -92,12 +93,14 @@ type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
 
 type Missiles = UV.Vector Missile
 
-data Player = Player { energy            :: Int,
-                       health            :: Int,
-                       energyGenPerTurn  :: Int,
-                       towerMap          :: TowerMap,
-                       constructionQueue :: ConstructionQueue,
-                       ownedMissiles     :: Missiles }
+data Player = Player { energy             :: Int,
+                       health             :: Int,
+                       energyGenPerTurn   :: Int,
+                       energyTowersPerRow :: UV.Vector Int,
+                       attackTowersPerRow :: UV.Vector Int,
+                       towerMap           :: TowerMap,
+                       constructionQueue  :: ConstructionQueue,
+                       ownedMissiles      :: Missiles }
               deriving (Show)
 
 -- Allows for built in sorting
@@ -108,11 +111,13 @@ compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderCon
 compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
 
 instance Eq Player where
-  (==) (Player energyA healthA  energyGenPerTurnA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB energyGenPerTurnB towerMapB constructionQueueB ownedMissilesB)
+  (==) (Player energyA healthA energyGenPerTurnA energyTowersPerRowA attackTowersPerRowA towerMapA constructionQueueA ownedMissilesA)
+       (Player energyB healthB energyGenPerTurnB energyTowersPerRowB attackTowersPerRowB towerMapB constructionQueueB ownedMissilesB)
     = energyA                             == energyB &&
       healthA                             == healthB &&
       energyGenPerTurnA                   == energyGenPerTurnB &&
+      energyTowersPerRowA                 == energyTowersPerRowB &&
+      attackTowersPerRowA                 == attackTowersPerRowB &&
       towerMapA                           == towerMapB &&
       (L.sort $ UV.toList ownedMissilesA) == (L.sort $ UV.toList ownedMissilesB) &&
       (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
@@ -121,15 +126,19 @@ instance NFData Player where
   rnf (Player energy'
               health'
               energyGenPerTurn'
+              energyTowersPerRow'
+              attackTowersPerRow'
               towerMap'
               constructionQueue'
               ownedMissiles')
-    = energy'                  `seq`
-      health'                  `seq`
-      energyGenPerTurn'        `seq`
-      (rnf towerMap')          `seq`
-      (rnf constructionQueue') `seq`
-      (rnf ownedMissiles')     `seq`
+    = energy'                   `seq`
+      health'                   `seq`
+      energyGenPerTurn'         `seq`
+      (rnf energyTowersPerRow') `seq`
+      (rnf attackTowersPerRow') `seq`
+      (rnf towerMap')           `seq`
+      (rnf constructionQueue')  `seq`
+      (rnf ownedMissiles')      `seq`
       ()
 
 data ScratchPlayer = ScratchPlayer String Int Int
@@ -165,10 +174,10 @@ instance FromJSON GameState where
            (ScratchPlayer _
                           bEnergy
                           bHealth))) = extractPlayers players'
-    return (GameState me' { energy    = aEnergy,
-                            health    = aHealth }
-                      oponent' { energy    = bEnergy,
-                                 health    = bHealth })
+    return (GameState me' { energy             = aEnergy,
+                            health             = aHealth }
+                      oponent' { energy             = bEnergy,
+                                 health             = bHealth })
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
@@ -205,7 +214,15 @@ type DenseMap = V.Vector DenseRow
 type DenseRow = V.Vector CellStateContainer
 
 emptyPlayer :: Player
-emptyPlayer = Player 0 0 0 M.empty PQ.empty UV.empty
+emptyPlayer = Player
+  0
+  0
+  0
+  (UV.fromList (replicate height 0))
+  (UV.fromList (replicate height 0))
+  M.empty
+  PQ.empty
+  UV.empty
 
 emptyGameState :: GameState
 emptyGameState = GameState emptyPlayer emptyPlayer
@@ -308,31 +325,53 @@ missileDamagePerTurn = (fromIntegral missileDamage) / (fromIntegral attackTowerC
 teslaTowerDamagePerTurn :: Float
 teslaTowerDamagePerTurn = (fromIntegral teslaTowerMaximumHitDamage) / (fromIntegral teslaTowerCooldownTime)
 
+incrementVectorAt :: Int -> UV.Vector Int -> UV.Vector Int
+incrementVectorAt i xs =
+  UV.modify increment xs
+  where
+    increment ys = do
+      oldValue <- MVector.read ys i
+      MVector.write ys i (oldValue + 1)
+
 incrementFitness :: Int -> Building -> Player -> Player
-incrementFitness y' building'  player@(Player { energyGenPerTurn = energyGenPerTurn' })
-  | building' == attack3     = player
-  | building' == attack2     = player
-  | building' == attack1     = player
-  | building' == attack0     = player
+incrementFitness y' building'  player@(Player { energyGenPerTurn   = energyGenPerTurn',
+                                                attackTowersPerRow = attackTowersPerRow',
+                                                energyTowersPerRow = energyTowersPerRow' })
+  | building' == attack3     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == attack2     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == attack1     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == attack0     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
   | building' == defense4    = player
   | building' == defense3    = player
   | building' == defense2    = player
   | building' == defense1    = player
-  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn }
+  | building' == energyTower = player { energyGenPerTurn   = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
+                                        energyTowersPerRow = incrementVectorAt y' energyTowersPerRow' }
   -- TODO: Come up with something reasonable here
   | otherwise                = player
 
+decrementVectorAt :: Int -> UV.Vector Int -> UV.Vector Int
+decrementVectorAt i xs =
+  UV.modify increment xs
+  where
+    increment ys = do
+      oldValue <- MVector.read ys i
+      MVector.write ys i (oldValue - 1)
+
 decrementFitness :: Int -> Building -> Player -> Player
-decrementFitness y' building' player@(Player { energyGenPerTurn = energyGenPerTurn' })
-  | building' == attack3     = player
-  | building' == attack2     = player
-  | building' == attack1     = player
-  | building' == attack0     = player
+decrementFitness y' building' player@(Player { energyGenPerTurn   = energyGenPerTurn',
+                                               attackTowersPerRow = attackTowersPerRow',
+                                               energyTowersPerRow = energyTowersPerRow' })
+  | building' == attack3     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == attack2     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == attack1     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == attack0     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
   | building' == defense4    = player
   | building' == defense3    = player
   | building' == defense2    = player
   | building' == defense1    = player
-  | building' == energyTower = player { energyGenPerTurn = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn  }
+  | building' == energyTower = player { energyGenPerTurn   = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
+                                        energyTowersPerRow = incrementVectorAt y' energyTowersPerRow'}
   | otherwise                = player
 
 stateFilePath :: String

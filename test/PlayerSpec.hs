@@ -6,6 +6,7 @@ import GameMap
 import Buildings
 import Coord
 import EfficientCommand
+import Magic
 
 import qualified Data.IntMap         as M
 import qualified Data.PQueue.Min     as PQ
@@ -34,20 +35,24 @@ spec =
   decrementCooldownSpec
 
 aPlayer :: Player
-aPlayer = (Player { energy            = 0,
-                    health            = 25,
-                    energyGenPerTurn  = 0,
-                    towerMap          = M.fromList [((toCoord 0 0), attack2)],
-                    constructionQueue = PQ.empty,
-                    ownedMissiles     = UV.empty })
+aPlayer = (Player { energy             = 0,
+                    health             = 25,
+                    energyGenPerTurn   = 0,
+                    energyTowersPerRow = UV.fromList (replicate height 0),
+                    attackTowersPerRow = UV.fromList (replicate height 0),
+                    towerMap           = M.fromList [((toCoord 0 0), attack2)],
+                    constructionQueue  = PQ.empty,
+                    ownedMissiles      = UV.empty })
 
 aPlayerWithNonZeroEnergy :: Player
-aPlayerWithNonZeroEnergy = (Player { energy            = 10,
-                                     health            = 15,
-                                     energyGenPerTurn  = 0,
-                                     towerMap          = M.fromList [((toCoord 6 2), attack2)],
-                                     constructionQueue = PQ.empty,
-                                     ownedMissiles     = UV.empty })
+aPlayerWithNonZeroEnergy = (Player { energy             = 10,
+                                     health             = 15,
+                                     energyGenPerTurn   = 0,
+                                     energyTowersPerRow = UV.fromList (replicate height 0),
+                                     attackTowersPerRow = UV.fromList (replicate height 0),
+                                     towerMap           = M.fromList [((toCoord 6 2), attack2)],
+                                     constructionQueue  = PQ.empty,
+                                     ownedMissiles      = UV.empty })
 
 aGameState :: GameState
 aGameState = (GameState { me      = aPlayer,
@@ -181,8 +186,9 @@ updateMoveSpec = do
     it "should build an attack tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ATTACK)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue = PQ.singleton (0, (toCoord 6 2), attack0 ),
-                energy            = -30 }
+      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), attack0 ),
+                energy             = -30,
+                attackTowersPerRow = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
     it "should build a defense tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) DEFENSE)) aPlayer
       `shouldBe`
@@ -191,9 +197,10 @@ updateMoveSpec = do
     it "should build a energy tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ENERGY)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue = PQ.singleton (0, (toCoord 6 2), energyTower),
-                energy            = -20,
-                energyGenPerTurn  = 3 }
+      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), energyTower),
+                energy             = -20,
+                energyGenPerTurn   = 3,
+                energyTowersPerRow = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
 
 decrementCooldownSpec :: Spec
 decrementCooldownSpec = do

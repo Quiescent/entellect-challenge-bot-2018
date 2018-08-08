@@ -50,12 +50,14 @@ tickBuildingSpec = do
 
 emptyPlayer :: Player
 emptyPlayer =
-  (Player { energy            = 37,
-            energyGenPerTurn  = 0,
-            health            = 30,
-            towerMap          = M.empty,
-            constructionQueue = PQ.empty,
-            ownedMissiles     = UV.empty })
+  (Player  { energy             = 37,
+             energyGenPerTurn   = 0,
+             energyTowersPerRow = UV.fromList (replicate height 0),
+             attackTowersPerRow = UV.fromList (replicate height 0),
+             health             = 30,
+             towerMap           = M.empty,
+             constructionQueue  = PQ.empty,
+             ownedMissiles      = UV.empty })
 
 emptyBoard :: GameState
 emptyBoard =

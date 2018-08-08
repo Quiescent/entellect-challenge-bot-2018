@@ -124,6 +124,7 @@ appropriate.
    :END:
 ** TODO Implement a dot-product version of the heuristic
 ** TODO Implement a bitset version of the engine
+** TODO Don't use a prio queue for construction
 ** TODO Use Accelerate for the top-level vector calculations
 ** TODO At a certain energy, go for the kill
 ** TODO Use a faster PRNG
