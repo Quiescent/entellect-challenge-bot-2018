@@ -12,8 +12,9 @@ import Player
 import Magic
 import Engine
 
-import qualified Data.List          as L
-import qualified Data.IntMap.Strict as M
+import qualified Data.List           as L
+import qualified Data.IntMap.Strict  as M
+import qualified Data.Vector.Unboxed as UV
 import Control.DeepSeq
 
 data Move = Move { myMove       :: Command,
@@ -27,23 +28,14 @@ instance NFData Move where
     ()
 
 myIntermediateBoardScore :: GameState -> Float
-myIntermediateBoardScore state =
-  let futureState = advanceToFutureState state
-  in turnsToMostExpensiveByMostExpensive state
-
--- Unrolled for the compiler to optimise (there are 10 right now)
-advanceToFutureState :: GameState -> GameState
-advanceToFutureState =
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine
+myIntermediateBoardScore
+  state@(GameState { me = (Player { attackTowersPerRow = myAttackTowersPerRow,
+                                    energyTowersPerRow = myEnergyTowersPerRow }),
+                     oponent = (Player { attackTowersPerRow = oponentsAttackTowersPerRow,
+                                         energyTowersPerRow = oponentsEnergyTowersPerRow })}) =
+  turnsToMostExpensiveByMostExpensive state +
+  (fromIntegral $ UV.foldl' (+) 0 $ UV.zipWith (*) myAttackTowersPerRow oponentsEnergyTowersPerRow) +
+  (fromIntegral $ UV.foldl' (+) 0 $ UV.zipWith (*) myAttackTowersPerRow oponentsAttackTowersPerRow)
 
 resultBonusScore :: Float
 resultBonusScore = 9

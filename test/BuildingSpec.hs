@@ -43,10 +43,11 @@ tickBuildingSpec = do
     it "should update the cooldown of attack towers" $
       tickBuildings boardWithBuildingsOnIt
       `shouldBe`
-      GameState { me      = emptyPlayer { towerMap = M.fromList [((toCoord 2 1),   attack2),
-                                                                  ((toCoord 5 1),  attack2)] },
-                  oponent = emptyPlayer { towerMap = M.fromList [((toCoord 8 3),   attack2),
-                                                                  ((toCoord 14 3), attack2)] }}
+      GameState { gameRound = 0,
+                  me        = emptyPlayer { towerMap = M.fromList [((toCoord 2 1),   attack2),
+                                                                    ((toCoord 5 1),  attack2)] },
+                  oponent   = emptyPlayer { towerMap = M.fromList [((toCoord 8 3),   attack2),
+                                                                    ((toCoord 14 3), attack2)] }}
 
 emptyPlayer :: Player
 emptyPlayer =
@@ -61,8 +62,9 @@ emptyPlayer =
 
 emptyBoard :: GameState
 emptyBoard =
-  GameState { me      = emptyPlayer,
-              oponent = emptyPlayer }
+  GameState { gameRound = 0,
+              me        = emptyPlayer,
+              oponent   = emptyPlayer }
 
 playerWithBuildingsInProgress :: Player
 playerWithBuildingsInProgress =
@@ -71,8 +73,9 @@ playerWithBuildingsInProgress =
 
 boardWithBuildingsInProgress :: GameState
 boardWithBuildingsInProgress =
-  GameState { me      = playerWithBuildingsInProgress,
-              oponent = emptyPlayer}
+  GameState { gameRound = 0,
+              me        = playerWithBuildingsInProgress,
+              oponent   = emptyPlayer}
 
 playerWithBuildingsAboutToFinish :: Player
 playerWithBuildingsAboutToFinish =
@@ -81,12 +84,14 @@ playerWithBuildingsAboutToFinish =
 
 boardWithBuildingsAboutToFinish :: GameState
 boardWithBuildingsAboutToFinish =
-  GameState { me      = playerWithBuildingsAboutToFinish,
-              oponent = emptyPlayer }
+  GameState { gameRound = 0,
+              me        = playerWithBuildingsAboutToFinish,
+              oponent   = emptyPlayer }
 
 boardWithBuildingsOnIt :: GameState
 boardWithBuildingsOnIt =
-  GameState { me      = emptyPlayer { towerMap = M.fromList [((toCoord 2 1), attack3),
-                                                             ((toCoord 5 1), attack3)] },
-              oponent = emptyPlayer { towerMap = M.fromList [((toCoord 8 3), attack3),
-                                                             ((toCoord 14 3), attack3)] }}
+  GameState { gameRound = 0,
+              me        = emptyPlayer { towerMap = M.fromList [((toCoord 2 1), attack3),
+                                                               ((toCoord 5 1), attack3)] },
+              oponent   = emptyPlayer { towerMap = M.fromList [((toCoord 8 3), attack3),
+                                                               ((toCoord 14 3), attack3)] }}

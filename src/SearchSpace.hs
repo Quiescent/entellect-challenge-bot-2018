@@ -97,26 +97,32 @@ allMovesOfType buildingType' cells' =
 allMyBackEnergyTowerMoves :: Moves
 allMyBackEnergyTowerMoves = allMovesOfType ENERGY myBackCells
 
-allMyForwardDefenseTowerMoves :: Moves
-allMyForwardDefenseTowerMoves = allMovesOfType DEFENSE myForwardCells
+allMyEnergyTowerMoves :: Moves
+allMyEnergyTowerMoves = allMovesOfType ENERGY myCells
 
-allMyMidToFrontAttackTowerMoves :: Moves
-allMyMidToFrontAttackTowerMoves = allMovesOfType ATTACK myMidToFrontCells
+allMyDefenseTowerMoves :: Moves
+allMyDefenseTowerMoves = allMovesOfType DEFENSE myCells
+
+allMyAttackTowerMoves :: Moves
+allMyAttackTowerMoves = allMovesOfType ATTACK myCells
 
 allMyFrontTeslaTowerMoves ::  Moves
-allMyFrontTeslaTowerMoves = allMovesOfType TESLA myFrontCells
+allMyFrontTeslaTowerMoves = allMovesOfType TESLA myForwardCells
 
 allOponentsBackEnergyTowerMoves :: Moves
 allOponentsBackEnergyTowerMoves = allMovesOfType ENERGY oponentsBackCells
 
-allOponentsForwardDefenseTowerMoves :: Moves
-allOponentsForwardDefenseTowerMoves = allMovesOfType DEFENSE oponentsForwardCells
+allOponentsEnergyTowerMoves :: Moves
+allOponentsEnergyTowerMoves = allMovesOfType ENERGY oponentsCells
 
-allOponentsMidToFrontAttackTowerMoves :: Moves
-allOponentsMidToFrontAttackTowerMoves = allMovesOfType ATTACK oponentsMidToFrontCells
+allOponentsDefenseTowerMoves :: Moves
+allOponentsDefenseTowerMoves = allMovesOfType DEFENSE oponentsCells
+
+allOponentsAttackTowerMoves :: Moves
+allOponentsAttackTowerMoves = allMovesOfType ATTACK oponentsCells
 
 allOponentsFrontTeslaTowerMoves ::  Moves
-allOponentsFrontTeslaTowerMoves = allMovesOfType TESLA oponentsFrontCells
+allOponentsFrontTeslaTowerMoves = allMovesOfType TESLA oponentsForwardCells
 
 switchAffordableMoves :: Moves -> Moves -> Moves -> Moves -> Int -> Int -> Moves
 switchAffordableMoves energyTowerMoves
@@ -140,9 +146,9 @@ switchAffordableMoves energyTowerMoves
 -- NOTE: Assumes that attack towers cost the same as defense towers
 switchMovesICanAfford :: Int -> Int -> Moves
 switchMovesICanAfford =
-  switchAffordableMoves allMyBackEnergyTowerMoves
-                        allMyForwardDefenseTowerMoves
-                        allMyMidToFrontAttackTowerMoves
+  switchAffordableMoves allMyEnergyTowerMoves
+                        allMyDefenseTowerMoves
+                        allMyAttackTowerMoves
                         allMyFrontTeslaTowerMoves
 
 myAvailableMoves :: GameState -> Moves
@@ -161,9 +167,9 @@ myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
 
 switchMovesOponentCanAfford :: Int -> Int -> Moves
 switchMovesOponentCanAfford =
-  switchAffordableMoves allOponentsBackEnergyTowerMoves
-                        allOponentsForwardDefenseTowerMoves
-                        allOponentsMidToFrontAttackTowerMoves
+  switchAffordableMoves allOponentsEnergyTowerMoves
+                        allOponentsDefenseTowerMoves
+                        allOponentsAttackTowerMoves
                         allOponentsFrontTeslaTowerMoves
 
 oponentsAvailableMoves :: GameState -> Moves

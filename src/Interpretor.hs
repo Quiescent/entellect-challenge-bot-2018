@@ -153,28 +153,39 @@ instance FromJSON ScratchPlayer where
                            energy''
                            health''
 
-data GameState = GameState { me       :: Player,
-                             oponent  :: Player }
+data GameDetails = GameDetails { gameRound' :: Int }
+
+instance FromJSON GameDetails where
+  parseJSON = withObject "GameDetails" $ \ v -> do
+    gameRound' <- v.: "round"
+    return $ GameDetails gameRound'
+
+data GameState = GameState { gameRound :: Int,
+                             me        :: Player,
+                             oponent   :: Player }
   deriving (Show, Eq)
 
 instance NFData GameState where
-  rnf (GameState me' oponent') =
-    (rnf me)      `seq`
-    (rnf oponent) `seq`
+  rnf (GameState gameRound me' oponent') =
+    (rnf gameRound) `seq`
+    (rnf me)        `seq`
+    (rnf oponent)   `seq`
     ()
 
 instance FromJSON GameState where
   parseJSON = withObject "GameState" $ \ v -> do
     players'      <- v .: "players"
     denseGameMap  <- v .: "gameMap"
-    let (GameState me' oponent') = convertDenseMap denseGameMap
+    gameDetails   <- v .: "gameDetails"
+    let (GameState _ me' oponent') = convertDenseMap denseGameMap
     let (((ScratchPlayer _
                          aEnergy
                          aHealth),
            (ScratchPlayer _
                           bEnergy
                           bHealth))) = extractPlayers players'
-    return (GameState me' { energy             = aEnergy,
+    return (GameState (gameRound' gameDetails)
+                      me' { energy             = aEnergy,
                             health             = aHealth }
                       oponent' { energy             = bEnergy,
                                  health             = bHealth })
@@ -225,7 +236,7 @@ emptyPlayer = Player
   UV.empty
 
 emptyGameState :: GameState
-emptyGameState = GameState emptyPlayer emptyPlayer
+emptyGameState = GameState 0 emptyPlayer emptyPlayer
 
 convertDenseMap :: DenseMap -> GameState
 convertDenseMap = V.foldr accRow emptyGameState
@@ -238,7 +249,7 @@ accCell (CellStateContainer x' y' _ buildings' missiles') =
   accMissiles missiles' . accBuildings x' y' buildings'
 
 accMissiles :: V.Vector ScratchMissile -> GameState -> GameState
-accMissiles missiles' gameState@(GameState me' oponent') =
+accMissiles missiles' gameState@(GameState _ me' oponent') =
   gameState { me      = me'      { ownedMissiles = myExistingMissiles       UV.++ myMissiles },
               oponent = oponent' { ownedMissiles = oponentsExistingMissiles UV.++ oponentsMissiles } }
   where
