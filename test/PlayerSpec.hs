@@ -2,13 +2,12 @@ module PlayerSpec where
 
 import Player
 import Interpretor
-import GameMap
 import Buildings
 import Coord
 import EfficientCommand
 import Magic
+import BitSetMap
 
-import qualified Data.IntMap         as M
 import qualified Data.Vector.Unboxed as UV
 
 import Test.Hspec
@@ -22,40 +21,94 @@ spec =
   oponentsEnergySpec                >>
   myHealthSpec                      >>
   oponentsHealthSpec                >>
-  mapMissilesSpec                   >>
-  updateTowerMapSpec                >>
   takeDamageSpec                    >>
   buildingFromStatsSpec             >>
-  updateMissilesSpec                >>
-  mapMapSpec                        >>
-  buildSpec                         >>
   updateMoveSpec                    >>
-  deconstructAtSpec                 >>
-  decrementCooldownSpec
+  deconstructAtSpec
 
 aPlayer :: Player
-aPlayer = (Player { energy             = 0,
-                    health             = 25,
-                    energyGenPerTurn   = 0,
-                    energyTowersPerRow = UV.fromList (replicate height 0),
-                    attackTowersPerRow = UV.fromList (replicate height 0),
-                    towerMap           = M.fromList [((toCoord 0 0), Attack2)],
-                    constructionQueue  = PQ.empty,
-                    ownedMissiles      = UV.empty })
+aPlayer = (Player { energy                          = 0,
+                    health                          = 25,
+                    energyGenPerTurn                = 0,
+                    energyTowersPerRow              = UV.fromList (replicate height 0),
+                    attackTowersPerRow              = UV.fromList (replicate height 0),
+                    energyTowersUnderConstruction   = 0,
+                    energyTowers                    = addMissile (toCoord 3 4) 0,
+                    attackTowersUnderConstruction   = 0,
+                    attack3Towers                   = addMissile (toCoord 4 4) 0,
+                    attack2Towers                   = addMissile (toCoord 5 4) 0,
+                    attack1Towers                   = addMissile (toCoord 6 4) 0,
+                    attack0Towers                   = addMissile (toCoord 7 4) 0,
+                    defenseTowersUnderConstruction2 = 0,
+                    defenseTowersUnderConstruction1 = 0,
+                    defenseTowersUnderConstruction0 = 0,
+                    defense4Towers                  = addMissile (toCoord 3 5) 0,
+                    defense3Towers                  = addMissile (toCoord 3 6) 0,
+                    defense2Towers                  = addMissile (toCoord 3 7) 0,
+                    defense1Towers                  = addMissile (toCoord 5 5) 0,
+                    teslaTower0                     = 0,
+                    teslaTower1                     = 0,
+                    teslaTower0ConstructionTime     = 0,
+                    teslaTower1ConstructionTime     = 0,
+                    teslaTower0CooldownTime         = 0,
+                    teslaTower1CooldownTime         = 0,
+                    missiles0                       = 0,
+                    missiles1                       = 0,
+                    missiles2                       = 0,
+                    missiles3                       = 0,
+                    missilesOtherSide0              = 0,
+                    missilesOtherSide1              = 0,
+                    missilesOtherSide2              = 0,
+                    missilesOtherSide3              = 0 })
 
 aPlayerWithNonZeroEnergy :: Player
-aPlayerWithNonZeroEnergy = (Player { energy             = 10,
-                                     health             = 15,
-                                     energyGenPerTurn   = 0,
-                                     energyTowersPerRow = UV.fromList (replicate height 0),
-                                     attackTowersPerRow = UV.fromList (replicate height 0),
-                                     towerMap           = M.fromList [((toCoord 6 2), Attack2)],
-                                     constructionQueue  = PQ.empty,
-                                     ownedMissiles      = UV.empty })
+aPlayerWithNonZeroEnergy = (Player { energy                          = 10,
+                                     health                          = 15,
+                                     energyGenPerTurn                = 0,
+                                     energyTowersPerRow              = UV.fromList (replicate height 0),
+                                     attackTowersPerRow              = UV.fromList (replicate height 0),
+                                     energyTowersUnderConstruction   = 0,
+                                     energyTowers                    = addMissile (toCoord 3 4)
+                                                                       (addMissile (toCoord 0 3) 0),
+                                     attackTowersUnderConstruction   = 0,
+                                     attack3Towers                   = addMissile (toCoord 4 4)
+                                                                       (addMissile (toCoord 1 3) 0),
+                                     attack2Towers                   = addMissile (toCoord 5 4)
+                                                                       (addMissile (toCoord 2 3) 0),
+                                     attack1Towers                   = addMissile (toCoord 6 4)
+                                                                       (addMissile (toCoord 3 3) 0),
+                                     attack0Towers                   = addMissile (toCoord 7 4)
+                                                                       (addMissile (toCoord 4 3) 0),
+                                     defenseTowersUnderConstruction2 = 0,
+                                     defenseTowersUnderConstruction1 = 0,
+                                     defenseTowersUnderConstruction0 = 0,
+                                     defense4Towers                  = addMissile (toCoord 3 5)
+                                                                       (addMissile (toCoord 5 3) 0),
+                                     defense3Towers                  = addMissile (toCoord 3 6)
+                                                                       (addMissile (toCoord 6 3) 0),
+                                     defense2Towers                  = addMissile (toCoord 3 7)
+                                                                       (addMissile (toCoord 7 3) 0),
+                                     defense1Towers                  = addMissile (toCoord 5 5)
+                                                                       (addMissile (toCoord 0 4) 0),
+                                     teslaTower0                     = 0,
+                                     teslaTower1                     = 0,
+                                     teslaTower0ConstructionTime     = 0,
+                                     teslaTower1ConstructionTime     = 0,
+                                     teslaTower0CooldownTime         = 0,
+                                     teslaTower1CooldownTime         = 0,
+                                     missiles0                       = 0,
+                                     missiles1                       = 0,
+                                     missiles2                       = 0,
+                                     missiles3                       = 0,
+                                     missilesOtherSide0              = 0,
+                                     missilesOtherSide1              = 0,
+                                     missilesOtherSide2              = 0,
+                                     missilesOtherSide3              = 0 })
 
 aGameState :: GameState
-aGameState = (GameState { me      = aPlayer,
-                          oponent = aPlayerWithNonZeroEnergy })
+aGameState = (GameState { gameRound = 0,
+                          me        = aPlayer,
+                          oponent   = aPlayerWithNonZeroEnergy })
 
 updateEnergySpec :: Spec
 updateEnergySpec = do
@@ -101,33 +154,6 @@ oponentsHealthSpec = do
     it "should produce the health of `oponent' from game states" $
       (oponentsHealth aGameState) `shouldBe` 15
 
--- Need one for me and one for oponent
--- resetCooldownAndCreateMissileSpec :: Spec
--- resetCooldownAndCreateMissileSpec = do
---   describe "resetCooldown" $ do
---     it "should reset the cooldown of the tower at 0, 0 and create a missile there" $
---       (resetCooldownAndCreateMissile aPlayer 0 0 10)
---       `shouldBe`
---       (aPlayer { towerMap      = M.fromList [((toCoord 0 0), Attack3)],
---                  ownedMissiles = UV.fromList [(toCoord 0 0)] })
-
-mapMissilesSpec :: Spec
-mapMissilesSpec = do
-  describe "mapMissiles" $ do
-    it "should modify produce the same player when the map function is `id'" $
-      (mapMissiles id aPlayer) `shouldBe` aPlayer
-
-aTowerMap :: TowerMap
-aTowerMap = M.fromList [((toCoord 0 2), Attack2)]
-
-updateTowerMapSpec :: Spec
-updateTowerMapSpec = do
-  describe "updateEnergy" $ do
-    it "should produce a player with an empty tower map when supplied with an empty tower map" $
-      (updateTowerMap M.empty aPlayer) `shouldBe` (aPlayer { towerMap = M.empty })
-    it "should produce a player with the given tower map when supplied with a tower map" $
-      (updateTowerMap aTowerMap aPlayer) `shouldBe` (aPlayer { towerMap = aTowerMap })
-
 takeDamageSpec :: Spec
 takeDamageSpec = do
   describe "takeDamage" $ do
@@ -142,35 +168,64 @@ buildingFromStatsSpec = do
     it "should produce a building with the given building statistics" $
       (buildingFromStats ATTACK) `shouldBe` Attack0
 
-updateMissilesSpec :: Spec
-updateMissilesSpec = do
-  describe "updateMissiles" $ do
-    it "should swap in the given list of missiles" $
-      (updateMissiles (UV.fromList [(toCoord 0 2)]) aPlayer) `shouldBe` (aPlayer { ownedMissiles = (UV.fromList [(toCoord 0 2)]) })
-
-mapMapSpec :: Spec
-mapMapSpec = do
-  describe "mapMap" $ do
-    it "should do nothing to the map when the given function is `id'" $
-      (mapMap id aPlayer) `shouldBe` aPlayer
-    it "should remove the tower at 0 0 when given removeAt 0 0" $
-      (mapMap (removeAt (toCoord 0 0)) aPlayer) `shouldBe` (aPlayer { towerMap = M.empty })
-
-buildSpec :: Spec
-buildSpec = do
-  describe "build" $ do
-    it "should produce a building at the given coordinates packed into an integer" $
-      (build (toCoord 4 5) Attack2) `shouldBe` 678
-    it "should produce a building at the given coordinate with that coordinate being zero" $
-      (build (toCoord 0 0) Attack2) `shouldBe` 6
-
 deconstructAtSpec :: Spec
 deconstructAtSpec = do
   describe "deconstructAt" $ do
-    it "should remove a tower at the given coordinates" $
-      (deconstructAt (toCoord 0 0) aPlayer) `shouldBe` (aPlayer { towerMap = M.empty })
-    it "should remove a tower at the given non-origin coordinates" $
-      (deconstructAt (toCoord 6 2) aPlayerWithNonZeroEnergy) `shouldBe` (aPlayerWithNonZeroEnergy { towerMap = M.empty })
+    it "should remove an energy tower at the given coordinates" $
+      (deconstructAt (toCoord 3 4) aPlayer) `shouldBe` (aPlayer { energyTowers = 0 })
+    it "energy: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 3 4) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { energyTowers = addMissile (toCoord 0 3) 0 })
+    it "should remove an attack3 tower at the given coordinates" $
+      (deconstructAt (toCoord 4 4) aPlayer) `shouldBe` (aPlayer { attack3Towers = 0 })
+    it "attack3: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 4 4) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { attack3Towers = addMissile (toCoord 1 3) 0 })
+    it "should remove an attack2 tower at the given coordinates" $
+      (deconstructAt (toCoord 5 4) aPlayer) `shouldBe` (aPlayer { attack2Towers = 0 })
+    it "attack2: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 5 4) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { attack2Towers = addMissile (toCoord 2 3) 0 })
+    it "should remove an attack1 tower at the given coordinates" $
+      (deconstructAt (toCoord 6 4) aPlayer) `shouldBe` (aPlayer { attack1Towers = 0 })
+    it "attack1: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 6 4) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { attack1Towers = addMissile (toCoord 3 3) 0 })
+    it "should remove an attack0 tower at the given coordinates" $
+      (deconstructAt (toCoord 7 4) aPlayer) `shouldBe` (aPlayer { attack0Towers = 0 })
+    it "attack0: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 7 4) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { attack0Towers = addMissile (toCoord 4 3) 0 })
+    it "should remove an defense4 tower at the given coordinates" $
+      (deconstructAt (toCoord 3 5) aPlayer) `shouldBe` (aPlayer { defense4Towers = 0 })
+    it "defense4: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 3 5) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { defense4Towers = addMissile (toCoord 5 3) 0 })
+    it "should remove an defense3 tower at the given coordinates" $
+      (deconstructAt (toCoord 3 6) aPlayer) `shouldBe` (aPlayer { defense3Towers = 0 })
+    it "defense3: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 3 6) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { defense3Towers = addMissile (toCoord 6 3) 0 })
+    it "should remove an defense2 tower at the given coordinates" $
+      (deconstructAt (toCoord 3 7) aPlayer) `shouldBe` (aPlayer { defense2Towers = 0 })
+    it "defense2: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 3 7) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { defense2Towers = addMissile (toCoord 7 3) 0 })
+    it "should remove an defense1 tower at the given coordinates" $
+      (deconstructAt (toCoord 5 5) aPlayer) `shouldBe` (aPlayer { defense1Towers = 0 })
+    it "defense1: should not remove anything else when removing that tower" $
+      (deconstructAt (toCoord 5 5) aPlayerWithNonZeroEnergy)
+      `shouldBe`
+      (aPlayerWithNonZeroEnergy { defense1Towers = addMissile (toCoord 0 4) 0 })
+
 
 updateMoveSpec :: Spec
 updateMoveSpec = do
@@ -185,26 +240,20 @@ updateMoveSpec = do
     it "should build an attack tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ATTACK)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), Attack0 ),
-                energy             = -30,
-                attackTowersPerRow = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
+      aPlayer { attackTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
+                energy                        = -30,
+                attackTowersPerRow            = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
     it "should build a defense tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) DEFENSE)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue = PQ.singleton (2, (toCoord 6 2), Defense4),
-                energy            = -30 }
+      aPlayer { defenseTowersUnderConstruction2 = addBuilding (toCoord 6 2) 0,
+                energy                          = -30 }
     it "should build a energy tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ENERGY)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), EnergyTower),
-                energy             = -20,
-                energyGenPerTurn   = 3,
-                energyTowersPerRow = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
+      aPlayer { energyTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
+                energy                        = -20,
+                energyGenPerTurn              = 3,
+                energyTowersPerRow            = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
 
-decrementCooldownSpec :: Spec
-decrementCooldownSpec = do
-  describe "decrementCooldown" $ do
-    it "should decrement the cooldown of the building at the given coordinates" $
-      decrementCooldown (toCoord 0 0) aPlayer
-      `shouldBe`
-      aPlayer { towerMap = M.fromList [((toCoord 0 0), Attack1)] }
+-- TODO (!!!) implement the missile movement/collission spec here !!!

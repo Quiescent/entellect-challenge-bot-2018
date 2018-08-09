@@ -12,8 +12,6 @@ import EfficientCommand
 import Test.Hspec
 import Test.QuickCheck
 
-import Debug.Trace
-
 spec :: Spec
 spec =
   subTreeSpec              >>
@@ -51,7 +49,6 @@ zeroOneTree =
 
 addEmptyPath :: [PackedCommand] -> GameTree -> GameTree
 addEmptyPath path tree =
-  probe ("After adding: " ++ show path) $
   foldr (\ newPath tree' -> addAt newPath empty tree') tree $
   tail $
   reverse $
