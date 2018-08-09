@@ -98,7 +98,11 @@ data Player = Player { energy                          :: Int,
                        missiles0                       :: Missiles,
                        missiles1                       :: Missiles,
                        missiles2                       :: Missiles,
-                       missiles3                       :: Missiles }
+                       missiles3                       :: Missiles,
+                       missilesOtherSide0              :: Missiles,
+                       missilesOtherSide1              :: Missiles,
+                       missilesOtherSide2              :: Missiles,
+                       missilesOtherSide3              :: Missiles }
               deriving (Show)
 
 instance Eq Player where
@@ -130,7 +134,11 @@ instance Eq Player where
                missiles0A
                missiles1A
                missiles2A
-               missiles3A)
+               missiles3A
+               missilesOtherSide0A
+               missilesOtherSide1A
+               missilesOtherSide2A
+               missilesOtherSide3A)
        (Player energyB
                healthB
                energyGenPerTurnB
@@ -159,7 +167,11 @@ instance Eq Player where
                missiles0B
                missiles1B
                missiles2B
-               missiles3B)
+               missiles3B
+               missilesOtherSide0B
+               missilesOtherSide1B
+               missilesOtherSide2B
+               missilesOtherSide3B)
     = energyA                          == energyB &&
       healthA                          == healthB &&
       energyGenPerTurnA                == energyGenPerTurnB &&
@@ -188,7 +200,11 @@ instance Eq Player where
       missiles0A                       == missiles0B &&
       missiles1A                       == missiles1B &&
       missiles2A                       == missiles2B &&
-      missiles3A                       == missiles3B
+      missiles3A                       == missiles3B &&
+      missilesOtherSide0B              == missilesOtherSide0A &&
+      missilesOtherSide1B              == missilesOtherSide1A &&
+      missilesOtherSide2B              == missilesOtherSide2A &&
+      missilesOtherSide3B              == missilesOtherSide3A
 
 instance NFData Player where
   rnf (Player energy'
@@ -219,7 +235,11 @@ instance NFData Player where
               missiles0'
               missiles1'
               missiles2'
-              missiles3')
+              missiles3'
+              missilesOtherSide0'
+              missilesOtherSide1'
+              missilesOtherSide2'
+              missilesOtherSide3')
     = energy'                          `seq`
       health'                          `seq`
       energyGenPerTurn'                `seq`
@@ -249,6 +269,10 @@ instance NFData Player where
       missiles1'                       `seq`
       missiles2'                       `seq`
       missiles3'                       `seq`
+      missilesOtherSide0'              `seq`
+      missilesOtherSide1'              `seq`
+      missilesOtherSide2'              `seq`
+      missilesOtherSide3'              `seq`
       ()
 
 data ScratchPlayer = ScratchPlayer String Int Int
@@ -339,6 +363,10 @@ emptyPlayer = Player
   0
   (UV.fromList (replicate height 0))
   (UV.fromList (replicate height 0))
+  0
+  0
+  0
+  0
   0
   0
   0
