@@ -1,5 +1,6 @@
 module BitSetMap (Missiles,
                   BuildingPlacements,
+                  buildingPlacementsAreEmpty,
                   addAllMissiles,
                   emptyBuildings,
                   addAllBuildings,
@@ -20,6 +21,9 @@ import Data.Word
 import Data.Bits
 
 import Coord
+
+notEmpty :: Word64 -> Bool
+notEmpty = (== 0)
 
 isSetAt :: Coord -> Word64 -> Bool
 isSetAt = flip testBit
@@ -57,6 +61,9 @@ emptyMissiles :: Missiles
 emptyMissiles = 0
 
 type BuildingPlacements = Word64
+
+buildingPlacementsAreEmpty :: BuildingPlacements -> Bool
+buildingPlacementsAreEmpty = notEmpty
 
 containsBuildingAt :: Coord -> BuildingPlacements -> Bool
 containsBuildingAt = isSetAt

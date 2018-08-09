@@ -407,25 +407,77 @@ accCell (CellStateContainer x' y' _ buildings' missiles') =
 
 accMissiles :: V.Vector ScratchMissile -> GameState -> GameState
 accMissiles missiles' gameState@(GameState _ me' oponent') =
-  gameState { me      = accMissilesToPlayer myMissiles       me',
-              oponent = accMissilesToPlayer oponentsMissiles oponent' }
+  gameState { me      = accMissilesToMyPlayer       myMissiles       me',
+              oponent = accMissilesToOponentsPlayer oponentsMissiles oponent' }
   where
-    (myMissiles, oponentsMissiles) = (splitMissiles missiles')
+    (myMissiles, oponentsMissiles) = splitMissiles missiles'
 
--- TODO: Implement
-accMissilesToPlayer :: UV.Vector Missile -> Player -> Player
---accMissilesToPlayer missiles player = player
-accMissilesToPlayer _ player = player
+accMissilesToMyPlayer :: UV.Vector (Int, Int) -> Player -> Player
+accMissilesToMyPlayer missiles player =
+  UV.foldr addMissileToMyPlayer player missiles
 
-splitMissiles :: V.Vector ScratchMissile -> (UV.Vector Missile, UV.Vector Missile)
+addMissileToMyPlayer :: (Int, Int) -> Player -> Player
+addMissileToMyPlayer (x', y') player =
+  let missileToAdd = addMissile (toCoord x' y') 0
+  in if x' < halfWay
+     then addMissilesToThisSide  missileToAdd player
+     else addMissilesToOtherSide missileToAdd player
+
+accMissilesToOponentsPlayer :: UV.Vector (Int, Int) -> Player -> Player
+accMissilesToOponentsPlayer missiles player =
+  UV.foldr addMissileToOponentsPlayer player missiles
+
+addMissileToOponentsPlayer :: (Int, Int) -> Player -> Player
+addMissileToOponentsPlayer (x', y') player =
+  let missileToAdd = addMissile (toCoord x' y') 0
+  in if x' >= halfWay
+     then addMissilesToThisSide  missileToAdd player
+     else addMissilesToOtherSide missileToAdd player
+
+addMissilesToThisSide :: Missiles -> Player -> Player
+addMissilesToThisSide missilesToAddTo0
+  player@(Player { missiles0 = missiles0',
+                   missiles1 = missiles1',
+                   missiles2 = missiles2',
+                   missiles3 = missiles3' }) =
+  let missilesOn0      = addAllMissiles missilesToAddTo0 missiles0'
+      missilesToAddTo1 = onlyOverlappingMissiles missilesToAddTo0 missiles0'
+      missilesOn1      = addAllMissiles missilesToAddTo1 missiles1'
+      missilesToAddTo2 = onlyOverlappingMissiles missilesToAddTo1 missiles1'
+      missilesOn2      = addAllMissiles missilesToAddTo2 missiles2'
+      missilesToAddTo3 = onlyOverlappingMissiles missilesToAddTo2 missiles2'
+      missilesOn3      = addAllMissiles missilesToAddTo3 missiles3'
+  in player { missiles0 = missilesOn0,
+              missiles1 = missilesOn1,
+              missiles2 = missilesOn2,
+              missiles3 = missilesOn3 }
+
+addMissilesToOtherSide :: Missiles -> Player -> Player
+addMissilesToOtherSide missilesToAddTo0
+  player@(Player { missilesOtherSide0 = missilesOtherSide0',
+                   missilesOtherSide1 = missilesOtherSide1',
+                   missilesOtherSide2 = missilesOtherSide2',
+                   missilesOtherSide3 = missilesOtherSide3' }) =
+  let missilesOn0      = addAllMissiles missilesToAddTo0 missilesOtherSide0'
+      missilesToAddTo1 = onlyOverlappingMissiles missilesToAddTo0 missilesOtherSide0'
+      missilesOn1      = addAllMissiles missilesToAddTo1 missilesOtherSide1'
+      missilesToAddTo2 = onlyOverlappingMissiles missilesToAddTo1 missilesOtherSide1'
+      missilesOn2      = addAllMissiles missilesToAddTo2 missilesOtherSide2'
+      missilesToAddTo3 = onlyOverlappingMissiles missilesToAddTo2 missilesOtherSide2'
+      missilesOn3      = addAllMissiles missilesToAddTo3 missilesOtherSide3'
+  in player { missilesOtherSide0 = missilesOn0,
+              missilesOtherSide1 = missilesOn1,
+              missilesOtherSide2 = missilesOn2,
+              missilesOtherSide3 = missilesOn3 }
+
+splitMissiles :: V.Vector ScratchMissile -> (UV.Vector (Int, Int), UV.Vector (Int, Int))
 splitMissiles = V.foldr splitMissilesAcc (UV.empty, UV.empty)
 
-splitMissilesAcc :: ScratchMissile -> (UV.Vector Missile, UV.Vector Missile) -> (UV.Vector Missile, UV.Vector Missile)
+splitMissilesAcc :: ScratchMissile -> (UV.Vector (Int, Int), UV.Vector (Int, Int)) -> (UV.Vector (Int, Int), UV.Vector (Int, Int))
 splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles) =
-  let missile = (toCoord x' y')
-  in if owner' == "A"
-     then (UV.cons missile myMissiles, oponentsMissiles)
-     else (myMissiles,                 UV.cons missile oponentsMissiles)
+  if owner' == "A"
+  then (UV.cons (x', y') myMissiles, oponentsMissiles)
+  else (myMissiles,                  UV.cons (x', y') oponentsMissiles)
 
 accBuildings :: Int -> Int -> V.Vector ScratchBuilding -> GameState -> GameState
 accBuildings x' y' buildings' =
@@ -485,22 +537,44 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
                                                addBuilding coord' defenseTowersUnderConstruction1' }
        (False, 0, Defense4)      -> player { defenseTowersUnderConstruction0 =
                                                addBuilding coord' defenseTowersUnderConstruction0' }
-       (False, _,   Attack0)     -> player { attackTowersUnderConstruction =
-                                               addBuilding coord' attackTowersUnderConstruction' }
-       (False, _,   EnergyTower) -> player { energyTowersUnderConstruction =
-                                               addBuilding coord' energyTowersUnderConstruction' }
+       (False, _, Attack0)       -> player { attackTowersUnderConstruction =
+                                              addBuilding coord' attackTowersUnderConstruction' }
+       (False, _, EnergyTower)   -> player { energyTowersUnderConstruction =
+                                              addBuilding coord' energyTowersUnderConstruction' }
         -- TESLA Tower Under Construction
-       (False, ctl', _)          -> addTeslaTowerUnderConstruction ctl' coord' player building'
+       (False, ctl', _)          -> addTeslaTowerUnderConstruction ctl' coord' player
 
--- TODO: Implement
 addTeslaTower :: Coord -> Player -> Building -> Player
---addTeslaTower coord' player building' = player
-addTeslaTower _ player _ = player
+addTeslaTower coord' player@(Player { teslaTower0 = teslaTower0' })
+  building' =
+  if buildingPlacementsAreEmpty teslaTower0'
+  then player { teslaTower0             = addBuilding coord' 0,
+                teslaTower0CooldownTime = cooldownTimeLeft' }
+  else player { teslaTower1             = addBuilding coord' 0,
+                teslaTower1CooldownTime = cooldownTimeLeft' }
+  where
+    cooldownTimeLeft' = cooldownTimeLeft building'
+    cooldownTimeLeft building''
+      | building'' == Tesla10 = 10
+      | building'' == Tesla9  = 9
+      | building'' == Tesla8  = 8
+      | building'' == Tesla7  = 7
+      | building'' == Tesla6  = 6
+      | building'' == Tesla5  = 5
+      | building'' == Tesla4  = 4
+      | building'' == Tesla3  = 3
+      | building'' == Tesla2  = 2
+      | building'' == Tesla1  = 1
+      | building'' == Tesla0  = 0
+      | otherwise             = error $ "Invalid building type for tesla tower: " ++ show building''
 
--- TODO: Implement
-addTeslaTowerUnderConstruction :: Int -> Coord -> Player -> Building -> Player
--- addTeslaTowerUnderConstruction ctl coord' player building' = player
-addTeslaTowerUnderConstruction _ _ player _ = player
+addTeslaTowerUnderConstruction :: Int -> Coord -> Player -> Player
+addTeslaTowerUnderConstruction ctl coord' player@(Player { teslaTower0 = teslaTower0' }) =
+  if buildingPlacementsAreEmpty teslaTower0'
+  then player { teslaTower0                 = addBuilding coord' 0,
+                teslaTower0ConstructionTime = ctl }
+  else player { teslaTower1                 = addBuilding coord' 0,
+                teslaTower1ConstructionTime = ctl }
 
 chooseBuilding :: Int -> Int -> BuildingType -> Building
 
@@ -553,7 +627,7 @@ incrementFitness y' building'  player@(Player { energyGenPerTurn   = energyGenPe
   | building' == Defense1    = player
   | building' == EnergyTower = player { energyGenPerTurn   = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
                                         energyTowersPerRow = incrementVectorAt y' energyTowersPerRow' }
-  -- TODO: Come up with something reasonable here
+  -- TODO: Come up with something reasonable for tesla towers
   | otherwise                = player
 
 decrementVectorAt :: Int -> UV.Vector Int -> UV.Vector Int
@@ -578,6 +652,7 @@ decrementFitness y' building' player@(Player { energyGenPerTurn   = energyGenPer
   | building' == Defense1    = player
   | building' == EnergyTower = player { energyGenPerTurn   = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
                                         energyTowersPerRow = incrementVectorAt y' energyTowersPerRow'}
+  -- TODO: Come up with something reasonable for tesla towers
   | otherwise                = player
 
 stateFilePath :: String

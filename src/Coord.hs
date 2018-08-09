@@ -2,7 +2,8 @@ module Coord (Coord,
               toCoord,
               fromCoord,
               getY,
-              getX)
+              getX,
+              halfWay)
   where
 
 import Magic

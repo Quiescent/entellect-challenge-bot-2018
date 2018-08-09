@@ -1,5 +1,4 @@
-module Player (emptyMissiles,
-               updateEnergy,
+module Player (updateEnergy,
                myPlayer,
                oponentsPlayer,
                myEnergy,
