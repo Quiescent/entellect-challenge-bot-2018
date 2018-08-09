@@ -126,7 +126,11 @@ emptyPlayer =
              missiles0                       = 0,
              missiles1                       = 0,
              missiles2                       = 0,
-             missiles3                       = 0 })
+             missiles3                       = 0,
+             missilesOtherSide0              = 0,
+             missilesOtherSide1              = 0,
+             missilesOtherSide2              = 0,
+             missilesOtherSide3              = 0 })
 
 emptyBoard :: GameState
 emptyBoard =

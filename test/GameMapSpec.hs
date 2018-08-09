@@ -5,6 +5,7 @@ import Interpretor
 import Magic
 import Buildings
 import Coord
+import BitSetMap
 
 import qualified Data.IntMap as M
 
@@ -20,12 +21,11 @@ removeAtSpec :: Spec
 removeAtSpec = do
   describe "removeAt" $ do
     it "should leave an empty map unmodified" $
-      removeAt (toCoord 2 3) M.empty `shouldBe` M.empty
+      removeAt (toCoord 2 3) emptyBuildings `shouldBe` emptyBuildings
     it "should remove a row when it becomes empty" $
-      removeAt (toCoord 2 3) (M.fromList [((toCoord 2 3), Attack2),
-                                          ((toCoord 1 5), Attack2)])
+      removeAt (toCoord 2 3) ((addBuilding (toCoord 2 3) (addBuilding (toCoord 1 5) 0)))
       `shouldBe`
-      M.fromList [((toCoord 1 5), Attack2)]
+      addBuilding (toCoord 2 3) 0
     it "should remove a tower from a row, leaving the row behind when it's not the last tower" $
       removeAt (toCoord 2 3) (M.fromList [((toCoord 2 3), Attack2),
                                            ((toCoord 6 3), Attack2),

@@ -9,7 +9,6 @@ import EfficientCommand
 import Magic
 
 import qualified Data.IntMap         as M
-import qualified Data.PQueue.Min     as PQ
 import qualified Data.Vector.Unboxed as UV
 
 import Test.Hspec
