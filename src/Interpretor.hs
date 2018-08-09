@@ -13,11 +13,7 @@ module Interpretor (repl,
                     BuildingType(..),
                     Building,
                     Command(..),
-                    GameState(..),
-                    TowerMap,
-                    BuildingUnderConstruction,
-                    ConstructionQueue,
-                    Missiles)
+                    GameState(..))
   where
 
 import Data.Aeson (decode,
@@ -38,6 +34,7 @@ import VectorIndex
 import Buildings
 import Coord
 import Magic
+import BitSetMap
 
 type Missile = Coord
 
@@ -78,49 +75,125 @@ instance FromJSON ScratchBuilding where
                     <*> v .: "buildingType"
                     <*> v .: "playerType"
 
--- TODO consider making this data to showup errors in how I've done this
-type BuildingUnderConstruction = (Int, Coord, Building)
-
-instance {-# OVERLAPPING #-} Ord BuildingUnderConstruction where 
-  (<) (x, _, _) (y, _, _) = x < y
-  (<=) (x, _, _) (y, _, _) = x < y
-  (>) (x, _, _) (y, _, _) = x > y
-  (>=) (x, _, _) (y, _, _) = x >= y
-  min a@(x, _, _) b@(y, _, _) = if x < y then a else b
-  max a@(x, _, _) b@(y, _, _) = if x > y then a else b
-
-type ConstructionQueue = PQ.MinQueue BuildingUnderConstruction
-
-type Missiles = UV.Vector Missile
-
-data Player = Player { energy             :: Int,
-                       health             :: Int,
-                       energyGenPerTurn   :: Int,
-                       energyTowersPerRow :: UV.Vector Int,
-                       attackTowersPerRow :: UV.Vector Int,
-                       towerMap           :: TowerMap,
-                       constructionQueue  :: ConstructionQueue,
-                       ownedMissiles      :: Missiles }
+data Player = Player { energy                          :: Int,
+                       health                          :: Int,
+                       energyGenPerTurn                :: Int,
+                       energyTowersPerRow              :: UV.Vector Int,
+                       attackTowersPerRow              :: UV.Vector Int,
+                       energyTowersUnderConstruction   :: BuildingPlacements,
+                       energyTowers                    :: BuildingPlacements,
+                       attackTowersUnderConstruction   :: BuildingPlacements,
+                       attack3Towers                   :: BuildingPlacements,
+                       attack2Towers                   :: BuildingPlacements,
+                       attack1Towers                   :: BuildingPlacements,
+                       attack0Towers                   :: BuildingPlacements,
+                       defenseTowersUnderConstruction2 :: BuildingPlacements,
+                       defenseTowersUnderConstruction1 :: BuildingPlacements,
+                       defenseTowersUnderConstruction0 :: BuildingPlacements,
+                       defense4Towers                  :: BuildingPlacements,
+                       defense3Towers                  :: BuildingPlacements,
+                       defense2Towers                  :: BuildingPlacements,
+                       defense1Towers                  :: BuildingPlacements,
+                       teslaTower0                     :: BuildingPlacements,
+                       teslaTower1                     :: BuildingPlacements,
+                       teslaTower0ConstructionTime     :: Int,
+                       teslaTower1ConstructionTime     :: Int,
+                       teslaTower0CooldownTime         :: Int,
+                       teslaTower1CooldownTime         :: Int,
+                       missiles0                       :: Missiles,
+                       missiles1                       :: Missiles,
+                       missiles2                       :: Missiles,
+                       missiles3                       :: Missiles }
               deriving (Show)
 
--- Allows for built in sorting
-toOrderedBuildingUnderConstruction :: BuildingUnderConstruction -> (Int, Int, Coord, Building)
-toOrderedBuildingUnderConstruction (x, y, z) = (0, x, y, z)
-
-compareFullyOrderedConstruction :: BuildingUnderConstruction -> BuildingUnderConstruction -> Ordering
-compareFullyOrderedConstruction x y = compare (toOrderedBuildingUnderConstruction x) (toOrderedBuildingUnderConstruction y)
-
 instance Eq Player where
-  (==) (Player energyA healthA energyGenPerTurnA energyTowersPerRowA attackTowersPerRowA towerMapA constructionQueueA ownedMissilesA)
-       (Player energyB healthB energyGenPerTurnB energyTowersPerRowB attackTowersPerRowB towerMapB constructionQueueB ownedMissilesB)
-    = energyA                             == energyB &&
-      healthA                             == healthB &&
-      energyGenPerTurnA                   == energyGenPerTurnB &&
-      energyTowersPerRowA                 == energyTowersPerRowB &&
-      attackTowersPerRowA                 == attackTowersPerRowB &&
-      towerMapA                           == towerMapB &&
-      (L.sort $ UV.toList ownedMissilesA) == (L.sort $ UV.toList ownedMissilesB) &&
-      (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueA) == (L.sortBy compareFullyOrderedConstruction $ PQ.toList constructionQueueB)
+  (==) (Player energyA
+               healthA
+               energyGenPerTurnA
+               energyTowersPerRowA
+               attackTowersPerRowA
+               energyTowersUnderConstructionA
+               energyTowersA
+               attackTowersUnderConstructionA
+               attack3TowersA
+               attack2TowersA
+               attack1TowersA
+               attack0TowersA
+               defenseTowersUnderConstruction2A
+               defenseTowersUnderConstruction1A
+               defenseTowersUnderConstruction0A
+               defenseTowers4A
+               defenseTowers3A
+               defenseTowers2A
+               defenseTowers1A
+               teslaTower0A
+               teslaTower1A
+               teslaTower0ConstructionTimeA
+               teslaTower1ConstructionTimeA
+               teslaTower0CooldownTimeA
+               teslaTower1CooldownTimeA
+               missiles0A
+               missiles1A
+               missiles2A
+               missiles3A)
+       (Player energyB
+               healthB
+               energyGenPerTurnB
+               energyTowersPerRowB
+               attackTowersPerRowB
+               energyTowersUnderConstructionB
+               energyTowersB
+               attackTowersUnderConstructionB
+               attack3TowersB
+               attack2TowersB
+               attack1TowersB
+               attack0TowersB
+               defenseTowersUnderConstruction2B
+               defenseTowersUnderConstruction1B
+               defenseTowersUnderConstruction0B
+               defenseTowers4B
+               defenseTowers3B
+               defenseTowers2B
+               defenseTowers1B
+               teslaTower0B
+               teslaTower1B
+               teslaTower0ConstructionTimeB
+               teslaTower1ConstructionTimeB
+               teslaTower0CooldownTimeB
+               teslaTower1CooldownTimeB
+               missiles0B
+               missiles1B
+               missiles2B
+               missiles3B)
+    = energyA                          == energyB &&
+      healthA                          == healthB &&
+      energyGenPerTurnA                == energyGenPerTurnB &&
+      energyTowersPerRowA              == energyTowersPerRowB &&
+      attackTowersPerRowA              == attackTowersPerRowB &&
+      energyTowersUnderConstructionA   == energyTowersUnderConstructionB &&
+      energyTowersA                    == energyTowersB &&
+      attackTowersUnderConstructionA   == attackTowersUnderConstructionB &&
+      attack3TowersA                   == attack3TowersB &&
+      attack2TowersA                   == attack2TowersB &&
+      attack1TowersA                   == attack1TowersB &&
+      attack0TowersA                   == attack0TowersB &&
+      defenseTowersUnderConstruction2A == defenseTowersUnderConstruction2B &&
+      defenseTowersUnderConstruction1A == defenseTowersUnderConstruction1B &&
+      defenseTowersUnderConstruction0A == defenseTowersUnderConstruction0B &&
+      defenseTowers4A                  == defenseTowers4B &&
+      defenseTowers3A                  == defenseTowers3B &&
+      defenseTowers2A                  == defenseTowers2B &&
+      defenseTowers1A                  == defenseTowers1B &&
+      teslaTower0A                     == teslaTower0B &&
+      teslaTower1A                     == teslaTower1B &&
+      teslaTower0ConstructionTimeA     == teslaTower0ConstructionTimeB &&
+      teslaTower1ConstructionTimeA     == teslaTower1ConstructionTimeB &&
+      teslaTower0CooldownTimeA         == teslaTower0CooldownTimeB &&
+      teslaTower1CooldownTimeA         == teslaTower1CooldownTimeB &&
+      missiles0A                       == missiles0B &&
+      missiles1A                       == missiles1B &&
+      missiles2A                       == missiles2B &&
+      missiles3A                       == missiles3B
 
 instance NFData Player where
   rnf (Player energy'
@@ -128,17 +201,59 @@ instance NFData Player where
               energyGenPerTurn'
               energyTowersPerRow'
               attackTowersPerRow'
-              towerMap'
-              constructionQueue'
-              ownedMissiles')
-    = energy'                   `seq`
-      health'                   `seq`
-      energyGenPerTurn'         `seq`
-      (rnf energyTowersPerRow') `seq`
-      (rnf attackTowersPerRow') `seq`
-      (rnf towerMap')           `seq`
-      (rnf constructionQueue')  `seq`
-      (rnf ownedMissiles')      `seq`
+              energyTowersUnderConstruction
+              energyTowers
+              attackTowersUnderConstruction
+              attack3Towers
+              attack2Towers
+              attack1Towers
+              attack0Towers
+              defenseTowersUnderConstruction2
+              defenseTowersUnderConstruction1
+              defenseTowersUnderConstruction0
+              defenseTowers4
+              defenseTowers3
+              defenseTowers2
+              defenseTowers1
+              teslaTower0
+              teslaTower1
+              teslaTower0ConstructionTime
+              teslaTower1ConstructionTime
+              teslaTower0CooldownTime
+              teslaTower1CooldownTime
+              missiles0
+              missiles1
+              missiles2
+              missiles3)
+    = energy'                         `seq`
+      health'                         `seq`
+      energyGenPerTurn'               `seq`
+      (rnf energyTowersPerRow')       `seq`
+      (rnf attackTowersPerRow')       `seq`
+      energyTowersUnderConstruction   `seq`
+      energyTowers                    `seq`
+      attackTowersUnderConstruction   `seq`
+      attack3Towers                   `seq`
+      attack2Towers                   `seq`
+      attack1Towers                   `seq`
+      attack0Towers                   `seq`
+      defenseTowersUnderConstruction2 `seq`
+      defenseTowersUnderConstruction1 `seq`
+      defenseTowersUnderConstruction0 `seq`
+      defenseTowers4                  `seq`
+      defenseTowers3                  `seq`
+      defenseTowers2                  `seq`
+      defenseTowers1                  `seq`
+      teslaTower0                     `seq`
+      teslaTower1                     `seq`
+      teslaTower0ConstructionTime     `seq`
+      teslaTower1ConstructionTime     `seq`
+      teslaTower0CooldownTime         `seq`
+      teslaTower1CooldownTime         `seq`
+      missiles0                       `seq`
+      missiles1                       `seq`
+      missiles2                       `seq`
+      missiles3                       `seq`
       ()
 
 data ScratchPlayer = ScratchPlayer String Int Int
@@ -198,8 +313,6 @@ extractPlayers players =
      then (firstPlayer,  secondPlayer)
      else (secondPlayer, firstPlayer)
 
-type TowerMap = M.IntMap Building
-
 data CellStateContainer = CellStateContainer Int
                                              Int
                                              String
@@ -231,9 +344,30 @@ emptyPlayer = Player
   0
   (UV.fromList (replicate height 0))
   (UV.fromList (replicate height 0))
-  M.empty
-  PQ.empty
-  UV.empty
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
 
 emptyGameState :: GameState
 emptyGameState = GameState 0 emptyPlayer emptyPlayer
@@ -250,27 +384,29 @@ accCell (CellStateContainer x' y' _ buildings' missiles') =
 
 accMissiles :: V.Vector ScratchMissile -> GameState -> GameState
 accMissiles missiles' gameState@(GameState _ me' oponent') =
-  gameState { me      = me'      { ownedMissiles = myExistingMissiles       UV.++ myMissiles },
-              oponent = oponent' { ownedMissiles = oponentsExistingMissiles UV.++ oponentsMissiles } }
+  gameState { me      = accMissilesToPlayer myMissiles       me',
+              oponent = accMissilesToPlayer oponentsMissiles oponent' }
   where
-    myExistingMissiles             = ownedMissiles me'
-    oponentsExistingMissiles       = ownedMissiles oponent'
     (myMissiles, oponentsMissiles) = (splitMissiles missiles')
 
-splitMissiles :: V.Vector ScratchMissile -> (Missiles, Missiles)
+-- TODO: Implement
+accMissilesToPlayer :: UV.Vector Missile -> Player -> Player
+accMissilesToPlayer missiles player = player
+
+splitMissiles :: V.Vector ScratchMissile -> (UV.Vector Missile, UV.Vector Missile)
 splitMissiles = V.foldr splitMissilesAcc (UV.empty, UV.empty)
 
-insertMissileSortedForOponent :: Missile -> Missiles -> Missiles
+insertMissileSortedForOponent :: Missile -> UV.Vector Missile -> UV.Vector Missile
 insertMissileSortedForOponent missile missiles =
   let (lte, ge) = UV.span (<= missile) missiles
   in UV.concat [lte, UV.singleton missile, ge]
 
-insertMissileSortedForMe :: Missile -> Missiles -> Missiles
+insertMissileSortedForMe :: Missile -> UV.Vector Missile -> UV.Vector Missile
 insertMissileSortedForMe missile missiles =
   let (lte, ge) = UV.span (>= missile) missiles
   in UV.concat [lte, UV.singleton missile, ge]
 
-splitMissilesAcc :: ScratchMissile -> (Missiles, Missiles) -> (Missiles, Missiles)
+splitMissilesAcc :: ScratchMissile -> (UV.Vector Missile, UV.Vector Missile) -> (UV.Vector Missile, UV.Vector Missile)
 splitMissilesAcc (ScratchMissile _ _ owner' x' y') (myMissiles, oponentsMissiles) =
   let missile = (toCoord x' y')
   in if owner' == "A"
@@ -296,39 +432,89 @@ toBuildingType "ENERGY"  = ENERGY
 toBuildingType "TESLA"   = TESLA
 
 accBuildingToPlayer :: Int -> Int -> ScratchBuilding -> Player -> Player
-accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _) player@(Player { towerMap          = towerMap',
-                                                                               constructionQueue = constructionQueue' }) =
+accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
+  player@(Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
+                   energyTowers                    = energyTowers',
+                   attackTowersUnderConstruction   = attackTowersUnderConstruction',
+                   attack3Towers                   = attack3Towers',
+                   attack2Towers                   = attack2Towers',
+                   attack1Towers                   = attack1Towers',
+                   attack0Towers                   = attack0Towers',
+                   defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
+                   defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
+                   defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
+                   defense4Towers                  = defense4Towers',
+                   defense3Towers                  = defense3Towers',
+                   defense2Towers                  = defense2Towers',
+                   defense1Towers                  = defense1Towers',
+                   teslaTower0                     = teslaTower0',
+                   teslaTower1                     = teslaTower1',
+                   teslaTower0ConstructionTime     = teslaTower0ConstructionTime',
+                   teslaTower1ConstructionTime     = teslaTower1ConstructionTime',
+                   teslaTower0CooldownTime         = teslaTower0CooldownTime',
+                   teslaTower1CooldownTime         = teslaTower1CooldownTime' }) =
   let building' = chooseBuilding int wctl (toBuildingType bt)
+      coord'    = toCoord x' y'
   in incrementFitness y' building' $
-     if ctl < 0
-     then player { towerMap = M.insert (toCoord x' y') building' towerMap' }
-     else player { constructionQueue = PQ.insert (ctl, toCoord x' y', building') constructionQueue' }
+     case (ctl < 0, ctl, building') of
+       (True,  _, Attack3)       -> player { attack3Towers  = addBuilding coord' attack3Towers' }
+       (True,  _, Attack2)       -> player { attack2Towers  = addBuilding coord' attack2Towers' }
+       (True,  _, Attack1)       -> player { attack1Towers  = addBuilding coord' attack1Towers' }
+       (True,  _, Attack0)       -> player { attack0Towers  = addBuilding coord' attack0Towers' }
+       (True,  _, Defense4)      -> player { defense4Towers = addBuilding coord' defense4Towers' }
+       (True,  _, Defense3)      -> player { defense3Towers = addBuilding coord' defense3Towers' }
+       (True,  _, Defense2)      -> player { defense2Towers = addBuilding coord' defense2Towers' }
+       (True,  _, Defense1)      -> player { defense1Towers = addBuilding coord' defense1Towers' }
+       (True,  _, EnergyTower)   -> player { energyTowers   = addBuilding coord' energyTowers' }
+       -- TESLA Tower
+       (True,  _, _)             -> addTeslaTower coord' player building'
+       -- Under Construction:
+       (False, 2, Defense4)      -> player { defenseTowersUnderConstruction2 =
+                                               addBuilding coord' defenseTowersUnderConstruction2' }
+       (False, 1, Defense4)      -> player { defenseTowersUnderConstruction1 =
+                                               addBuilding coord' defenseTowersUnderConstruction1' }
+       (False, 0, Defense4)      -> player { defenseTowersUnderConstruction0 =
+                                               addBuilding coord' defenseTowersUnderConstruction0' }
+       (False, _,   Attack0)     -> player { attackTowersUnderConstruction =
+                                               addBuilding coord' attackTowersUnderConstruction' }
+       (False, _,   EnergyTower) -> player { energyTowersUnderConstruction =
+                                               addBuilding coord' energyTowersUnderConstruction' }
+        -- TESLA Tower Under Construction
+       (False, ctl, _)           -> addTeslaTowerUnderConstruction coord' player building'
+
+-- TODO: Implement
+addTeslaTower :: Coord -> Player -> Building -> Player
+addTeslaTower coord' player building' = player
+
+-- TODO: Implement
+addTeslaTowerUnderConstruction :: Coord -> Player -> Building -> Player
+addTeslaTowerUnderConstruction coord' player building' = player
 
 chooseBuilding :: Int -> Int -> BuildingType -> Building
 
-chooseBuilding _  _ ENERGY = energyTower
+chooseBuilding _  _ ENERGY = EnergyTower
 
-chooseBuilding _ 3 ATTACK = attack3
-chooseBuilding _ 2 ATTACK = attack2
-chooseBuilding _ 1 ATTACK = attack1
-chooseBuilding _ 0 ATTACK = attack0
+chooseBuilding _ 3 ATTACK = Attack3
+chooseBuilding _ 2 ATTACK = Attack2
+chooseBuilding _ 1 ATTACK = Attack1
+chooseBuilding _ 0 ATTACK = Attack0
 
-chooseBuilding 20 _ DEFENSE = defense4
-chooseBuilding 15 _ DEFENSE = defense3
-chooseBuilding 10 _ DEFENSE = defense2
-chooseBuilding 5  _ DEFENSE = defense1
+chooseBuilding 20 _ DEFENSE = Defense4
+chooseBuilding 15 _ DEFENSE = Defense4
+chooseBuilding 10 _ DEFENSE = Defense2
+chooseBuilding 5  _ DEFENSE = Defense1
 
-chooseBuilding _ 10 TESLA = tesla10
-chooseBuilding _ 9  TESLA = tesla9
-chooseBuilding _ 8  TESLA = tesla8
-chooseBuilding _ 7  TESLA = tesla7
-chooseBuilding _ 6  TESLA = tesla6
-chooseBuilding _ 5  TESLA = tesla5
-chooseBuilding _ 4  TESLA = tesla4
-chooseBuilding _ 3  TESLA = tesla3
-chooseBuilding _ 2  TESLA = tesla2
-chooseBuilding _ 1  TESLA = tesla1
-chooseBuilding _ 0  TESLA = tesla0
+chooseBuilding _ 10 TESLA = Tesla10
+chooseBuilding _ 9  TESLA = Tesla9
+chooseBuilding _ 8  TESLA = Tesla8
+chooseBuilding _ 7  TESLA = Tesla7
+chooseBuilding _ 6  TESLA = Tesla6
+chooseBuilding _ 5  TESLA = Tesla5
+chooseBuilding _ 4  TESLA = Tesla4
+chooseBuilding _ 3  TESLA = Tesla3
+chooseBuilding _ 2  TESLA = Tesla2
+chooseBuilding _ 1  TESLA = Tesla1
+chooseBuilding _ 0  TESLA = Tesla0
 
 missileDamagePerTurn :: Float
 missileDamagePerTurn = (fromIntegral missileDamage) / (fromIntegral attackTowerCooldownTime)
@@ -348,15 +534,15 @@ incrementFitness :: Int -> Building -> Player -> Player
 incrementFitness y' building'  player@(Player { energyGenPerTurn   = energyGenPerTurn',
                                                 attackTowersPerRow = attackTowersPerRow',
                                                 energyTowersPerRow = energyTowersPerRow' })
-  | building' == attack3     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == attack2     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == attack1     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == attack0     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == defense4    = player
-  | building' == defense3    = player
-  | building' == defense2    = player
-  | building' == defense1    = player
-  | building' == energyTower = player { energyGenPerTurn   = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
+  | building' == Attack3     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == Attack2     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == Attack1     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == Attack0     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
+  | building' == Defense4    = player
+  | building' == Defense4    = player
+  | building' == Defense2    = player
+  | building' == Defense1    = player
+  | building' == EnergyTower = player { energyGenPerTurn   = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
                                         energyTowersPerRow = incrementVectorAt y' energyTowersPerRow' }
   -- TODO: Come up with something reasonable here
   | otherwise                = player
@@ -373,15 +559,15 @@ decrementFitness :: Int -> Building -> Player -> Player
 decrementFitness y' building' player@(Player { energyGenPerTurn   = energyGenPerTurn',
                                                attackTowersPerRow = attackTowersPerRow',
                                                energyTowersPerRow = energyTowersPerRow' })
-  | building' == attack3     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == attack2     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == attack1     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == attack0     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == defense4    = player
-  | building' == defense3    = player
-  | building' == defense2    = player
-  | building' == defense1    = player
-  | building' == energyTower = player { energyGenPerTurn   = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
+  | building' == Attack3     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == Attack2     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == Attack1     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == Attack0     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
+  | building' == Defense4    = player
+  | building' == Defense4    = player
+  | building' == Defense2    = player
+  | building' == Defense1    = player
+  | building' == EnergyTower = player { energyGenPerTurn   = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
                                         energyTowersPerRow = incrementVectorAt y' energyTowersPerRow'}
   | otherwise                = player
 

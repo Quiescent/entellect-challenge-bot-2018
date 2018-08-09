@@ -1,4 +1,4 @@
-module Building (tickBuildings, missileDamagesBuilding)
+module Building (tickBuildings)
   where
 
 import Interpretor (GameState(..),
@@ -8,66 +8,65 @@ import Interpretor (GameState(..),
 import Player
 import GameMap
 import GameState
-import BuildingsUnderConstruction
 import Magic
 import Buildings
 import VectorIndex
+import BitSetMap
 
 import qualified Data.Vector as V
 
 tickBuildings :: GameState -> GameState
-tickBuildings = (generateMissilesAndUpdateCooldown) . updateBuildingProgress
+tickBuildings = generateMissilesAndUpdateCooldown . updateBuildingProgress
 
 generateMissilesAndUpdateCooldown :: GameState -> GameState
 generateMissilesAndUpdateCooldown =
-  mapMyPlayer generateAndUpdateCooldownMissilesOnPlayerForMe . mapOponentsPlayer generateAndUpdateCooldownMissilesOnPlayerForOponent
+  mapMyPlayer generateAndUpdateCooldownMissilesOnPlayer .
+  mapOponentsPlayer generateAndUpdateCooldownMissilesOnPlayer
 
-generateAndUpdateCooldownMissilesOnPlayerForMe ::  Player -> Player
-generateAndUpdateCooldownMissilesOnPlayerForMe player =
-  mapFoldIndexed generateMissilesAndUpdateCooldownForBuildingForMe player playerMap
-  where
-    playerMap = towerMap player
-
-generateAndUpdateCooldownMissilesOnPlayerForOponent ::  Player -> Player
-generateAndUpdateCooldownMissilesOnPlayerForOponent player =
-  mapFoldIndexed generateMissilesAndUpdateCooldownForBuildingForOponent player playerMap
-  where
-    playerMap = towerMap player
-
-generateMissilesAndUpdateCooldownForBuildingForMe :: Int -> Building -> Player -> Player
-generateMissilesAndUpdateCooldownForBuildingForMe coord building' player
-  | building' == attack0 = resetCooldownAndCreateMissileForMe player coord attackTowerCooldownTime
-  | building' == attack1 = decrementCooldown coord player
-  | building' == attack2 = decrementCooldown coord player
-  | building' == attack3 = decrementCooldown coord player
-  | otherwise = player
-
-generateMissilesAndUpdateCooldownForBuildingForOponent :: Int -> Building -> Player -> Player
-generateMissilesAndUpdateCooldownForBuildingForOponent coord building' player
-  | building' == attack0 = resetCooldownAndCreateMissileForOponent player coord attackTowerCooldownTime
-  | building' == attack1 = decrementCooldown coord player
-  | building' == attack2 = decrementCooldown coord player
-  | building' == attack3 = decrementCooldown coord player
-  | otherwise = player
+generateAndUpdateCooldownMissilesOnPlayer ::  Player -> Player
+generateAndUpdateCooldownMissilesOnPlayer
+  player@(Player { attack3Towers = attack3Towers',
+                   attack2Towers = attack2Towers',
+                   attack1Towers = attack1Towers',
+                   attack0Towers = attack0Towers',
+                   missiles0     = missiles0',
+                   missiles1     = missiles1',
+                   missiles2     = missiles2',
+                   missiles3     = missiles3' }) =
+  let missilesToBeGenerated = attack0Towers'
+  -- TODO: Select a place to put them based on availability
+  in player { attack3Towers = attack0Towers',
+              attack2Towers = attack3Towers',
+              attack1Towers = attack2Towers',
+              attack0Towers = attack1Towers',
+              missiles0     = missiles0',
+              missiles1     = missiles1',
+              missiles2     = missiles2',
+              missiles3     = missiles3' }
 
 updateBuildingProgress :: GameState -> GameState
 updateBuildingProgress =
   mapMyPlayer updateBuildingProgress' . mapOponentsPlayer updateBuildingProgress'
 
 updateBuildingProgress' :: Player -> Player
-updateBuildingProgress' player =
-  let (constructed, newConstructionQueue) = tickConstruction $ constructionQueue player
-      newTowerMap                         = foldr placeBuilding (towerMap player) constructed
-  in player { constructionQueue = newConstructionQueue,
-              towerMap          = newTowerMap }
-
-missileDamagesBuilding :: Building -> Maybe Building
-missileDamagesBuilding building' =
-  results `vectorIndex` building'
-  where
-    results = V.fromList $ map inner [energyTower..tesla0]
-    inner building''
-      | building'' == defense4 = Just defense3
-      | building'' == defense3 = Just defense2
-      | building'' == defense2 = Just defense1
-      | otherwise              = Nothing
+updateBuildingProgress'
+  player@(Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
+                   energyTowers                    = energyTowers',
+                   attackTowersUnderConstruction   = attackTowersUnderConstruction',
+                   attack0Towers                   = attack0Towers',
+                   defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
+                   defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
+                   defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
+                   defense4Towers                  = defense4Towers',
+                   teslaTower0ConstructionTime     = teslaTower0ConstructionTime',
+                   teslaTower1ConstructionTime     = teslaTower1ConstructionTime' }) =
+  player { energyTowersUnderConstruction   = emptyBuildings,
+           energyTowers                    = addAllBuildings energyTowersUnderConstruction' energyTowers',
+           attackTowersUnderConstruction   = emptyBuildings,
+           attack0Towers                   = addAllBuildings attack0Towers' attackTowersUnderConstruction',
+           defenseTowersUnderConstruction2 = emptyBuildings,
+           defenseTowersUnderConstruction1 = defenseTowersUnderConstruction2',
+           defenseTowersUnderConstruction0 = defenseTowersUnderConstruction1',
+           defense4Towers                  = addAllBuildings defense4Towers' defenseTowersUnderConstruction0',
+           teslaTower0ConstructionTime     = teslaTower0ConstructionTime' - 1,
+           teslaTower1ConstructionTime     = teslaTower1ConstructionTime' - 1 }

@@ -19,9 +19,9 @@ damageBuildingSpec :: Spec
 damageBuildingSpec = do
   describe "damageBuilding" $ do
     it "should remove the damage amount from the health of a building" $
-      missileDamagesBuilding defense4 `shouldBe` Just defense3
+      missileDamagesBuilding Defense4 `shouldBe` Just Defense4
     it "should produce nothing when damaged to zero" $
-      missileDamagesBuilding attack3 `shouldBe` Nothing
+      missileDamagesBuilding Attack3 `shouldBe` Nothing
 
 tickBuildingSpec :: Spec
 tickBuildingSpec = do
@@ -32,22 +32,22 @@ tickBuildingSpec = do
       tickBuildings boardWithBuildingsInProgress
       `shouldBe`
       emptyBoard { me = playerWithBuildingsInProgress { constructionQueue =
-                                                         PQ.fromList [(1, (toCoord 0 0), attack3),
-                                                                      (2, (toCoord 2 5), attack3)]}  }
+                                                         PQ.fromList [(1, (toCoord 0 0), Attack3),
+                                                                      (2, (toCoord 2 5), Attack3)]}  }
     it "should place buildings which finish construction" $
       tickBuildings boardWithBuildingsAboutToFinish
       `shouldBe`
-      emptyBoard { me = emptyPlayer { towerMap = M.fromList [((toCoord 0 0), attack3),
-                                                             ((toCoord 2 5), attack3)],
+      emptyBoard { me = emptyPlayer { towerMap = M.fromList [((toCoord 0 0), Attack3),
+                                                             ((toCoord 2 5), Attack3)],
                                       ownedMissiles = UV.fromList [(toCoord 0 0), (toCoord 2 5)]} }
     it "should update the cooldown of attack towers" $
       tickBuildings boardWithBuildingsOnIt
       `shouldBe`
       GameState { gameRound = 0,
-                  me        = emptyPlayer { towerMap = M.fromList [((toCoord 2 1),   attack2),
-                                                                    ((toCoord 5 1),  attack2)] },
-                  oponent   = emptyPlayer { towerMap = M.fromList [((toCoord 8 3),   attack2),
-                                                                    ((toCoord 14 3), attack2)] }}
+                  me        = emptyPlayer { towerMap = M.fromList [((toCoord 2 1),   Attack2),
+                                                                    ((toCoord 5 1),  Attack2)] },
+                  oponent   = emptyPlayer { towerMap = M.fromList [((toCoord 8 3),   Attack2),
+                                                                    ((toCoord 14 3), Attack2)] }}
 
 emptyPlayer :: Player
 emptyPlayer =
@@ -68,8 +68,8 @@ emptyBoard =
 
 playerWithBuildingsInProgress :: Player
 playerWithBuildingsInProgress =
-  emptyPlayer { constructionQueue = PQ.fromList [(2, (toCoord 0 0), attack3),
-                                                 (3, (toCoord 2 5), attack3)] }
+  emptyPlayer { constructionQueue = PQ.fromList [(2, (toCoord 0 0), Attack3),
+                                                 (3, (toCoord 2 5), Attack3)] }
 
 boardWithBuildingsInProgress :: GameState
 boardWithBuildingsInProgress =
@@ -79,8 +79,8 @@ boardWithBuildingsInProgress =
 
 playerWithBuildingsAboutToFinish :: Player
 playerWithBuildingsAboutToFinish =
-  emptyPlayer { constructionQueue = PQ.fromList [(0, (toCoord 0 0), attack0),
-                                                 (0, (toCoord 2 5), attack0)] }
+  emptyPlayer { constructionQueue = PQ.fromList [(0, (toCoord 0 0), Attack0),
+                                                 (0, (toCoord 2 5), Attack0)] }
 
 boardWithBuildingsAboutToFinish :: GameState
 boardWithBuildingsAboutToFinish =
@@ -91,7 +91,7 @@ boardWithBuildingsAboutToFinish =
 boardWithBuildingsOnIt :: GameState
 boardWithBuildingsOnIt =
   GameState { gameRound = 0,
-              me        = emptyPlayer { towerMap = M.fromList [((toCoord 2 1), attack3),
-                                                               ((toCoord 5 1), attack3)] },
-              oponent   = emptyPlayer { towerMap = M.fromList [((toCoord 8 3), attack3),
-                                                               ((toCoord 14 3), attack3)] }}
+              me        = emptyPlayer { towerMap = M.fromList [((toCoord 2 1), Attack3),
+                                                               ((toCoord 5 1), Attack3)] },
+              oponent   = emptyPlayer { towerMap = M.fromList [((toCoord 8 3), Attack3),
+                                                               ((toCoord 14 3), Attack3)] }}

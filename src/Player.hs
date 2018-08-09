@@ -1,5 +1,4 @@
-module Player (filterMMissiles,
-               emptyMissiles,
+module Player (emptyMissiles,
                updateEnergy,
                myPlayer,
                oponentsPlayer,
@@ -8,18 +7,13 @@ module Player (filterMMissiles,
                constructionTime,
                myHealth,
                oponentsHealth,
-               resetCooldownAndCreateMissileForMe,
-               resetCooldownAndCreateMissileForOponent,
-               mapMissiles,
-               updateTowerMap,
                takeDamage,
                buildingFromStats,
-               updateMissiles,
-               mapMap,
                build,
                updateMove,
                deconstructAt,
-               decrementCooldown)
+               buildOnMap,
+               availableCoord)
   where
 
 import Interpretor (decrementFitness,
@@ -32,22 +26,17 @@ import Interpretor (decrementFitness,
                     Player(..),
                     Missile(..),
                     Building(..),
-                    BuildingType(..),
-                    TowerMap,
-                    Missiles)
+                    BuildingType(..))
 import Coord
 import GameMap
-import BuildingsUnderConstruction
 import Magic
 import Towers
 import Buildings
 import EfficientCommand
 import VectorIndex
+import BitSetMap
 
 import qualified Data.Vector.Unboxed as UV
-
-emptyMissiles :: Missiles
-emptyMissiles = UV.empty
 
 myPlayer :: GameState -> Player
 myPlayer = me
@@ -77,71 +66,22 @@ updateEnergy :: Int -> Player -> Player
 updateEnergy energyToAdd player@(Player { energy = energy' }) =
   player { energy = energy' + energyToAdd }
 
-resetCooldownAndCreateMissileForMe :: Player -> Coord -> Int -> Player
-resetCooldownAndCreateMissileForMe owner' coord cooldown =
-  addMissileForMe coord ownerWithResetBuilding
-  where
-    ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
-    mapWithResetBuilding   = adjustAt resetBuildingCooldown coord (towerMap owner')
-
-resetCooldownAndCreateMissileForOponent :: Player -> Coord -> Int -> Player
-resetCooldownAndCreateMissileForOponent owner' coord cooldown =
-  addMissileForOponent coord ownerWithResetBuilding
-  where
-    ownerWithResetBuilding = owner' { towerMap = mapWithResetBuilding }
-    mapWithResetBuilding   = adjustAt resetBuildingCooldown coord (towerMap owner')
-
-resetBuildingCooldown :: Building -> Building
-resetBuildingCooldown building' =
-  results `uVectorIndex` building'
-  where
-    results = UV.fromList $ map inner [energyTower..tesla0]
-    inner building''
-      | building'' == attack0 = attack3
-      | building'' == tesla0  = tesla10
-      | otherwise             = building''
-
-addMissileForMe :: Missile -> Player -> Player
-addMissileForMe missile player@(Player { ownedMissiles = missiles' }) =
-  player { ownedMissiles = insertMissileSortedForMe missile  missiles' }
-
-addMissileForOponent :: Missile -> Player -> Player
-addMissileForOponent missile player@(Player { ownedMissiles = missiles' }) =
-  player { ownedMissiles = insertMissileSortedForOponent missile  missiles' }
-
-filterMMissiles :: Monad m => Monad m => (Missile -> m Bool) -> Missiles -> m Missiles
-filterMMissiles = UV.filterM
-
-mapMap :: (TowerMap -> TowerMap) -> Player -> Player
-mapMap f player@(Player { towerMap = towerMap' }) =
-  player { towerMap = f towerMap' }
-
-mapMissiles :: (Missile -> Missile) -> Player -> Player
-mapMissiles f player@(Player { ownedMissiles = ownedMissiles' }) =
-  player { ownedMissiles = UV.map f ownedMissiles' }
-
-updateMissiles :: Missiles -> Player -> Player
-updateMissiles missiles player = player { ownedMissiles = missiles }
-
-updateTowerMap :: TowerMap -> Player -> Player
-updateTowerMap towerMap' player' = player' { towerMap = towerMap' }
-
 takeDamage :: Int -> Player -> Player
 takeDamage damage' player'@(Player { health = health' }) =
   player' { health = health' - damage' }
 
 buildingFromStats :: BuildingType -> Building
 buildingFromStats buildingType'
-  | buildingType' == TESLA   = tesla0
-  | buildingType' == ATTACK  = attack0
-  | buildingType' == ENERGY  = energyTower
-  | buildingType' == DEFENSE = defense4
+  | buildingType' == TESLA   = Tesla0
+  | buildingType' == ATTACK  = Attack0
+  | buildingType' == ENERGY  = EnergyTower
+  | buildingType' == DEFENSE = Defense4
 
 updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
 updateMove 0       player' = player'
 updateMove command player' =
-  incrementFitness y' building' $ buildOnMap timeLeft coord' building' player'
+  incrementFitness y' building' $ buildOnMap coord' building' player'
   where
     coord'        = coordOfCommand command
     y'            = getY coord'
@@ -155,40 +95,121 @@ constructionTime ENERGY  = energyTowerConstructionTime
 constructionTime DEFENSE = defenseTowerConstructionTime
 constructionTime ATTACK  = attackTowerConstructionTime
 
-buildOnMap :: Int -> Coord -> Building -> Player -> Player
-buildOnMap timeLeft coord building' player@(Player { constructionQueue = constructionQueue',
-                                                     towerMap          = towerMap',
-                                                     energy            = energy' }) =
-  player { constructionQueue = addBuilding buildingUnderConstruction constructionQueue',
-           energy            = energy' - towerCost building' }
+buildOnMap :: Coord -> Building -> Player -> Player
+buildOnMap coord building'
+  player@(Player { defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
+                   energyTowersUnderConstruction   = energyTowersUnderConstruction',
+                   attackTowersUnderConstruction   = attackTowersUnderConstruction',
+                   teslaTower0                     = teslaTower0',
+                   teslaTower1                     = teslaTower1',
+                   teslaTower0ConstructionTime     = teslaTower0ConstructionTime',
+                   teslaTower1ConstructionTime     = teslaTower1ConstructionTime',
+                   teslaTower0CooldownTime         = teslaTower0CooldownTime',
+                   teslaTower1CooldownTime         = teslaTower1CooldownTime',
+                   energy                          = energy' }) =
+  case building' of
+    Defense4    -> player' { defenseTowersUnderConstruction2 = addBuilding coord defenseTowersUnderConstruction2' }
+    Attack0     -> player' { attackTowersUnderConstruction   = addBuilding coord attackTowersUnderConstruction' }
+    EnergyTower -> player' { energyTowersUnderConstruction   = addBuilding coord energyTowersUnderConstruction' }
+    Tesla0      ->
+      if teslaTower0' == 0
+      then player' { teslaTower0                 = addBuilding coord teslaTower0',
+                     teslaTower0ConstructionTime = teslaTowerConstructionTime,
+                     teslaTower0CooldownTime     = 0 }
+      else player' { teslaTower1                 = addBuilding coord teslaTower1',
+                     teslaTower1ConstructionTime = teslaTowerConstructionTime,
+                     teslaTower1CooldownTime     = 0 }
   where
-    buildingUnderConstruction = createBuildingUnderConstruction (timeLeft - 1) coord building'
+    player' = player { energy = energy' - towerCost building' }
 
 deconstructAt :: Coord -> Player -> Player
-deconstructAt coord = mapMap (removeAt coord)
+deconstructAt coord
+  player@(Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
+                   energyTowers                    = energyTowers',
+                   attackTowersUnderConstruction   = attackTowersUnderConstruction',
+                   attack3Towers                   = attack3Towers',
+                   attack2Towers                   = attack2Towers',
+                   attack1Towers                   = attack1Towers',
+                   attack0Towers                   = attack0Towers',
+                   defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
+                   defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
+                   defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
+                   defense4Towers                  = defense4Towers',
+                   defense3Towers                  = defense3Towers',
+                   defense2Towers                  = defense2Towers',
+                   defense1Towers                  = defense1Towers',
+                   teslaTower0                     = teslaTower0',
+                   teslaTower1                     = teslaTower1' })
+  | containsBuildingAt coord energyTowersUnderConstruction'   =
+    player { energyTowersUnderConstruction = removeBuilding coord energyTowersUnderConstruction' }
+  | containsBuildingAt coord energyTowers'                    =
+    player { energyTowers = removeBuilding coord energyTowers' }
+  | containsBuildingAt coord attackTowersUnderConstruction'   =
+    player { attackTowersUnderConstruction = removeBuilding coord attackTowersUnderConstruction' }
+  | containsBuildingAt coord attack3Towers'                   =
+    player { attack3Towers = removeBuilding coord attack3Towers' }
+  | containsBuildingAt coord attack2Towers'                   =
+    player { attack2Towers = removeBuilding coord attack2Towers' }
+  | containsBuildingAt coord attack1Towers'                   =
+    player { attack1Towers = removeBuilding coord attack1Towers' }
+  | containsBuildingAt coord attack0Towers'                   =
+    player { attack0Towers = removeBuilding coord attack0Towers' }
+  | containsBuildingAt coord defenseTowersUnderConstruction2' =
+    player { defenseTowersUnderConstruction2 = removeBuilding coord defenseTowersUnderConstruction2' }
+  | containsBuildingAt coord defenseTowersUnderConstruction1' =
+    player { defenseTowersUnderConstruction1 = removeBuilding coord defenseTowersUnderConstruction1' }
+  | containsBuildingAt coord defenseTowersUnderConstruction0' =
+    player { defenseTowersUnderConstruction0 = removeBuilding coord defenseTowersUnderConstruction0' }
+  | containsBuildingAt coord defense4Towers'                  =
+    player { defense4Towers = removeBuilding coord defense4Towers' }
+  | containsBuildingAt coord defense3Towers'                  =
+    player { defense3Towers = removeBuilding coord defense3Towers' }
+  | containsBuildingAt coord defense2Towers'                  =
+    player { defense2Towers = removeBuilding coord defense2Towers' }
+  | containsBuildingAt coord defense1Towers'                  =
+    player { defense1Towers = removeBuilding coord defense1Towers' }
+  | containsBuildingAt coord teslaTower0'                     =
+    player { teslaTower0 = removeBuilding coord teslaTower0' }
+  | containsBuildingAt coord teslaTower1'                     =
+    player { teslaTower1 = removeBuilding coord teslaTower1' }
+  | otherwise                                                 = player
 
-decrementCooldown :: Coord -> Player -> Player
-decrementCooldown coord = mapMap (adjustAt decrementCooldownOfBuilding coord)
+-- TODO: Implement
+tickConstruction :: Player -> Player
+tickConstruction = id
 
-decrementCooldownOfBuilding :: Building -> Building
-decrementCooldownOfBuilding building' =
-  results `uVectorIndex` building'
-  where
-    results = UV.fromList $ map inner [energyTower..tesla0]
-    inner building''
-      | building'' == tesla10 = tesla9
-      | building'' == tesla9  = tesla8
-      | building'' == tesla8  = tesla7
-      | building'' == tesla7  = tesla6
-      | building'' == tesla6  = tesla5
-      | building'' == tesla5  = tesla4
-      | building'' == tesla4  = tesla3
-      | building'' == tesla3  = tesla2
-      | building'' == tesla2  = tesla1
-      | building'' == tesla1  = tesla0
-      | building'' == tesla0  = tesla10
-      | building'' == attack3 = attack2
-      | building'' == attack2 = attack1
-      | building'' == attack1 = attack0
-      | building'' == attack0 = attack3
-      | otherwise             = building''
+availableCoord :: Coord -> Player -> Bool
+availableCoord coord
+  (Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
+            energyTowers                    = energyTowers',
+            attackTowersUnderConstruction   = attackTowersUnderConstruction',
+            attack3Towers                   = attack3Towers',
+            attack2Towers                   = attack2Towers',
+            attack1Towers                   = attack1Towers',
+            attack0Towers                   = attack0Towers',
+            defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
+            defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
+            defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
+            defense4Towers                  = defense4Towers',
+            defense3Towers                  = defense3Towers',
+            defense2Towers                  = defense2Towers',
+            defense1Towers                  = defense1Towers',
+            teslaTower0                     = teslaTower0',
+            teslaTower1                     = teslaTower1' }) =
+  not $ containsBuildingAt coord
+  (energyTowersUnderConstruction'   `addAllBuildings`
+   energyTowers'                    `addAllBuildings`
+   attackTowersUnderConstruction'   `addAllBuildings`
+   attack3Towers'                   `addAllBuildings`
+   attack2Towers'                   `addAllBuildings`
+   attack1Towers'                   `addAllBuildings`
+   attack0Towers'                   `addAllBuildings`
+   defenseTowersUnderConstruction2' `addAllBuildings`
+   defenseTowersUnderConstruction1' `addAllBuildings`
+   defenseTowersUnderConstruction0' `addAllBuildings`
+   defense4Towers'                  `addAllBuildings`
+   defense3Towers'                  `addAllBuildings`
+   defense2Towers'                  `addAllBuildings`
+   defense1Towers'                  `addAllBuildings`
+   teslaTower0'                     `addAllBuildings`
+   teslaTower1')

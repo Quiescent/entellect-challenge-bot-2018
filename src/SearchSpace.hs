@@ -10,12 +10,12 @@ import Interpretor (GameState(..),
                     Player(..),
                     BuildingType(..),
                     Command(..))
+import Player
 import Engine
 import GameMap
 import Cell
 import GameState
 import Objective
-import BuildingsUnderConstruction
 import Coord
 import Magic
 import EfficientCommand
@@ -152,18 +152,13 @@ switchMovesICanAfford =
                         allMyFrontTeslaTowerMoves
 
 myAvailableMoves :: GameState -> Moves
-myAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
-                                             energy            = energy',
-                                             energyGenPerTurn  = energyGenPerTurn',
-                                             constructionQueue = constructionQueue' }) }) = do
+myAvailableMoves (GameState { me = player@(Player { energy            = energy',
+                                                    energyGenPerTurn  = energyGenPerTurn' }) }) = do
   UV.filter available affordableMoves
   where
     available 0          = True
-    available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
-    notUnderConstruction = (not . (flip containsSite constructionSites))
-    notTaken             = (not . (flip definedAt) towerMap')
+    available command    = let i = coordOfCommand command in availableCoord i player
     affordableMoves      = switchMovesICanAfford energy' energyGenPerTurn'
-    constructionSites    = buildingConstructionSites constructionQueue'
 
 switchMovesOponentCanAfford :: Int -> Int -> Moves
 switchMovesOponentCanAfford =
@@ -173,18 +168,13 @@ switchMovesOponentCanAfford =
                         allOponentsFrontTeslaTowerMoves
 
 oponentsAvailableMoves :: GameState -> Moves
-oponentsAvailableMoves (GameState { me = (Player { towerMap          = towerMap',
-                                                   energy            = energy',
-                                                   energyGenPerTurn  = energyGenPerTurn',
-                                                   constructionQueue = constructionQueue' }) }) =
+oponentsAvailableMoves (GameState { oponent = player@(Player { energy            = energy',
+                                                               energyGenPerTurn  = energyGenPerTurn' }) }) =
   UV.filter available affordableMoves
   where
     available 0          = True
-    available command    = let i = coordOfCommand command in notUnderConstruction i && notTaken i
-    notUnderConstruction = (not . (flip containsSite constructionSites))
-    notTaken             = (not . (flip definedAt) towerMap')
+    available command    = let i = coordOfCommand command in availableCoord i player
     affordableMoves      = switchMovesOponentCanAfford energy' energyGenPerTurn'
-    constructionSites    = buildingConstructionSites constructionQueue'
 
 maxSearchTime :: Int64
 maxSearchTime = 1900000000

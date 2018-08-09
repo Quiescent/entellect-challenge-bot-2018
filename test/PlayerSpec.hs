@@ -40,7 +40,7 @@ aPlayer = (Player { energy             = 0,
                     energyGenPerTurn   = 0,
                     energyTowersPerRow = UV.fromList (replicate height 0),
                     attackTowersPerRow = UV.fromList (replicate height 0),
-                    towerMap           = M.fromList [((toCoord 0 0), attack2)],
+                    towerMap           = M.fromList [((toCoord 0 0), Attack2)],
                     constructionQueue  = PQ.empty,
                     ownedMissiles      = UV.empty })
 
@@ -50,7 +50,7 @@ aPlayerWithNonZeroEnergy = (Player { energy             = 10,
                                      energyGenPerTurn   = 0,
                                      energyTowersPerRow = UV.fromList (replicate height 0),
                                      attackTowersPerRow = UV.fromList (replicate height 0),
-                                     towerMap           = M.fromList [((toCoord 6 2), attack2)],
+                                     towerMap           = M.fromList [((toCoord 6 2), Attack2)],
                                      constructionQueue  = PQ.empty,
                                      ownedMissiles      = UV.empty })
 
@@ -109,7 +109,7 @@ oponentsHealthSpec = do
 --     it "should reset the cooldown of the tower at 0, 0 and create a missile there" $
 --       (resetCooldownAndCreateMissile aPlayer 0 0 10)
 --       `shouldBe`
---       (aPlayer { towerMap      = M.fromList [((toCoord 0 0), attack3)],
+--       (aPlayer { towerMap      = M.fromList [((toCoord 0 0), Attack3)],
 --                  ownedMissiles = UV.fromList [(toCoord 0 0)] })
 
 mapMissilesSpec :: Spec
@@ -119,7 +119,7 @@ mapMissilesSpec = do
       (mapMissiles id aPlayer) `shouldBe` aPlayer
 
 aTowerMap :: TowerMap
-aTowerMap = M.fromList [((toCoord 0 2), attack2)]
+aTowerMap = M.fromList [((toCoord 0 2), Attack2)]
 
 updateTowerMapSpec :: Spec
 updateTowerMapSpec = do
@@ -141,7 +141,7 @@ buildingFromStatsSpec :: Spec
 buildingFromStatsSpec = do
   describe "buildingFromStats" $ do
     it "should produce a building with the given building statistics" $
-      (buildingFromStats ATTACK) `shouldBe` attack0
+      (buildingFromStats ATTACK) `shouldBe` Attack0
 
 updateMissilesSpec :: Spec
 updateMissilesSpec = do
@@ -161,9 +161,9 @@ buildSpec :: Spec
 buildSpec = do
   describe "build" $ do
     it "should produce a building at the given coordinates packed into an integer" $
-      (build (toCoord 4 5) attack2) `shouldBe` 678
+      (build (toCoord 4 5) Attack2) `shouldBe` 678
     it "should produce a building at the given coordinate with that coordinate being zero" $
-      (build (toCoord 0 0) attack2) `shouldBe` 6
+      (build (toCoord 0 0) Attack2) `shouldBe` 6
 
 deconstructAtSpec :: Spec
 deconstructAtSpec = do
@@ -186,18 +186,18 @@ updateMoveSpec = do
     it "should build an attack tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ATTACK)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), attack0 ),
+      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), Attack0 ),
                 energy             = -30,
                 attackTowersPerRow = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
     it "should build a defense tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) DEFENSE)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue = PQ.singleton (2, (toCoord 6 2), defense4),
+      aPlayer { constructionQueue = PQ.singleton (2, (toCoord 6 2), Defense4),
                 energy            = -30 }
     it "should build a energy tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ENERGY)) aPlayer
       `shouldBe`
-      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), energyTower),
+      aPlayer { constructionQueue  = PQ.singleton (0, (toCoord 6 2), EnergyTower),
                 energy             = -20,
                 energyGenPerTurn   = 3,
                 energyTowersPerRow = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
@@ -208,4 +208,4 @@ decrementCooldownSpec = do
     it "should decrement the cooldown of the building at the given coordinates" $
       decrementCooldown (toCoord 0 0) aPlayer
       `shouldBe`
-      aPlayer { towerMap = M.fromList [((toCoord 0 0), attack1)] }
+      aPlayer { towerMap = M.fromList [((toCoord 0 0), Attack1)] }

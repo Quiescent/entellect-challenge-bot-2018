@@ -1,12 +1,7 @@
 module GameState (runCommand,
                   mapMyPlayer,
                   mapOponentsPlayer,
-                  UpdateMissiles,
-                  updateMyMissiles,
-                  updateOponentsMissiles,
                   UpdatePlayer,
-                  mapMyMap,
-                  mapOponentsMap,
                   updateMe,
                   updateOponent,
                   Command(..),
@@ -17,14 +12,12 @@ module GameState (runCommand,
 import Interpretor (GameState(..),
                     Command(..),
                     Player(..),
-                    TowerMap,
-                    Missile,
-                    Missiles)
+                    Missile)
 import Player
 import GameMap
-import BuildingsUnderConstruction
 import Coord
 import EfficientCommand
+import BitSetMap
 
 type MapPlayer = (Player -> Player) -> GameState -> GameState
 
@@ -39,21 +32,11 @@ mapOponentsPlayer f state@(GameState { oponent = oponent' }) =
 runCommand :: Player -> Command -> Player
 runCommand player NothingCommand               = player
 runCommand player (Deconstruct coord')         =
-  mapMap (removeAt coord') player
+  deconstructAt coord' player
 runCommand player (Build coord' buildingType') =
-  player { constructionQueue = addBuilding (createBuildingUnderConstruction constructionTime' coord' building')
-                                           (constructionQueue player) }
+  buildOnMap coord' building' player
   where
-    constructionTime' = constructionTime  buildingType'
-    building'         = buildingFromStats buildingType'
-
-type UpdateMissiles = Missiles -> GameState -> GameState
-
-updateMyMissiles :: UpdateMissiles
-updateMyMissiles missiles = mapMyPlayer (updateMissiles missiles)
-
-updateOponentsMissiles :: UpdateMissiles
-updateOponentsMissiles missiles = mapOponentsPlayer (updateMissiles missiles)
+    building' = buildingFromStats buildingType'
 
 type UpdatePlayer = Player -> GameState -> GameState
 
@@ -62,12 +45,6 @@ updateMe player' = mapMyPlayer (\ _ -> player')
 
 updateOponent :: UpdatePlayer
 updateOponent player' = mapOponentsPlayer (\ _ -> player')
-
-mapMyMap :: (TowerMap -> TowerMap) -> GameState -> GameState
-mapMyMap f = mapMyPlayer (mapMap f)
-
-mapOponentsMap :: (TowerMap -> TowerMap) -> GameState -> GameState
-mapOponentsMap f = mapOponentsPlayer (mapMap f)
 
 updateMyMove :: EfficientCommand -> GameState -> GameState
 updateMyMove command = mapMyPlayer (updateMove command)
