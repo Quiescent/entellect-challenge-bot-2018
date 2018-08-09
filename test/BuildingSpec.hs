@@ -13,15 +13,7 @@ import qualified Data.PQueue.Min     as PQ
 import qualified Data.Vector.Unboxed as UV
 
 spec :: Spec
-spec = damageBuildingSpec >> tickBuildingSpec
-
-damageBuildingSpec :: Spec
-damageBuildingSpec = do
-  describe "damageBuilding" $ do
-    it "should remove the damage amount from the health of a building" $
-      missileDamagesBuilding Defense4 `shouldBe` Just Defense4
-    it "should produce nothing when damaged to zero" $
-      missileDamagesBuilding Attack3 `shouldBe` Nothing
+spec = tickBuildingSpec
 
 tickBuildingSpec :: Spec
 tickBuildingSpec = do
