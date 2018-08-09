@@ -49,8 +49,6 @@ zeroOneTree =
                      (UV.fromList [1..2])))])
   (UV.fromList [1..3])
 
-probe message x = trace (message ++ show x) x
-
 addEmptyPath :: [PackedCommand] -> GameTree -> GameTree
 addEmptyPath path tree =
   probe ("After adding: " ++ show path) $

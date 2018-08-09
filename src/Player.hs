@@ -13,7 +13,8 @@ module Player (emptyMissiles,
                updateMove,
                deconstructAt,
                buildOnMap,
-               availableCoord)
+               availableCoord,
+               collideAndMoveMissiles)
   where
 
 import Interpretor (incrementFitness,
@@ -109,6 +110,10 @@ buildOnMap coord building'
       "Attempted to build an invalid building state (constructed buildings have zero CD and full health): " ++ show x
   where
     player' = player { energy = energy' - towerCost building' }
+
+-- TODO: Implement
+collideAndMoveMissiles :: Player -> Player
+collideAndMoveMissiles = id
 
 deconstructAt :: Coord -> Player -> Player
 deconstructAt coord

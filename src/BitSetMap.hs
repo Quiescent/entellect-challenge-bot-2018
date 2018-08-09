@@ -28,7 +28,7 @@ setAt :: Coord -> Word64 -> Word64
 setAt = flip setBit
 
 unSetAt :: Coord -> Word64 -> Word64
-unSetAt = flip setBit
+unSetAt = flip clearBit
 
 addAll :: Word64 -> Word64 -> Word64
 addAll = (.|.)
