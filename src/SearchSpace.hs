@@ -48,7 +48,7 @@ xPredicate p coord =
 type Cells = UV.Vector Coord
 
 myCells :: Cells
-myCells = UV.filter cellBelongsToMe $ allCells
+myCells = allCells
 
 -- myFrontCells :: Cells
 -- myFrontCells = UV.filter (xPredicate (== 7)) myCells
@@ -63,7 +63,7 @@ myForwardCells = UV.filter (xPredicate (>= 6)) myCells
 -- myBackCells = UV.filter (xPredicate (<= 1)) myCells
 
 oponentsCells :: Cells
-oponentsCells = UV.filter cellBelongsToOponent $ allCells
+oponentsCells = allCells
 
 -- oponentsFrontCells :: Cells
 -- oponentsFrontCells = UV.filter (xPredicate (== 8)) oponentsCells
