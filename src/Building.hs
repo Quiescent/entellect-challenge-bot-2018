@@ -24,16 +24,22 @@ generateAndUpdateCooldownMissilesOnPlayer
                    missiles1     = missiles1',
                    missiles2     = missiles2',
                    missiles3     = missiles3' }) =
-  let missilesToBeGenerated = attack0Towers'
-  -- TODO: Select a place to put them based on availability
+  let missilesToAddTo0 = attack0Towers'
+      missilesOn0      = addAllMissiles missilesToAddTo0 missiles0'
+      missilesToAddTo1 = onlyOverlappingMissiles missilesToAddTo0 missiles0'
+      missilesOn1      = addAllMissiles missilesToAddTo1 missiles1'
+      missilesToAddTo2 = onlyOverlappingMissiles missilesToAddTo1 missiles1'
+      missilesOn2      = addAllMissiles missilesToAddTo2 missiles2'
+      missilesToAddTo3 = onlyOverlappingMissiles missilesToAddTo2 missiles2'
+      missilesOn3      = addAllMissiles missilesToAddTo3 missiles3'
   in player { attack3Towers = attack0Towers',
               attack2Towers = attack3Towers',
               attack1Towers = attack2Towers',
               attack0Towers = attack1Towers',
-              missiles0     = addAllMissiles missilesToBeGenerated missiles0', -- TODO: Fix
-              missiles1     = missiles1',
-              missiles2     = missiles2',
-              missiles3     = missiles3' }
+              missiles0     = missilesOn0,
+              missiles1     = missilesOn1,
+              missiles2     = missilesOn2,
+              missiles3     = missilesOn3 }
 
 updateBuildingProgress :: GameState -> GameState
 updateBuildingProgress =

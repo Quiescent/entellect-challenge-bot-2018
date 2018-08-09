@@ -12,7 +12,8 @@ module BitSetMap (Missiles,
                   removeBuilding,
                   moveMissilesLeft,
                   moveMissilesRight,
-                  interSectionIndices)
+                  interSectionIndices,
+                  onlyOverlappingMissiles)
   where
 
 import Data.Word
@@ -20,22 +21,22 @@ import Data.Bits
 
 import Coord
 
-type Missiles = Word64
-
-pack :: Coord -> Word64
-pack x = 1 `shiftL` x
-
 isSetAt :: Coord -> Word64 -> Bool
-isSetAt i x = (pack i) .&. x > 0
+isSetAt = flip testBit
 
 setAt :: Coord -> Word64 -> Word64
-setAt i x = (pack i) .|. x
+setAt = flip setBit
 
 unSetAt :: Coord -> Word64 -> Word64
-unSetAt i x = (complement (pack i)) .&. x
+unSetAt = flip setBit
 
 addAll :: Word64 -> Word64 -> Word64
 addAll = (.|.)
+
+type Missiles = Word64
+
+onlyOverlappingMissiles :: Missiles -> Missiles -> Missiles
+onlyOverlappingMissiles = (.&.)
 
 containsMissile :: Coord -> Missiles -> Bool
 containsMissile = isSetAt

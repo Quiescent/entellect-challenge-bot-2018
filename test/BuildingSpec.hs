@@ -45,6 +45,56 @@ tickBuildingSpec = do
                                             attack1Towers = 651654,
                                             attack0Towers = 687643,
                                             missiles0     = 34684 } }
+    it "should generate missiles which overlap with the first slot, in the second" $
+      tickBuildings boardWithMissilesToBeGeneratedWithSomeOnExistingMissiles
+      `shouldBe`
+      GameState { gameRound = 0,
+                  me = meWithMissilesToBeGeneratedWithSomeOnExistingMissiles
+                         { attack0Towers = 0,
+                           attack3Towers = 6546874,
+                           missiles0     = 7595451,
+                           missiles1     = 4243760 },
+                  oponent = oponentWithMissilesToBeGeneratedWithSomeOnExistingMissiles
+                              { attack0Towers = 0,
+                                attack3Towers = 687643,
+                                missiles0     = 2064027,
+                                missiles1     = 132098 } }
+    it "should bump all missiles to the second slot when the first is full" $
+      tickBuildings boardWithMissilesToBeGeneratedAndBumpedToMissiles1
+      `shouldBe`
+      GameState { gameRound = 0,
+                  me = meWithMissilesToBeGeneratedAndBumpedToMissiles1
+                         { attack0Towers = 0,
+                           attack3Towers = 6546874,
+                           missiles1     = 6546874 },
+                  oponent = oponentWithMissilesToBeGeneratedAndBumpedToMissiles1
+                              { attack0Towers = 0,
+                                attack3Towers = 687643,
+                                missiles1     = 687643 } }
+    it "should bump all missiles to the third slot when the first and second are full" $
+      tickBuildings boardWithMissilesToBeGeneratedAndBumpedToMissiles2
+      `shouldBe`
+      GameState { gameRound = 0,
+                  me = meWithMissilesToBeGeneratedAndBumpedToMissiles2
+                         { attack0Towers = 0,
+                           attack3Towers = 6546874,
+                           missiles2     = 6546874 },
+                  oponent = oponentWithMissilesToBeGeneratedAndBumpedToMissiles2
+                              { attack0Towers = 0,
+                                attack3Towers = 687643,
+                                missiles2     = 687643 } }
+    it "should bump all missiles to the third slot when the first and second are full" $
+      tickBuildings boardWithMissilesToBeGeneratedAndBumpedToMissiles3
+      `shouldBe`
+      GameState { gameRound = 0,
+                  me = meWithMissilesToBeGeneratedAndBumpedToMissiles3
+                         { attack0Towers = 0,
+                           attack3Towers = 6546874,
+                           missiles3     = 6546874 },
+                  oponent = oponentWithMissilesToBeGeneratedAndBumpedToMissiles3
+                              { attack0Towers = 0,
+                                attack3Towers = 687643,
+                                missiles3     = 687643 } }
 
 emptyPlayer :: Player
 emptyPlayer =
@@ -120,3 +170,73 @@ boardWithBuildingsOnIt =
                                         attack2Towers = 651654,  -- 10011111000110000110
                                         attack1Towers = 687643,  -- 10100111111000011011
                                         attack0Towers = 34684 }} -- 1000011101111100
+
+meWithMissilesToBeGeneratedWithSomeOnExistingMissiles :: Player
+meWithMissilesToBeGeneratedWithSomeOnExistingMissiles =
+  emptyPlayer { attack0Towers = 6546874,  -- 11000111110010110111010
+                missiles0     = 5292337 } -- 10100001100000100110001
+
+oponentWithMissilesToBeGeneratedWithSomeOnExistingMissiles :: Player
+oponentWithMissilesToBeGeneratedWithSomeOnExistingMissiles =
+  emptyPlayer { attack0Towers =  687643,   --  10100111111000011011
+                missiles0     =  1508482 } -- 101110000010010000010
+
+boardWithMissilesToBeGeneratedWithSomeOnExistingMissiles :: GameState
+boardWithMissilesToBeGeneratedWithSomeOnExistingMissiles =
+  GameState { gameRound = 0,
+              me        = meWithMissilesToBeGeneratedWithSomeOnExistingMissiles,
+              oponent   = oponentWithMissilesToBeGeneratedWithSomeOnExistingMissiles }
+
+meWithMissilesToBeGeneratedAndBumpedToMissiles1 :: Player
+meWithMissilesToBeGeneratedAndBumpedToMissiles1 =
+  emptyPlayer { attack0Towers = 6546874,               -- 11000111110010110111010
+                missiles0     = 18446744073709551615 } -- 1111111111111111111111111111111111111111111111111111111111111111
+
+oponentWithMissilesToBeGeneratedAndBumpedToMissiles1 :: Player
+oponentWithMissilesToBeGeneratedAndBumpedToMissiles1 =
+  emptyPlayer { attack0Towers =  687643,                -- 10100111111000011011
+                missiles0     =  18446744073709551615 } -- 1111111111111111111111111111111111111111111111111111111111111111
+
+boardWithMissilesToBeGeneratedAndBumpedToMissiles1 :: GameState
+boardWithMissilesToBeGeneratedAndBumpedToMissiles1 =
+  GameState { gameRound = 0,
+              me        = meWithMissilesToBeGeneratedAndBumpedToMissiles1,
+              oponent   = oponentWithMissilesToBeGeneratedAndBumpedToMissiles1 }
+
+meWithMissilesToBeGeneratedAndBumpedToMissiles2 :: Player
+meWithMissilesToBeGeneratedAndBumpedToMissiles2 =
+  emptyPlayer { attack0Towers = 6546874,               -- 11000111110010110111010
+                missiles0     = 18446744073709551615,  -- 1111111111111111111111111111111111111111111111111111111111111111
+                missiles1     = 18446744073709551615 } -- 1111111111111111111111111111111111111111111111111111111111111111
+
+oponentWithMissilesToBeGeneratedAndBumpedToMissiles2 :: Player
+oponentWithMissilesToBeGeneratedAndBumpedToMissiles2 =
+  emptyPlayer { attack0Towers =  687643,                -- 10100111111000011011
+                missiles0     =  18446744073709551615,  -- 1111111111111111111111111111111111111111111111111111111111111111
+                missiles1     =  18446744073709551615 } -- 1111111111111111111111111111111111111111111111111111111111111111
+
+boardWithMissilesToBeGeneratedAndBumpedToMissiles2 :: GameState
+boardWithMissilesToBeGeneratedAndBumpedToMissiles2 =
+  GameState { gameRound = 0,
+              me        = meWithMissilesToBeGeneratedAndBumpedToMissiles2,
+              oponent   = oponentWithMissilesToBeGeneratedAndBumpedToMissiles2 }
+
+meWithMissilesToBeGeneratedAndBumpedToMissiles3 :: Player
+meWithMissilesToBeGeneratedAndBumpedToMissiles3 =
+  emptyPlayer { attack0Towers = 6546874,               -- 11000111110010110111010
+                missiles0     = 18446744073709551615,  -- 1111111111111111111111111111111111111111111111111111111111111111
+                missiles1     = 18446744073709551615,  -- 1111111111111111111111111111111111111111111111111111111111111111
+                missiles2     = 18446744073709551615 } -- 1111111111111111111111111111111111111111111111111111111111111111
+
+oponentWithMissilesToBeGeneratedAndBumpedToMissiles3 :: Player
+oponentWithMissilesToBeGeneratedAndBumpedToMissiles3 =
+  emptyPlayer { attack0Towers =  687643,                -- 10100111111000011011
+                missiles0     =  18446744073709551615,  -- 1111111111111111111111111111111111111111111111111111111111111111
+                missiles1     =  18446744073709551615,  -- 1111111111111111111111111111111111111111111111111111111111111111
+                missiles2     =  18446744073709551615 } -- 1111111111111111111111111111111111111111111111111111111111111111
+
+boardWithMissilesToBeGeneratedAndBumpedToMissiles3 :: GameState
+boardWithMissilesToBeGeneratedAndBumpedToMissiles3 =
+  GameState { gameRound = 0,
+              me        = meWithMissilesToBeGeneratedAndBumpedToMissiles3,
+              oponent   = oponentWithMissilesToBeGeneratedAndBumpedToMissiles3 }
