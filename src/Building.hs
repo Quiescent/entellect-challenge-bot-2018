@@ -59,5 +59,5 @@ updateBuildingProgress'
            defenseTowersUnderConstruction1 = defenseTowersUnderConstruction2',
            defenseTowersUnderConstruction0 = defenseTowersUnderConstruction1',
            defense4Towers                  = addAllBuildings defense4Towers' defenseTowersUnderConstruction0',
-           teslaTower0ConstructionTime     = teslaTower0ConstructionTime' - 1,
-           teslaTower1ConstructionTime     = teslaTower1ConstructionTime' - 1 }
+           teslaTower0ConstructionTime     = teslaTower0ConstructionTime' - if teslaTower0ConstructionTime' <= 0 then 0 else 1,
+           teslaTower1ConstructionTime     = teslaTower1ConstructionTime' - if teslaTower1ConstructionTime' <= 0 then 0 else 1 }
