@@ -7,9 +7,8 @@ module GameMap (removeAt,
                 Collision(..))
   where
 
-import Interpretor (Building(..))
+import Interpretor (Building)
 import BitSetMap
-import Magic
 
 import Coord
 
@@ -35,13 +34,12 @@ data Collision = HitNothing
 -- log functionality to test them.
 -- TODO: Implement
 findRightOf :: CollisionDetector
-findRightOf missiles buildings = HitNothing
-
-firstOutOfBoundsCoord :: Int
-firstOutOfBoundsCoord = width * height
+--findRightOf missiles buildings = HitNothing
+findRightOf _ _ = HitNothing
 
 findLeftOf :: CollisionDetector
-findLeftOf coord buildings = HitNothing
+--findLeftOf coord buildings = HitNothing
+findLeftOf _ _ = HitNothing
 
 definedAt :: Coord -> BuildingPlacements -> Bool
 definedAt = containsBuildingAt

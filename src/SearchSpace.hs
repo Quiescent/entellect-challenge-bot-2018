@@ -8,11 +8,9 @@ module SearchSpace (advanceState,
 
 import Interpretor (GameState(..),
                     Player(..),
-                    BuildingType(..),
-                    Command(..))
+                    BuildingType(..))
 import Player
 import Engine
-import GameMap
 import Cell
 import GameState
 import Objective
@@ -28,9 +26,6 @@ import System.Clock
 import Data.Maybe
 import System.Random
 import Control.Monad.State.Lazy
-import qualified Data.List           as L
-import qualified Data.Vector         as V
-import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Unboxed as UV
 
 import Control.Concurrent (killThread,
@@ -41,12 +36,9 @@ import Control.Concurrent (killThread,
                            threadDelay,
                            MVar)
 
-import Control.Parallel (pseq)
-import Control.Parallel.Strategies (parList, using, rdeepseq)
+import Control.Parallel.Strategies (using, rdeepseq)
 import Control.Exception (evaluate)
-import Control.DeepSeq (rnf, deepseq)
-
-data FloatEvaluator = FloatEvaluator !Float
+import Control.DeepSeq (deepseq)
 
 xPredicate :: (Int -> Bool) -> Coord -> Bool
 xPredicate p coord =
@@ -58,32 +50,32 @@ type Cells = UV.Vector Coord
 myCells :: Cells
 myCells = UV.filter cellBelongsToMe $ allCells
 
-myFrontCells :: Cells
-myFrontCells = UV.filter (xPredicate (== 7)) myCells
+-- myFrontCells :: Cells
+-- myFrontCells = UV.filter (xPredicate (== 7)) myCells
 
 myForwardCells :: Cells
 myForwardCells = UV.filter (xPredicate (>= 6)) myCells
 
-myMidToFrontCells :: Cells
-myMidToFrontCells = UV.filter (xPredicate (>= 2)) myCells
+-- myMidToFrontCells :: Cells
+-- myMidToFrontCells = UV.filter (xPredicate (>= 2)) myCells
 
-myBackCells :: Cells
-myBackCells = UV.filter (xPredicate (<= 1)) myCells
+-- myBackCells :: Cells
+-- myBackCells = UV.filter (xPredicate (<= 1)) myCells
 
 oponentsCells :: Cells
 oponentsCells = UV.filter cellBelongsToOponent $ allCells
 
-oponentsFrontCells :: Cells
-oponentsFrontCells = UV.filter (xPredicate (== 8)) oponentsCells
+-- oponentsFrontCells :: Cells
+-- oponentsFrontCells = UV.filter (xPredicate (== 8)) oponentsCells
 
 oponentsForwardCells :: Cells
 oponentsForwardCells = UV.filter (xPredicate (<= 9)) $ oponentsCells
 
-oponentsMidToFrontCells :: Cells
-oponentsMidToFrontCells = UV.filter (xPredicate (<= 13)) oponentsCells
+-- oponentsMidToFrontCells :: Cells
+-- oponentsMidToFrontCells = UV.filter (xPredicate (<= 13)) oponentsCells
 
-oponentsBackCells :: Cells
-oponentsBackCells = UV.filter (xPredicate (>= 14)) oponentsCells
+-- oponentsBackCells :: Cells
+-- oponentsBackCells = UV.filter (xPredicate (>= 14)) oponentsCells
 
 type Moves = UV.Vector EfficientCommand
 
@@ -94,8 +86,8 @@ allMovesOfType :: BuildingType -> Cells -> Moves
 allMovesOfType buildingType' cells' =
   UV.map ((flip build) (buildingTypeToInt buildingType')) cells'
 
-allMyBackEnergyTowerMoves :: Moves
-allMyBackEnergyTowerMoves = allMovesOfType ENERGY myBackCells
+-- allMyBackEnergyTowerMoves :: Moves
+-- allMyBackEnergyTowerMoves = allMovesOfType ENERGY myBackCells
 
 allMyEnergyTowerMoves :: Moves
 allMyEnergyTowerMoves = allMovesOfType ENERGY myCells
@@ -109,8 +101,8 @@ allMyAttackTowerMoves = allMovesOfType ATTACK myCells
 allMyFrontTeslaTowerMoves ::  Moves
 allMyFrontTeslaTowerMoves = allMovesOfType TESLA myForwardCells
 
-allOponentsBackEnergyTowerMoves :: Moves
-allOponentsBackEnergyTowerMoves = allMovesOfType ENERGY oponentsBackCells
+-- allOponentsBackEnergyTowerMoves :: Moves
+-- allOponentsBackEnergyTowerMoves = allMovesOfType ENERGY oponentsBackCells
 
 allOponentsEnergyTowerMoves :: Moves
 allOponentsEnergyTowerMoves = allMovesOfType ENERGY oponentsCells
@@ -186,12 +178,12 @@ delayTime :: Int
 delayTime = 10
 
 search :: StdGen -> GameState -> IO Command
-search g state = do
+search g state' = do
   let clock          = Realtime
   startTime         <- getTime clock
   let startTimeNanos = timeToNanos startTime
   bestMove          <- newEmptyMVar
-  threadId          <- forkIO $ searchDeeper bestMove g state
+  threadId          <- forkIO $ searchDeeper bestMove g state'
   let searchIter bestSoFar = do
         bestMoveSoFar <- tryTakeMVar bestMove
         timeNow       <- getTime clock
@@ -207,9 +199,6 @@ search g state = do
             killThread threadId -- this had no effect :(
             return newBest
   searchIter undefined -- It's not quitting the program here :/
-
-unwrapEvaluator :: FloatEvaluator -> Float
-unwrapEvaluator (FloatEvaluator x) = x
 
 searchDeeper :: MVar Command -> StdGen -> GameState -> IO ()
 searchDeeper best g initialState = searchDeeperIter g M.empty
@@ -238,7 +227,7 @@ playToEnd g initialState gameTree =
   playToEndIter depth (g, [], initialState) gameTree
   where
     playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
-    playToEndIter 0 (_, _, currentState)                      gameTree' = gameTree'
+    playToEndIter 0 (_, _, _)                               gameTree' = gameTree'
     playToEndIter n advanceStateResult@(_, _, currentState) gameTree' =
       if gameOver currentState
       then if iWon currentState
@@ -269,14 +258,14 @@ decrementTreeFitness moves gameTree =
   M.incrementDecrementBy moves (-winLossModifier) gameTree
 
 gameOver :: GameState -> Bool
-gameOver (GameState { me      = (Player { health = myHealth }),
-                      oponent = (Player { health = oponentsHealth }) }) =
-  myHealth <= 0 || oponentsHealth <= 0
+gameOver (GameState { me      = (Player { health = myHealth' }),
+                      oponent = (Player { health = oponentsHealth' }) }) =
+  myHealth' <= 0 || oponentsHealth' <= 0
 
 iWon :: GameState -> Bool
-iWon (GameState { me      = (Player { health = myHealth }),
-                  oponent = (Player { health = oponentsHealth }) }) =
-  oponentsHealth <= 0 && myHealth > 0
+iWon (GameState { me      = (Player { health = myHealth' }),
+                  oponent = (Player { health = oponentsHealth' }) }) =
+  oponentsHealth' <= 0 && myHealth' > 0
 
 advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
 advanceState (g, moves, currentState) = do
@@ -302,24 +291,20 @@ advanceState (g, moves, currentState) = do
   when (isEmpty || myScoresAreEmpty || oponentsScoresAreEmpty) $
     put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
   let (g', g'') = split g
-  let (indexOfMyMove, myMove, _)         =
+  let (indexOfMyMove, myMove', _)         =
         chooseOne g' myMoves $
         cdf $
         myScores
-  let myScores = UV.map (myIntermediateBoardScore . (flip updateMyMove currentState)) myMoves
-  let (indexOfOponentsMove, oponentsMove, g''') =
+  let (indexOfOponentsMove, oponentsMove', g''') =
         chooseOne g'' oponentsMoves $
         cdf $
         oponentsScores
-  let nextState = updateMyMove myMove $
-        updateOponentsMove oponentsMove $
+  let nextState = updateMyMove myMove' $
+        updateOponentsMove oponentsMove' $
         tickEngine currentState
   return (g''',
           (combineCommands indexOfMyMove indexOfOponentsMove):moves,
           nextState)
-
-invertScores :: UV.Vector Float -> UV.Vector Float
-invertScores = UV.map (1.0 /)
 
 cdf :: UV.Vector Float -> UV.Vector Float
 cdf xs = normalised

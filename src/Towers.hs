@@ -1,13 +1,11 @@
 module Towers (towerPrices, towerCost)
   where
 
-import Interpretor (Building(..),
+import Interpretor (Building,
                     BuildingType(..))
 import Magic
 import Buildings
-import VectorIndex
 
-import qualified Data.Vector.Unboxed as UV
 
 attackTowerCostWithType :: (Int, BuildingType)
 attackTowerCostWithType = (attackTowerCost, ATTACK)

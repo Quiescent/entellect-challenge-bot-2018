@@ -16,27 +16,19 @@ module Player (emptyMissiles,
                availableCoord)
   where
 
-import Interpretor (decrementFitness,
-                    insertMissileSortedForMe,
-                    insertMissileSortedForOponent,
-                    incrementFitness,
+import Interpretor (incrementFitness,
                     GameState(..),
                     BuildingType(..),
-                    Command(..),
                     Player(..),
-                    Missile(..),
-                    Building(..),
+                    Building,
                     BuildingType(..))
 import Coord
-import GameMap
 import Magic
 import Towers
 import Buildings
 import EfficientCommand
-import VectorIndex
 import BitSetMap
 
-import qualified Data.Vector.Unboxed as UV
 
 myPlayer :: GameState -> Player
 myPlayer = me
@@ -71,11 +63,10 @@ takeDamage damage' player'@(Player { health = health' }) =
   player' { health = health' - damage' }
 
 buildingFromStats :: BuildingType -> Building
-buildingFromStats buildingType'
-  | buildingType' == TESLA   = Tesla0
-  | buildingType' == ATTACK  = Attack0
-  | buildingType' == ENERGY  = EnergyTower
-  | buildingType' == DEFENSE = Defense4
+buildingFromStats TESLA   = Tesla0
+buildingFromStats ATTACK  = Attack0
+buildingFromStats ENERGY  = EnergyTower
+buildingFromStats DEFENSE = Defense4
 
 updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
@@ -86,7 +77,6 @@ updateMove command player' =
     coord'        = coordOfCommand command
     y'            = getY coord'
     buildingType' = buildingTypeOfCommand command
-    timeLeft      = constructionTime buildingType'
     building'     = buildingFromStats buildingType'
 
 constructionTime :: BuildingType -> Int
@@ -102,10 +92,6 @@ buildOnMap coord building'
                    attackTowersUnderConstruction   = attackTowersUnderConstruction',
                    teslaTower0                     = teslaTower0',
                    teslaTower1                     = teslaTower1',
-                   teslaTower0ConstructionTime     = teslaTower0ConstructionTime',
-                   teslaTower1ConstructionTime     = teslaTower1ConstructionTime',
-                   teslaTower0CooldownTime         = teslaTower0CooldownTime',
-                   teslaTower1CooldownTime         = teslaTower1CooldownTime',
                    energy                          = energy' }) =
   case building' of
     Defense4    -> player' { defenseTowersUnderConstruction2 = addBuilding coord defenseTowersUnderConstruction2' }
@@ -119,6 +105,8 @@ buildOnMap coord building'
       else player' { teslaTower1                 = addBuilding coord teslaTower1',
                      teslaTower1ConstructionTime = teslaTowerConstructionTime,
                      teslaTower1CooldownTime     = 0 }
+    x           -> error $
+      "Attempted to build an invalid building state (constructed buildings have zero CD and full health): " ++ show x
   where
     player' = player { energy = energy' - towerCost building' }
 
@@ -173,10 +161,6 @@ deconstructAt coord
   | containsBuildingAt coord teslaTower1'                     =
     player { teslaTower1 = removeBuilding coord teslaTower1' }
   | otherwise                                                 = player
-
--- TODO: Implement
-tickConstruction :: Player -> Player
-tickConstruction = id
 
 availableCoord :: Coord -> Player -> Bool
 availableCoord coord

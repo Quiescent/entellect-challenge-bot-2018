@@ -10,7 +10,6 @@ module GameTree (GameTree(..),
 
 import EfficientCommand
 
-import Data.Maybe
 import qualified Data.IntMap                 as M
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as MVector
@@ -24,7 +23,7 @@ subTree (move:moves) (GameTree _ branches _) =
   M.lookup move branches >>= subTree moves
 
 incrementDecrementBy :: [PackedCommand] -> Float -> GameTree -> GameTree
-incrementDecrementBy []           x tree = tree
+incrementDecrementBy []           _ tree = tree
 incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
   let updatedSubTree = M.adjust (incrementDecrementBy moves x) move branches
   in GameTree (UV.modify increment myMoveScores) updatedSubTree (UV.modify decrement oponentsMoveScores)

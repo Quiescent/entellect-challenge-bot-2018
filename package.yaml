@@ -20,7 +20,6 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/quiescent/EntelectChallenge2018#readme>
 
 dependencies:
-- pqueue >= 1.4.1.1
 - base >= 4.7 && < 5
 - aeson >= 1.2.4.0
 - containers >= 0.5.11.0

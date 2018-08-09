@@ -1,22 +1,12 @@
 module Engine (tickEngine)
   where
 
-import Interpretor (decrementFitness,
-                    GameState(..),
-                    BuildingType(..),
-                    Player(..),
-                    Building(..),
-                    Missile)
+import Interpretor (GameState(..), Player(..))
+
 import Player
-import Missile
 import Building
-import GameMap
 import GameState
 import Magic
-import Coord
-import BitSetMap
-
-import Control.Monad.State.Lazy
 
 tickEngine :: GameState -> GameState
 tickEngine = gainEnergy . collideMissiles . tickBuildings

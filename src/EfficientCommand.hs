@@ -16,6 +16,7 @@ intToBuildingType 1 = DEFENSE
 intToBuildingType 2 = ATTACK
 intToBuildingType 3 = ENERGY
 intToBuildingType 4 = TESLA
+intToBuildingType x = error $ "Unhandled building type: " ++ show x
 
 type EfficientCommand = Int
 
@@ -25,7 +26,7 @@ nothingCommand = 0
 type EfficientBuilding = Int
 
 build :: Coord -> EfficientBuilding -> EfficientCommand
-build bCoord buildingType' = buildingType' .|. (bCoord `shiftL` 3)
+build coord' buildingType' = buildingType' .|. (coord' `shiftL` 3)
 
 toCommand :: EfficientCommand -> Command
 toCommand 0 = NothingCommand

@@ -1,5 +1,6 @@
 module BitSetMap (Missiles,
                   BuildingPlacements,
+                  addAllMissiles,
                   emptyBuildings,
                   addAllBuildings,
                   emptyMissiles,
@@ -10,13 +11,13 @@ module BitSetMap (Missiles,
                   containsBuildingAt,
                   removeBuilding,
                   moveMissilesLeft,
-                  moveMissilesRight)
+                  moveMissilesRight,
+                  interSectionIndices)
   where
 
 import Data.Word
 import Data.Bits
 
-import Buildings
 import Coord
 
 type Missiles = Word64
@@ -33,11 +34,17 @@ setAt i x = (pack i) .|. x
 unSetAt :: Coord -> Word64 -> Word64
 unSetAt i x = (complement (pack i)) .&. x
 
+addAll :: Word64 -> Word64 -> Word64
+addAll = (.|.)
+
 containsMissile :: Coord -> Missiles -> Bool
 containsMissile = isSetAt
 
 addMissile :: Coord -> Missiles -> Missiles
 addMissile = setAt
+
+addAllMissiles :: Missiles -> Missiles -> Missiles
+addAllMissiles = addAll
 
 moveMissilesRight :: Missiles -> Missiles
 moveMissilesRight = (flip shiftR) 1
@@ -63,7 +70,7 @@ removeBuilding :: Coord -> BuildingPlacements -> BuildingPlacements
 removeBuilding = unSetAt
 
 addAllBuildings :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
-addAllBuildings = (.|.)
+addAllBuildings = addAll
 
 emptyBuildings :: BuildingPlacements
 emptyBuildings = 0

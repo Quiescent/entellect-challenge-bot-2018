@@ -9,15 +9,10 @@ module GameState (runCommand,
                   updateOponentsMove)
   where
 
-import Interpretor (GameState(..),
-                    Command(..),
-                    Player(..),
-                    Missile)
+import Interpretor (GameState(..), Command(..), Player(..))
+
 import Player
-import GameMap
-import Coord
 import EfficientCommand
-import BitSetMap
 
 type MapPlayer = (Player -> Player) -> GameState -> GameState
 

@@ -40,7 +40,7 @@ main = do
   putStrLn $ playerOneName ++ ", " ++
              playerTwoName ++ ", " ++
              matchDirectory
-  foldM playMoveForRound initialState [0..roundCount - 2]
+  foldM_ playMoveForRound initialState [0..roundCount - 2]
   putStrLn "Done"
 
 transposePlayerTwosMove :: Command -> Command

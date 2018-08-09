@@ -5,15 +5,10 @@ module Objective (myIntermediateBoardScore,
                   Move(..))
   where
 
-import Interpretor (GameState(..),
-                    Command(..),
-                    Player(..))
-import Player
 import Magic
-import Engine
 
-import qualified Data.List           as L
-import qualified Data.IntMap.Strict  as M
+import Interpretor (Command, GameState(..), Player(..))
+
 import qualified Data.Vector.Unboxed as UV
 import Control.DeepSeq
 
@@ -29,13 +24,13 @@ instance NFData Move where
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore
-  state@(GameState { me = (Player { attackTowersPerRow = myAttackTowersPerRow,
-                                    energyTowersPerRow = myEnergyTowersPerRow }),
+  state@(GameState { me = (Player { attackTowersPerRow = myAttackTowersPerRow }),
                      oponent = (Player { attackTowersPerRow = oponentsAttackTowersPerRow,
                                          energyTowersPerRow = oponentsEnergyTowersPerRow })}) =
   turnsToMostExpensiveByMostExpensive state +
   (fromIntegral $ UV.foldl' (+) 0 $ UV.zipWith (*) myAttackTowersPerRow oponentsEnergyTowersPerRow) +
   (fromIntegral $ UV.foldl' (+) 0 $ UV.zipWith (*) myAttackTowersPerRow oponentsAttackTowersPerRow)
+
 
 resultBonusScore :: Float
 resultBonusScore = 9

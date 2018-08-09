@@ -1,19 +1,10 @@
 module Building (tickBuildings)
   where
 
-import Interpretor (GameState(..),
-                    Building(..),
-                    BuildingType(..),
-                    Player(..))
-import Player
-import GameMap
-import GameState
-import Magic
-import Buildings
-import VectorIndex
-import BitSetMap
+import Interpretor (GameState(..), Player(..))
 
-import qualified Data.Vector as V
+import GameState
+import BitSetMap
 
 tickBuildings :: GameState -> GameState
 tickBuildings = generateMissilesAndUpdateCooldown . updateBuildingProgress
@@ -39,7 +30,7 @@ generateAndUpdateCooldownMissilesOnPlayer
               attack2Towers = attack3Towers',
               attack1Towers = attack2Towers',
               attack0Towers = attack1Towers',
-              missiles0     = missiles0',
+              missiles0     = addAllMissiles missilesToBeGenerated missiles0', -- TODO: Fix
               missiles1     = missiles1',
               missiles2     = missiles2',
               missiles3     = missiles3' }
