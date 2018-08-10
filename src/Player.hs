@@ -13,7 +13,8 @@ module Player (updateEnergy,
                deconstructAt,
                buildOnMap,
                availableCoord,
-               collideAndMoveMissiles)
+               collide,
+               moveCheckingBoundaries)
   where
 
 import Interpretor (incrementFitness,
@@ -85,6 +86,207 @@ constructionTime ENERGY  = energyTowerConstructionTime
 constructionTime DEFENSE = defenseTowerConstructionTime
 constructionTime ATTACK  = attackTowerConstructionTime
 
+collide :: Player -> Player -> (Player, Player)
+collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
+                                     missilesOtherSide1 = missilesOtherSide1',
+                                     missilesOtherSide2 = missilesOtherSide2',
+                                     missilesOtherSide3 = missilesOtherSide3' })
+  player@(Player { energyTowers                = energyTowers',
+                   attack3Towers               = attack3Towers',
+                   attack2Towers               = attack2Towers',
+                   attack1Towers               = attack1Towers',
+                   attack0Towers               = attack0Towers',
+                   defense4Towers              = defense4Towers',
+                   defense3Towers              = defense3Towers',
+                   defense2Towers              = defense2Towers',
+                   defense1Towers              = defense1Towers',
+                   teslaTower0                 = teslaTower0',
+                   teslaTower1                 = teslaTower1'
+                   -- teslaTower0ConstructionTime = teslaTower0ConstructionTime',
+                   -- teslaTower1ConstructionTime = teslaTower1ConstructionTime',
+                   -- teslaTower0CooldownTime     = teslaTower0CooldownTime',
+                   -- teslaTower1CooldownTime     = teslaTower1CooldownTime'
+                 }) =
+      -- First round of missiles
+  let allPlacements = addAllBuildings energyTowers'
+                                      (addAllBuildings attack3Towers'
+                                       (addAllBuildings attack2Towers'
+                                        (addAllBuildings attack1Towers'
+                                         (addAllBuildings attack0Towers'
+                                          (addAllBuildings defense4Towers'
+                                           (addAllBuildings defense3Towers'
+                                            (addAllBuildings defense2Towers'
+                                             (addAllBuildings defense1Towers'
+                                              (addAllBuildings teslaTower0'
+                                               teslaTower1')))))))))
+      collided0       = missilesWhichCollided missilesOtherSide0' allPlacements
+      missiles0After  = removeAllMissiles  collided0 missilesOtherSide0'
+      energyTowers0   = removeAllBuildings collided0 energyTowers'
+      attack3Towers0  = removeAllBuildings collided0 attack3Towers'
+      attack2Towers0  = removeAllBuildings collided0 attack2Towers'
+      attack1Towers0  = removeAllBuildings collided0 attack1Towers'
+      attack0Towers0  = removeAllBuildings collided0 attack0Towers'
+      defense4Towers0 = removeAllBuildings collided0 defense4Towers'
+      defense3Towers0 = removeAllBuildings collided0 defense3Towers'
+      defense2Towers0 = removeAllBuildings collided0 defense2Towers'
+      defense1Towers0 = removeAllBuildings collided0 defense1Towers'
+      -- TODO: Reset the cooldown of the tesla tower if it was destroyed
+      teslaTower00    = removeAllBuildings collided0 teslaTower0'
+      teslaTower10    = removeAllBuildings collided0 teslaTower1'
+      -- Second round of missiles
+      allPlacements1  = addAllBuildings energyTowers0
+                                        (addAllBuildings attack3Towers0
+                                         (addAllBuildings attack2Towers0
+                                          (addAllBuildings attack1Towers0
+                                           (addAllBuildings attack0Towers0
+                                            (addAllBuildings defense4Towers0
+                                             (addAllBuildings defense3Towers0
+                                              (addAllBuildings defense2Towers0
+                                               (addAllBuildings defense1Towers0
+                                                (addAllBuildings teslaTower00
+                                                 teslaTower10)))))))))
+      collided1       = missilesWhichCollided missilesOtherSide1' allPlacements1
+      missiles1After  = removeAllMissiles  collided1 missilesOtherSide1'
+      energyTowers1   = removeAllBuildings collided1 energyTowers0
+      attack3Towers1  = removeAllBuildings collided1 attack3Towers0
+      attack2Towers1  = removeAllBuildings collided1 attack2Towers0
+      attack1Towers1  = removeAllBuildings collided1 attack1Towers0
+      attack0Towers1  = removeAllBuildings collided1 attack0Towers0
+      defense4Towers1 = removeAllBuildings collided1 defense4Towers0
+      defense3Towers1 = removeAllBuildings collided1 defense3Towers0
+      defense2Towers1 = removeAllBuildings collided1 defense2Towers0
+      defense1Towers1 = removeAllBuildings collided1 defense1Towers0
+      -- TODO: Reset the cooldown of the tesla tower if it was destroyed
+      teslaTower01    = removeAllBuildings collided1 teslaTower00
+      teslaTower11    = removeAllBuildings collided1 teslaTower10
+      -- Third round of missiles
+      allPlacements2  = addAllBuildings energyTowers1
+                                        (addAllBuildings attack3Towers1
+                                         (addAllBuildings attack2Towers1
+                                          (addAllBuildings attack1Towers1
+                                           (addAllBuildings attack0Towers1
+                                            (addAllBuildings defense4Towers1
+                                             (addAllBuildings defense3Towers1
+                                              (addAllBuildings defense2Towers1
+                                               (addAllBuildings defense1Towers1
+                                                (addAllBuildings teslaTower01
+                                                 teslaTower11)))))))))
+      collided2       = missilesWhichCollided missilesOtherSide2' allPlacements2
+      missiles2After  = removeAllMissiles  collided2 missilesOtherSide2'
+      energyTowers2   = removeAllBuildings collided2 energyTowers1
+      attack3Towers2  = removeAllBuildings collided2 attack3Towers1
+      attack2Towers2  = removeAllBuildings collided2 attack2Towers1
+      attack1Towers2  = removeAllBuildings collided2 attack1Towers1
+      attack0Towers2  = removeAllBuildings collided2 attack0Towers1
+      defense4Towers2 = removeAllBuildings collided2 defense4Towers1
+      defense3Towers2 = removeAllBuildings collided2 defense3Towers1
+      defense2Towers2 = removeAllBuildings collided2 defense2Towers1
+      defense1Towers2 = removeAllBuildings collided2 defense1Towers1
+      -- TODO: Reset the cooldown of the tesla tower if it was destroyed
+      teslaTower02    = removeAllBuildings collided2 teslaTower01
+      teslaTower12    = removeAllBuildings collided2 teslaTower11
+      -- Fourth round of missiles
+      allPlacements3  = addAllBuildings energyTowers3
+                                        (addAllBuildings attack3Towers3
+                                         (addAllBuildings attack2Towers3
+                                          (addAllBuildings attack2Towers3
+                                           (addAllBuildings attack0Towers3
+                                            (addAllBuildings defense4Towers3
+                                             (addAllBuildings defense3Towers3
+                                              (addAllBuildings defense2Towers3
+                                               (addAllBuildings defense2Towers3
+                                                (addAllBuildings teslaTower03
+                                                 teslaTower12)))))))))
+      collided3       = missilesWhichCollided missilesOtherSide3' allPlacements3
+      missiles3After  = removeAllMissiles  collided3 missilesOtherSide3'
+      energyTowers3   = removeAllBuildings collided3 energyTowers2
+      attack3Towers3  = removeAllBuildings collided3 attack3Towers2
+      attack2Towers3  = removeAllBuildings collided3 attack2Towers2
+      attack1Towers3  = removeAllBuildings collided3 attack1Towers2
+      attack0Towers3  = removeAllBuildings collided3 attack0Towers2
+      defense4Towers3 = removeAllBuildings collided3 defense4Towers2
+      defense3Towers3 = removeAllBuildings collided3 defense3Towers2
+      defense2Towers3 = removeAllBuildings collided3 defense2Towers2
+      defense1Towers3 = removeAllBuildings collided3 defense1Towers2
+      -- TODO: Reset the cooldown of the tesla tower if it was destroyed
+      teslaTower03    = removeAllBuildings collided3 teslaTower02
+      teslaTower13    = removeAllBuildings collided3 teslaTower12
+  in (playerWithMissiles { missilesOtherSide0 = missiles0After,
+                           missilesOtherSide1 = missiles1After,
+                           missilesOtherSide2 = missiles2After,
+                           missilesOtherSide3 = missiles3After },
+       player { energyTowers   = energyTowers3,
+                attack3Towers  = attack3Towers3,
+                attack2Towers  = attack2Towers3,
+                attack1Towers  = attack1Towers3,
+                attack0Towers  = attack0Towers3,
+                defense4Towers = defense4Towers3,
+                defense3Towers = addAllBuildings
+                                 (buildingPlacementDifference defense4Towers' defense4Towers1)
+                                 (addAllBuildings
+                                   (buildingPlacementDifference defense4Towers1 defense4Towers2)
+                                   (addAllBuildings
+                                    (buildingPlacementDifference defense4Towers2 defense4Towers3)
+                                    defense3Towers3)),
+                defense2Towers = addAllBuildings
+                                 (buildingPlacementDifference defense3Towers' defense3Towers1)
+                                 (addAllBuildings
+                                   (buildingPlacementDifference defense3Towers1 defense3Towers2)
+                                   (addAllBuildings
+                                    (buildingPlacementDifference defense3Towers2 defense3Towers3)
+                                    defense2Towers3)),
+                defense1Towers = addAllBuildings
+                                 (buildingPlacementDifference defense2Towers' defense2Towers1)
+                                 (addAllBuildings
+                                   (buildingPlacementDifference defense2Towers1 defense2Towers2)
+                                   (addAllBuildings
+                                    (buildingPlacementDifference defense2Towers2 defense2Towers3)
+                                    defense1Towers3)),
+                teslaTower0 = teslaTower03,
+                teslaTower1 = teslaTower13 })
+
+moveCheckingBoundaries :: Player -> Player -> (Player, Player)
+moveCheckingBoundaries
+  playerToMove@(Player { missiles0          = missiles0',
+                         missiles1          = missiles1',
+                         missiles2          = missiles2',
+                         missiles3          = missiles3',
+                         missilesOtherSide0 = missilesOtherSide0',
+                         missilesOtherSide1 = missilesOtherSide1',
+                         missilesOtherSide2 = missilesOtherSide2',
+                         missilesOtherSide3 = missilesOtherSide3'})
+  playerToHit@(Player { health = health' }) =
+  let missilesAboutToTransfer0  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles0'
+      missilesAboutToTransfer1  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles1'
+      missilesAboutToTransfer2  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles2'
+      missilesAboutToTransfer3  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles3'
+      missilesAboutToHitPlayer0 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide0'
+      missilesAboutToHitPlayer1 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide1'
+      missilesAboutToHitPlayer2 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide2'
+      missilesAboutToHitPlayer3 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide3'
+      hitsTaken                 = countMissiles missilesAboutToHitPlayer0 +
+                                  countMissiles missilesAboutToHitPlayer1 +
+                                  countMissiles missilesAboutToHitPlayer2 +
+                                  countMissiles missilesAboutToHitPlayer3
+      missilesOtherSide0''      = addAllMissiles missilesAboutToTransfer0 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer0 missilesOtherSide0'
+      missilesOtherSide1''      = addAllMissiles missilesAboutToTransfer1 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer1 missilesOtherSide1'
+      missilesOtherSide2''      = addAllMissiles missilesAboutToTransfer2 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer2 missilesOtherSide2'
+      missilesOtherSide3''      = addAllMissiles missilesAboutToTransfer3 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer3 missilesOtherSide3'
+      missiles0''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer0 missiles0'
+      missiles1''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer1 missiles1'
+      missiles2''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer2 missiles2'
+      missiles3''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer3 missiles3'
+  in (playerToMove { missiles0          = missiles0'',
+                     missiles1          = missiles1'',
+                     missiles2          = missiles2'',
+                     missiles3          = missiles3'',
+                     missilesOtherSide0 = missilesOtherSide0'',
+                     missilesOtherSide1 = missilesOtherSide1'',
+                     missilesOtherSide2 = missilesOtherSide2'',
+                     missilesOtherSide3 = missilesOtherSide3'' },
+      playerToHit { health = health' - hitsTaken * missileDamage })
+
+
 buildOnMap :: Coord -> Building -> Player -> Player
 buildOnMap coord building'
   player@(Player { defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
@@ -109,10 +311,6 @@ buildOnMap coord building'
       "Attempted to build an invalid building state (constructed buildings have zero CD and full health): " ++ show x
   where
     player' = player { energy = energy' - towerCost building' }
-
--- TODO: Implement
-collideAndMoveMissiles :: Player -> Player
-collideAndMoveMissiles = id
 
 deconstructAt :: Coord -> Player -> Player
 deconstructAt coord

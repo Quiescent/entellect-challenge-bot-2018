@@ -14,7 +14,15 @@ module BitSetMap (Missiles,
                   moveMissilesLeft,
                   moveMissilesRight,
                   interSectionIndices,
-                  onlyOverlappingMissiles)
+                  onlyOverlappingMissiles,
+                  removeAllBuildings,
+                  missilesWhichCollided,
+                  removeAllMissiles,
+                  buildingPlacementDifference,
+                  missilesAboutToHitPlayer,
+                  moveToMidPoint,
+                  missilesAboutToTransfer,
+                  countMissiles)
   where
 
 import Data.Word
@@ -37,11 +45,41 @@ unSetAt = flip clearBit
 addAll :: Word64 -> Word64 -> Word64
 addAll = (.|.)
 
+removeAll :: Word64 -> Word64 -> Word64
+removeAll xs ys = (complement xs) .&. ys
+
+difference :: Word64 -> Word64 -> Word64
+difference = xor
+
+count :: Word64 -> Int
+count = popCount
+
 type Missiles = Word64
+
+countMissiles :: Missiles -> Int
+countMissiles = count
+
+missilesAboutToTransfer :: Missiles
+missilesAboutToTransfer = 72340172838076673
+-- 0000000100000001000000010000000100000001000000010000000100000001
+
+missilesAboutToHitPlayer :: Missiles
+missilesAboutToHitPlayer = 9259542123273814144
+-- 1000000010000000100000001000000010000000100000001000000010000000
+
+moveToMidPoint :: Missiles -> Missiles
+moveToMidPoint = (flip shiftL) (halfWay - 1)
 
 onlyOverlappingMissiles :: Missiles -> Missiles -> Missiles
 onlyOverlappingMissiles = (.&.)
 
+missilesWhichCollided :: Missiles -> BuildingPlacements -> Missiles
+missilesWhichCollided missiles buildingPlacements =
+  missiles .&. buildingPlacements
+
+removeAllMissiles :: Missiles -> Missiles -> Missiles
+removeAllMissiles = removeAll
+  
 containsMissile :: Coord -> Missiles -> Bool
 containsMissile = isSetAt
 
@@ -77,8 +115,14 @@ placementWidth = 64
 removeBuilding :: Coord -> BuildingPlacements -> BuildingPlacements
 removeBuilding = unSetAt
 
+removeAllBuildings :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
+removeAllBuildings = removeAll
+
 addAllBuildings :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
 addAllBuildings = addAll
+
+buildingPlacementDifference :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
+buildingPlacementDifference = difference
 
 emptyBuildings :: BuildingPlacements
 emptyBuildings = 0
