@@ -16,8 +16,11 @@ type Coord = Int
 halfWay :: Int
 halfWay = width `div` 2
 
+mySideSizeMaxIndex :: Int
+mySideSizeMaxIndex = halfWay * height - 1
+
 toCoord :: Int -> Int -> Coord
-toCoord x y = y * halfWay + (if x >= halfWay then (width - 1) - x else x)
+toCoord x y = mySideSizeMaxIndex - (y * halfWay + (if x >= halfWay then (width - 1) - x else x))
 
 fromCoord :: Coord -> (Int, Int)
 fromCoord coord = (getX coord,
@@ -30,7 +33,7 @@ correspondingYs :: UV.Vector Int
 correspondingYs = UV.fromList $ [0..height - 1] >>= (replicate halfWay)
 
 getY :: Coord -> Int
-getY coord = correspondingYs `uVectorIndex` coord
+getY coord = correspondingYs `uVectorIndex` (mySideSizeMaxIndex - coord)
 
 getX :: Coord -> Int
-getX coord = correspondingXs `uVectorIndex` coord
+getX coord = correspondingXs `uVectorIndex` (mySideSizeMaxIndex - coord)
