@@ -17,8 +17,7 @@ module Player (updateEnergy,
                moveCheckingBoundaries)
   where
 
-import Interpretor (incrementFitness,
-                    GameState(..),
+import Interpretor (GameState(..),
                     BuildingType(..),
                     Player(..),
                     Building,
@@ -73,10 +72,9 @@ updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
 updateMove 0       player' = player'
 updateMove command player' =
-  incrementFitness y' building' $ buildOnMap coord' building' player'
+  buildOnMap coord' building' player'
   where
     coord'        = coordOfCommand command
-    y'            = getY coord'
     buildingType' = buildingTypeOfCommand command
     building'     = buildingFromStats buildingType'
 
@@ -224,24 +222,24 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                 defense3Towers = addAllBuildings
                                  (buildingPlacementDifference defense4Towers' defense4Towers1)
                                  (addAllBuildings
-                                   (buildingPlacementDifference defense4Towers1 defense4Towers2)
-                                   (addAllBuildings
-                                    (buildingPlacementDifference defense4Towers2 defense4Towers3)
-                                    defense3Towers3)),
+                                  (buildingPlacementDifference defense4Towers1 defense4Towers2)
+                                  (addAllBuildings
+                                   (buildingPlacementDifference defense4Towers2 defense4Towers3)
+                                   defense3Towers3)),
                 defense2Towers = addAllBuildings
                                  (buildingPlacementDifference defense3Towers' defense3Towers1)
                                  (addAllBuildings
-                                   (buildingPlacementDifference defense3Towers1 defense3Towers2)
-                                   (addAllBuildings
-                                    (buildingPlacementDifference defense3Towers2 defense3Towers3)
-                                    defense2Towers3)),
+                                  (buildingPlacementDifference defense3Towers1 defense3Towers2)
+                                  (addAllBuildings
+                                   (buildingPlacementDifference defense3Towers2 defense3Towers3)
+                                   defense2Towers3)),
                 defense1Towers = addAllBuildings
                                  (buildingPlacementDifference defense2Towers' defense2Towers1)
                                  (addAllBuildings
-                                   (buildingPlacementDifference defense2Towers1 defense2Towers2)
-                                   (addAllBuildings
-                                    (buildingPlacementDifference defense2Towers2 defense2Towers3)
-                                    defense1Towers3)),
+                                  (buildingPlacementDifference defense2Towers1 defense2Towers2)
+                                  (addAllBuildings
+                                   (buildingPlacementDifference defense2Towers2 defense2Towers3)
+                                   defense1Towers3)),
                 teslaTower0 = teslaTower03,
                 teslaTower1 = teslaTower13 })
 

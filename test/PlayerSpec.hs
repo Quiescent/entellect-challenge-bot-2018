@@ -5,10 +5,7 @@ import Interpretor
 import Buildings
 import Coord
 import EfficientCommand
-import Magic
 import BitSetMap
-
-import qualified Data.Vector.Unboxed as UV
 
 import Test.Hspec
 
@@ -31,9 +28,6 @@ spec =
 aPlayer :: Player
 aPlayer = (Player { energy                          = 0,
                     health                          = 25,
-                    energyGenPerTurn                = 0,
-                    energyTowersPerRow              = UV.fromList (replicate height 0),
-                    attackTowersPerRow              = UV.fromList (replicate height 0),
                     energyTowersUnderConstruction   = 0,
                     energyTowers                    = addMissile (toCoord 3 4) 0,
                     attackTowersUnderConstruction   = 0,
@@ -66,9 +60,6 @@ aPlayer = (Player { energy                          = 0,
 aPlayerWithNonZeroEnergy :: Player
 aPlayerWithNonZeroEnergy = (Player { energy                          = 10,
                                      health                          = 15,
-                                     energyGenPerTurn                = 0,
-                                     energyTowersPerRow              = UV.fromList (replicate height 0),
-                                     attackTowersPerRow              = UV.fromList (replicate height 0),
                                      energyTowersUnderConstruction   = 0,
                                      energyTowers                    = addMissile (toCoord 3 4)
                                                                        (addMissile (toCoord 0 3) 0),
@@ -232,9 +223,6 @@ aPlayerWithAnEnergyTowerAtTwoTwo :: Player
 aPlayerWithAnEnergyTowerAtTwoTwo =
   Player { energy                          = 0,
            health                          = 0,
-           energyGenPerTurn                = 0,
-           energyTowersPerRow              = UV.empty,
-           attackTowersPerRow              = UV.empty,
            energyTowersUnderConstruction   = 0,
            energyTowers                    = addBuilding (toCoord 2 2) 0,
            attackTowersUnderConstruction   = 0,
@@ -268,9 +256,6 @@ aPlayerWithAMissileOnTheOtherSideAtTwoTwo :: Player
 aPlayerWithAMissileOnTheOtherSideAtTwoTwo =
   Player { energy                          = 0,
            health                          = 0,
-           energyGenPerTurn                = 0,
-           energyTowersPerRow              = UV.empty,
-           attackTowersPerRow              = UV.empty,
            energyTowersUnderConstruction   = 0,
            energyTowers                    = 0,
            attackTowersUnderConstruction   = 0,
@@ -304,9 +289,6 @@ aPlayerWithAMissileOnTwoTwo :: Player
 aPlayerWithAMissileOnTwoTwo =
   Player { energy                          = 0,
            health                          = 0,
-           energyGenPerTurn                = 0,
-           energyTowersPerRow              = UV.empty,
-           attackTowersPerRow              = UV.empty,
            energyTowersUnderConstruction   = 0,
            energyTowers                    = 0,
            attackTowersUnderConstruction   = 0,
@@ -339,9 +321,6 @@ aPlayerWithAMissileOnTwoTwo =
 anEmptyPlayer :: Player
 anEmptyPlayer = Player { energy                          = 0,
                          health                          = 0,
-                         energyGenPerTurn                = 0,
-                         energyTowersPerRow              = UV.empty,
-                         attackTowersPerRow              = UV.empty,
                          energyTowersUnderConstruction   = 0,
                          energyTowers                    = 0,
                          attackTowersUnderConstruction   = 0,
@@ -426,8 +405,7 @@ updateMoveSpec = do
       updateMove (toEfficientCommand (Build (toCoord 6 2) ATTACK)) aPlayer
       `shouldBe`
       aPlayer { attackTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
-                energy                        = -30,
-                attackTowersPerRow            = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
+                energy                        = -30 }
     it "should build a defense tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) DEFENSE)) aPlayer
       `shouldBe`
@@ -437,8 +415,6 @@ updateMoveSpec = do
       updateMove (toEfficientCommand (Build (toCoord 6 2) ENERGY)) aPlayer
       `shouldBe`
       aPlayer { energyTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
-                energy                        = -20,
-                energyGenPerTurn              = 3,
-                energyTowersPerRow            = UV.fromList [0, 0, 1, 0, 0, 0, 0, 0] }
+                energy                        = -20 }
 
 -- TODO (!!!) implement the missile movement/collission spec here !!!

@@ -1,4 +1,4 @@
-module Engine (tickEngine)
+module Engine (tickEngine, energyGenPerTurn)
   where
 
 import Interpretor (GameState(..), Player(..))
@@ -7,6 +7,7 @@ import Player
 import Building
 import GameState
 import Magic
+import BitSetMap
 
 tickEngine :: GameState -> GameState
 tickEngine = incrementRound . gainEnergy . collideMissiles . tickBuildings
@@ -20,6 +21,12 @@ gainEnergy = mapMyPlayer (incrementEnergy) . mapOponentsPlayer (incrementEnergy)
 
 incrementEnergy :: Player -> Player
 incrementEnergy player' = updateEnergy (energyPerTurn + (energyGenPerTurn player')) player'
+
+energyGenPerTurn :: Player -> Int
+energyGenPerTurn =
+  (* energyTowerEnergyGeneratedPerTurn) .
+  countBuildings .
+  energyTowers
 
 collideMissiles :: GameState -> GameState
 collideMissiles = collideAndMoveMissiles

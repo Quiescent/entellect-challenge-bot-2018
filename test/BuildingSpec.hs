@@ -2,11 +2,8 @@ module BuildingSpec where
 
 import Building
 import Interpretor
-import Magic
 
 import Test.Hspec
-
-import qualified Data.Vector.Unboxed as UV
 
 spec :: Spec
 spec = tickBuildingSpec
@@ -99,9 +96,6 @@ tickBuildingSpec = do
 emptyPlayer :: Player
 emptyPlayer =
   (Player  { energy                          = 37,
-             energyGenPerTurn                = 0,
-             energyTowersPerRow              = UV.fromList (replicate height 0),
-             attackTowersPerRow              = UV.fromList (replicate height 0),
              health                          = 30,
              energyTowersUnderConstruction   = 0,
              energyTowers                    = 0,

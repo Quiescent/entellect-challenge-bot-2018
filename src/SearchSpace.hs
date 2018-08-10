@@ -144,13 +144,13 @@ switchMovesICanAfford =
                         allMyFrontTeslaTowerMoves
 
 myAvailableMoves :: GameState -> Moves
-myAvailableMoves (GameState { me = player@(Player { energy            = energy',
-                                                    energyGenPerTurn  = energyGenPerTurn' }) }) = do
+myAvailableMoves (GameState { me = player@(Player { energy = energy' }) }) = do
   UV.filter available affordableMoves
   where
-    available 0          = True
-    available command    = let i = coordOfCommand command in availableCoord i player
-    affordableMoves      = switchMovesICanAfford energy' energyGenPerTurn'
+    available 0       = True
+    available command = let i = coordOfCommand command in availableCoord i player
+    energyGenPerTurn' = energyGenPerTurn player
+    affordableMoves   = switchMovesICanAfford energy' energyGenPerTurn'
 
 switchMovesOponentCanAfford :: Int -> Int -> Moves
 switchMovesOponentCanAfford =
@@ -160,13 +160,13 @@ switchMovesOponentCanAfford =
                         allOponentsFrontTeslaTowerMoves
 
 oponentsAvailableMoves :: GameState -> Moves
-oponentsAvailableMoves (GameState { oponent = player@(Player { energy            = energy',
-                                                               energyGenPerTurn  = energyGenPerTurn' }) }) =
+oponentsAvailableMoves (GameState { oponent = player@(Player { energy = energy' }) }) =
   UV.filter available affordableMoves
   where
-    available 0          = True
-    available command    = let i = coordOfCommand command in availableCoord i player
-    affordableMoves      = switchMovesOponentCanAfford energy' energyGenPerTurn'
+    available 0       = True
+    available command = let i = coordOfCommand command in availableCoord i player
+    energyGenPerTurn' = energyGenPerTurn player
+    affordableMoves   = switchMovesOponentCanAfford energy' energyGenPerTurn'
 
 maxSearchTime :: Int64
 maxSearchTime = 1900000000

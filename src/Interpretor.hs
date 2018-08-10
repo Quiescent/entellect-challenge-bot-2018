@@ -4,8 +4,6 @@
 
 module Interpretor (repl,
                     parseStateString,
-                    incrementFitness,
-                    decrementFitness,
                     Player(..),
                     Missile,
                     BuildingType(..),
@@ -22,13 +20,11 @@ import Data.Aeson (decode,
 import qualified Data.Vector                 as V
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.ByteString.Lazy        as B
-import qualified Data.Vector.Unboxed.Mutable as MVector
 import Control.DeepSeq
 import VectorIndex
 
 import Buildings
 import Coord
-import Magic
 import BitSetMap
 
 type Missile = Coord
@@ -72,9 +68,6 @@ instance FromJSON ScratchBuilding where
 
 data Player = Player { energy                          :: Int,
                        health                          :: Int,
-                       energyGenPerTurn                :: Int,
-                       energyTowersPerRow              :: UV.Vector Int,
-                       attackTowersPerRow              :: UV.Vector Int,
                        energyTowersUnderConstruction   :: BuildingPlacements,
                        energyTowers                    :: BuildingPlacements,
                        attackTowersUnderConstruction   :: BuildingPlacements,
@@ -108,9 +101,6 @@ data Player = Player { energy                          :: Int,
 instance Eq Player where
   (==) (Player energyA
                healthA
-               energyGenPerTurnA
-               energyTowersPerRowA
-               attackTowersPerRowA
                energyTowersUnderConstructionA
                energyTowersA
                attackTowersUnderConstructionA
@@ -141,9 +131,6 @@ instance Eq Player where
                missilesOtherSide3A)
        (Player energyB
                healthB
-               energyGenPerTurnB
-               energyTowersPerRowB
-               attackTowersPerRowB
                energyTowersUnderConstructionB
                energyTowersB
                attackTowersUnderConstructionB
@@ -174,9 +161,6 @@ instance Eq Player where
                missilesOtherSide3B)
     = energyA                          == energyB &&
       healthA                          == healthB &&
-      energyGenPerTurnA                == energyGenPerTurnB &&
-      energyTowersPerRowA              == energyTowersPerRowB &&
-      attackTowersPerRowA              == attackTowersPerRowB &&
       energyTowersUnderConstructionA   == energyTowersUnderConstructionB &&
       energyTowersA                    == energyTowersB &&
       attackTowersUnderConstructionA   == attackTowersUnderConstructionB &&
@@ -209,9 +193,6 @@ instance Eq Player where
 instance NFData Player where
   rnf (Player energy'
               health'
-              energyGenPerTurn'
-              energyTowersPerRow'
-              attackTowersPerRow'
               energyTowersUnderConstruction'
               energyTowers'
               attackTowersUnderConstruction'
@@ -242,9 +223,6 @@ instance NFData Player where
               missilesOtherSide3')
     = energy'                          `seq`
       health'                          `seq`
-      energyGenPerTurn'                `seq`
-      (rnf energyTowersPerRow')        `seq`
-      (rnf attackTowersPerRow')        `seq`
       energyTowersUnderConstruction'   `seq`
       energyTowers'                    `seq`
       attackTowersUnderConstruction'   `seq`
@@ -360,9 +338,6 @@ emptyPlayer :: Player
 emptyPlayer = Player
   0
   0
-  0
-  (UV.fromList (replicate height 0))
-  (UV.fromList (replicate height 0))
   0
   0
   0
@@ -517,8 +492,7 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
                    defense1Towers                  = defense1Towers' }) =
   let building' = chooseBuilding int wctl (toBuildingType bt)
       coord'    = toCoord x' y'
-  in incrementFitness y' building' $
-     case (ctl < 0, ctl, building') of
+  in case (ctl < 0, ctl, building') of
        (True,  _, Attack3)       -> player { attack3Towers  = addBuilding coord' attack3Towers' }
        (True,  _, Attack2)       -> player { attack2Towers  = addBuilding coord' attack2Towers' }
        (True,  _, Attack1)       -> player { attack1Towers  = addBuilding coord' attack1Towers' }
@@ -604,56 +578,6 @@ chooseBuilding _ 0  TESLA = Tesla0
 
 chooseBuilding int ctl' buildingType' =
   error $ "(int, ctl, buildingType) not recognised: " ++ show (int, ctl', buildingType')
-
-incrementVectorAt :: Int -> UV.Vector Int -> UV.Vector Int
-incrementVectorAt i xs =
-  UV.modify increment xs
-  where
-    increment ys = do
-      oldValue <- MVector.read ys i
-      MVector.write ys i (oldValue + 1)
-
-incrementFitness :: Int -> Building -> Player -> Player
-incrementFitness y' building'  player@(Player { energyGenPerTurn   = energyGenPerTurn',
-                                                attackTowersPerRow = attackTowersPerRow',
-                                                energyTowersPerRow = energyTowersPerRow' })
-  | building' == Attack3     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == Attack2     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == Attack1     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == Attack0     = player { attackTowersPerRow = incrementVectorAt y' attackTowersPerRow' }
-  | building' == Defense4    = player
-  | building' == Defense4    = player
-  | building' == Defense2    = player
-  | building' == Defense1    = player
-  | building' == EnergyTower = player { energyGenPerTurn   = energyGenPerTurn' + energyTowerEnergyGeneratedPerTurn,
-                                        energyTowersPerRow = incrementVectorAt y' energyTowersPerRow' }
-  -- TODO: Come up with something reasonable for tesla towers
-  | otherwise                = player
-
-decrementVectorAt :: Int -> UV.Vector Int -> UV.Vector Int
-decrementVectorAt i xs =
-  UV.modify increment xs
-  where
-    increment ys = do
-      oldValue <- MVector.read ys i
-      MVector.write ys i (oldValue - 1)
-
-decrementFitness :: Int -> Building -> Player -> Player
-decrementFitness y' building' player@(Player { energyGenPerTurn   = energyGenPerTurn',
-                                               attackTowersPerRow = attackTowersPerRow',
-                                               energyTowersPerRow = energyTowersPerRow' })
-  | building' == Attack3     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == Attack2     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == Attack1     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == Attack0     = player { attackTowersPerRow = decrementVectorAt y' attackTowersPerRow' }
-  | building' == Defense4    = player
-  | building' == Defense4    = player
-  | building' == Defense2    = player
-  | building' == Defense1    = player
-  | building' == EnergyTower = player { energyGenPerTurn   = energyGenPerTurn' - energyTowerEnergyGeneratedPerTurn,
-                                        energyTowersPerRow = incrementVectorAt y' energyTowersPerRow'}
-  -- TODO: Come up with something reasonable for tesla towers
-  | otherwise                = player
 
 stateFilePath :: String
 stateFilePath = "state.json"

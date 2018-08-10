@@ -21,7 +21,8 @@ module BitSetMap (Missiles,
                   buildingPlacementDifference,
                   missilesAboutToHitPlayer,
                   missilesAboutToTransfer,
-                  countMissiles)
+                  countMissiles,
+                  countBuildings)
   where
 
 import Data.Word
@@ -94,6 +95,9 @@ emptyMissiles :: Missiles
 emptyMissiles = 0
 
 type BuildingPlacements = Word64
+
+countBuildings :: BuildingPlacements -> Int
+countBuildings = count
 
 buildingPlacementsAreEmpty :: BuildingPlacements -> Bool
 buildingPlacementsAreEmpty = notEmpty

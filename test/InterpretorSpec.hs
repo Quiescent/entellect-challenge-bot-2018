@@ -4,11 +4,9 @@ module InterpretorSpec (spec) where
 
 import Interpretor
 import Coord
-import Magic
 import BitSetMap
 
 import qualified Data.ByteString.Lazy as B
-import qualified Data.Vector.Unboxed  as UV
 
 import Test.Hspec
 
@@ -31,10 +29,7 @@ expectedSimpleStateString :: GameState
 expectedSimpleStateString =
   (GameState { gameRound = 11,
                me        = (Player { energy                          = 37,
-                                     energyGenPerTurn                = 0,
                                      health                          = 30,
-                                     energyTowersPerRow              = UV.fromList (replicate height 0),
-                                     attackTowersPerRow              = UV.fromList (replicate height 0),
                                      energyTowersUnderConstruction   = 0,
                                      energyTowers                    = 0,
                                      attackTowersUnderConstruction   = 0,
@@ -64,10 +59,7 @@ expectedSimpleStateString =
                                      missilesOtherSide2              = 0,
                                      missilesOtherSide3              = 0 }),
                oponent   = (Player { energy                          = 53,
-                                     energyGenPerTurn                = 0,
                                      health                          = 100,
-                                     energyTowersPerRow              = UV.fromList (replicate height 0),
-                                     attackTowersPerRow              = UV.fromList (replicate height 0),
                                      energyTowersUnderConstruction   = 0,
                                      energyTowers                    = 0,
                                      attackTowersUnderConstruction   = 0,
@@ -105,9 +97,6 @@ expectedWithFinishedTowersStateString =
   (GameState { gameRound = 11,
                me        = (Player { energy             = 37,
                                      health             = 30,
-                                     energyGenPerTurn   = 6,
-                                     energyTowersPerRow = UV.fromList [0, 0, 0, 2, 0, 0, 0, 0],
-                                     attackTowersPerRow = UV.fromList (replicate height 0),
                                      energyTowersUnderConstruction = 0,
                                      energyTowers = addBuilding (toCoord 0 3)
                                                     (addBuilding (toCoord 5 3) 0),
@@ -142,9 +131,6 @@ expectedWithFinishedTowersStateString =
                                      missilesOtherSide3 = 0 }),
                oponent   = (Player { energy             = 53,
                                      health             = 100,
-                                     energyGenPerTurn   = 21,
-                                     energyTowersPerRow = UV.fromList [1, 1, 1, 1, 1, 1, 1, 0],
-                                     attackTowersPerRow = UV.fromList [0, 1, 1, 0, 1, 6, 1, 0],
                                      energyTowersUnderConstruction = 0,
                                      energyTowers = addBuilding (toCoord 15 0)
                                                     (addBuilding (toCoord 15 1)
@@ -197,9 +183,6 @@ expectedWithFinishedAndUnfinishedTowersStateString =
   (GameState { gameRound = 11,
                me        = (Player { energy                          = 37,
                                      health                          = 30,
-                                     energyGenPerTurn                = 6,
-                                     energyTowersPerRow              = UV.fromList [0, 0, 0, 2, 0, 0, 0, 0],
-                                     attackTowersPerRow              = UV.fromList (replicate height 0),
                                      energyTowersUnderConstruction   = 0,
                                      energyTowers                    = addBuilding (toCoord 0 3)
                                                                        (addBuilding (toCoord 5 3) 0),
@@ -234,9 +217,6 @@ expectedWithFinishedAndUnfinishedTowersStateString =
                                      missilesOtherSide3              = 0 }),
                oponent   = (Player { energy             = 53,
                                      health             = 100,
-                                     energyGenPerTurn   = 21,
-                                     energyTowersPerRow = UV.fromList [1, 1, 1, 1, 1, 1, 1, 0],
-                                     attackTowersPerRow = UV.fromList [0, 1, 1, 0, 1, 6, 2, 0],
                                      energyTowersUnderConstruction = 0,
                                      energyTowers = addBuilding (toCoord 15 0)
                                                     (addBuilding (toCoord 15 1)
@@ -289,9 +269,6 @@ expectedWithFinishedAndUnfinishedTowersStateStringAndMissiles =
   (GameState { gameRound = 11,
                me        = (Player { energy             = 37,
                                      health             = 30,
-                                     energyGenPerTurn   = 6,
-                                     energyTowersPerRow = UV.fromList [0, 0, 0, 2, 0, 0, 0, 0],
-                                     attackTowersPerRow = UV.fromList (replicate height 0),
                                      energyTowersUnderConstruction   = 0,
                                      energyTowers                    = addBuilding (toCoord 0 3)
                                                                        (addBuilding (toCoord 5 3) 0),
@@ -331,9 +308,6 @@ expectedWithFinishedAndUnfinishedTowersStateStringAndMissiles =
                                      missilesOtherSide3              = 0 }),
                oponent   = (Player { energy             = 53,
                                      health             = 100,
-                                     energyGenPerTurn   = 21,
-                                     energyTowersPerRow = UV.fromList [1, 1, 1, 1, 1, 1, 1, 0],
-                                     attackTowersPerRow = UV.fromList [0, 1, 1, 0, 1, 6, 2, 0],
                                      energyTowersUnderConstruction = 0,
                                      energyTowers = addBuilding (toCoord 15 0)
                                                     (addBuilding (toCoord 15 1)
