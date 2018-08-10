@@ -107,7 +107,7 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                    -- teslaTower0CooldownTime     = teslaTower0CooldownTime',
                    -- teslaTower1CooldownTime     = teslaTower1CooldownTime'
                  }) =
-      -- First round of missiles
+  -- First round of missiles
   let allPlacements = addAllBuildings energyTowers'
                                       (addAllBuildings attack3Towers'
                                        (addAllBuildings attack2Towers'
@@ -186,16 +186,16 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower02    = removeAllBuildings collided2 teslaTower01
       teslaTower12    = removeAllBuildings collided2 teslaTower11
       -- Fourth round of missiles
-      allPlacements3  = addAllBuildings energyTowers3
-                                        (addAllBuildings attack3Towers3
-                                         (addAllBuildings attack2Towers3
-                                          (addAllBuildings attack2Towers3
-                                           (addAllBuildings attack0Towers3
-                                            (addAllBuildings defense4Towers3
-                                             (addAllBuildings defense3Towers3
-                                              (addAllBuildings defense2Towers3
-                                               (addAllBuildings defense2Towers3
-                                                (addAllBuildings teslaTower03
+      allPlacements3  = addAllBuildings energyTowers2
+                                        (addAllBuildings attack3Towers2
+                                         (addAllBuildings attack2Towers2
+                                          (addAllBuildings attack2Towers2
+                                           (addAllBuildings attack0Towers2
+                                            (addAllBuildings defense4Towers2
+                                             (addAllBuildings defense3Towers2
+                                              (addAllBuildings defense2Towers2
+                                               (addAllBuildings defense2Towers2
+                                                (addAllBuildings teslaTower02
                                                  teslaTower12)))))))))
       collided3       = missilesWhichCollided missilesOtherSide3' allPlacements3
       missiles3After  = removeAllMissiles  collided3 missilesOtherSide3'
@@ -256,10 +256,10 @@ moveCheckingBoundaries
                          missilesOtherSide2 = missilesOtherSide2',
                          missilesOtherSide3 = missilesOtherSide3'})
   playerToHit@(Player { health = health' }) =
-  let missilesAboutToTransfer0  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles0'
-      missilesAboutToTransfer1  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles1'
-      missilesAboutToTransfer2  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles2'
-      missilesAboutToTransfer3  = moveToMidPoint $ onlyOverlappingMissiles missilesAboutToTransfer missiles3'
+  let missilesAboutToTransfer0  = onlyOverlappingMissiles missilesAboutToTransfer missiles0'
+      missilesAboutToTransfer1  = onlyOverlappingMissiles missilesAboutToTransfer missiles1'
+      missilesAboutToTransfer2  = onlyOverlappingMissiles missilesAboutToTransfer missiles2'
+      missilesAboutToTransfer3  = onlyOverlappingMissiles missilesAboutToTransfer missiles3'
       missilesAboutToHitPlayer0 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide0'
       missilesAboutToHitPlayer1 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide1'
       missilesAboutToHitPlayer2 = onlyOverlappingMissiles missilesAboutToHitPlayer missilesOtherSide2'
@@ -272,10 +272,10 @@ moveCheckingBoundaries
       missilesOtherSide1''      = addAllMissiles missilesAboutToTransfer1 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer1 missilesOtherSide1'
       missilesOtherSide2''      = addAllMissiles missilesAboutToTransfer2 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer2 missilesOtherSide2'
       missilesOtherSide3''      = addAllMissiles missilesAboutToTransfer3 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer3 missilesOtherSide3'
-      missiles0''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer0 missiles0'
-      missiles1''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer1 missiles1'
-      missiles2''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer2 missiles2'
-      missiles3''               = moveMissilesLeft $ removeAllMissiles missilesAboutToTransfer3 missiles3'
+      missiles0''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer0 missiles0'
+      missiles1''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer1 missiles1'
+      missiles2''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer2 missiles2'
+      missiles3''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer3 missiles3'
   in (playerToMove { missiles0          = missiles0'',
                      missiles1          = missiles1'',
                      missiles2          = missiles2'',
