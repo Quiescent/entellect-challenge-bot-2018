@@ -20,7 +20,6 @@ module BitSetMap (Missiles,
                   removeAllMissiles,
                   buildingPlacementDifference,
                   missilesAboutToHitPlayer,
-                  moveToMidPoint,
                   missilesAboutToTransfer,
                   countMissiles)
   where
@@ -60,22 +59,18 @@ countMissiles :: Missiles -> Int
 countMissiles = count
 
 missilesAboutToTransfer :: Missiles
-missilesAboutToTransfer = 72340172838076673
+missilesAboutToTransfer = 9259542123273814144
 -- 0000000100000001000000010000000100000001000000010000000100000001
 
 missilesAboutToHitPlayer :: Missiles
-missilesAboutToHitPlayer = 9259542123273814144
+missilesAboutToHitPlayer = 72340172838076673
 -- 1000000010000000100000001000000010000000100000001000000010000000
-
-moveToMidPoint :: Missiles -> Missiles
-moveToMidPoint = (flip shiftL) (halfWay - 1)
 
 onlyOverlappingMissiles :: Missiles -> Missiles -> Missiles
 onlyOverlappingMissiles = (.&.)
 
 missilesWhichCollided :: Missiles -> BuildingPlacements -> Missiles
-missilesWhichCollided missiles buildingPlacements =
-  missiles .&. buildingPlacements
+missilesWhichCollided = (.&.)
 
 removeAllMissiles :: Missiles -> Missiles -> Missiles
 removeAllMissiles = removeAll
