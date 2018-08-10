@@ -59,11 +59,11 @@ countMissiles :: Missiles -> Int
 countMissiles = count
 
 missilesAboutToTransfer :: Missiles
-missilesAboutToTransfer = 9259542123273814144
+missilesAboutToTransfer = 72340172838076673
 -- 0000000100000001000000010000000100000001000000010000000100000001
 
 missilesAboutToHitPlayer :: Missiles
-missilesAboutToHitPlayer = 72340172838076673
+missilesAboutToHitPlayer = 9259542123273814144
 -- 1000000010000000100000001000000010000000100000001000000010000000
 
 onlyOverlappingMissiles :: Missiles -> Missiles -> Missiles

@@ -390,6 +390,10 @@ collideSpec = do
       (anEmptyPlayer, aPlayerWithAMissileOnTheOtherSideAtTwoTwo {
           energyTowers = addBuilding (toCoord 3 4) 0 })
 
+aPlayerWithAMissileOnSevenTwo :: Player
+aPlayerWithAMissileOnSevenTwo =
+  anEmptyPlayer { missiles0 = addMissile (toCoord 7 2) 0 }
+
 moveCheckingBoundariesSpec :: Spec
 moveCheckingBoundariesSpec = do
   describe "moveCheckingBoundaries" $ do
@@ -401,6 +405,12 @@ moveCheckingBoundariesSpec = do
       moveCheckingBoundaries aPlayerWithAMissileOnTwoTwo anEmptyPlayer
       `shouldBe`
       (aPlayerWithAMissileOnTwoTwo { missiles0 = addMissile (toCoord 3 2) 0 }, anEmptyPlayer)
+    it "should transfer a missile to the other side" $
+      moveCheckingBoundaries aPlayerWithAMissileOnSevenTwo anEmptyPlayer
+      `shouldBe`
+      (aPlayerWithAMissileOnSevenTwo { missiles0          = 0,
+                                       missilesOtherSide0 = addMissile (toCoord 7 2) 0 },
+       anEmptyPlayer)
 
 updateMoveSpec :: Spec
 updateMoveSpec = do
