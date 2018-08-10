@@ -38,7 +38,7 @@ runCommand player (Build coord' buildingType') =
 -- repeated twice and then the missiles are finally collided again.
 collideAndMoveMissiles :: GameState -> GameState
 collideAndMoveMissiles 
-  state@(GameState { me = me',
+  state@(GameState { me      = me',
                      oponent = oponent'}) =
   let (me1, oponent1)   = collide me' oponent'
       (oponent2, me2)   = collide oponent1 me1
