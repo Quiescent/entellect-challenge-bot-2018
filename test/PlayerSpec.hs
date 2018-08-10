@@ -14,17 +14,19 @@ import Test.Hspec
 
 spec :: Spec
 spec =
-  updateEnergySpec                  >>
-  myPlayerSpec                      >>
-  oponentsPlayerSpec                >>
-  myEnergySpec                      >>
-  oponentsEnergySpec                >>
-  myHealthSpec                      >>
-  oponentsHealthSpec                >>
-  takeDamageSpec                    >>
-  buildingFromStatsSpec             >>
-  updateMoveSpec                    >>
-  deconstructAtSpec
+  updateEnergySpec           >>
+  myPlayerSpec               >>
+  oponentsPlayerSpec         >>
+  myEnergySpec               >>
+  oponentsEnergySpec         >>
+  myHealthSpec               >>
+  oponentsHealthSpec         >>
+  takeDamageSpec             >>
+  buildingFromStatsSpec      >>
+  updateMoveSpec             >>
+  deconstructAtSpec          >>
+  collideSpec                >>
+  moveCheckingBoundariesSpec
 
 aPlayer :: Player
 aPlayer = (Player { energy                          = 0,
@@ -226,6 +228,21 @@ deconstructAtSpec = do
       `shouldBe`
       (aPlayerWithNonZeroEnergy { defense1Towers = addMissile (toCoord 0 4) 0 })
 
+collideSpec :: Spec
+collideSpec = do
+  describe "collide" $ do
+    it "should be implemented" $
+      True
+      `shouldBe`
+      True
+
+moveCheckingBoundariesSpec :: Spec
+moveCheckingBoundariesSpec = do
+  describe "moveCheckingBoundaries" $ do
+    it "should be implemented" $
+      True
+      `shouldBe`
+      True
 
 updateMoveSpec :: Spec
 updateMoveSpec = do
