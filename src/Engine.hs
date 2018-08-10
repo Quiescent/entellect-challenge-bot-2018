@@ -9,7 +9,11 @@ import GameState
 import Magic
 
 tickEngine :: GameState -> GameState
-tickEngine = gainEnergy . collideMissiles . tickBuildings
+tickEngine = incrementRound . gainEnergy . collideMissiles . tickBuildings
+
+incrementRound :: GameState -> GameState
+incrementRound gameState@(GameState { gameRound = gameRound' }) =
+  gameState { gameRound = gameRound' + 1 }
 
 gainEnergy :: GameState -> GameState
 gainEnergy = mapMyPlayer (incrementEnergy) . mapOponentsPlayer (incrementEnergy)
@@ -17,6 +21,5 @@ gainEnergy = mapMyPlayer (incrementEnergy) . mapOponentsPlayer (incrementEnergy)
 incrementEnergy :: Player -> Player
 incrementEnergy player' = updateEnergy (energyPerTurn + (energyGenPerTurn player')) player'
 
--- TODO: Implement moving and coliding the missiles
 collideMissiles :: GameState -> GameState
-collideMissiles = id
+collideMissiles = collideAndMoveMissiles
