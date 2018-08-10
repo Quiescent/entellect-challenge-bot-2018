@@ -228,13 +228,124 @@ deconstructAtSpec = do
       `shouldBe`
       (aPlayerWithNonZeroEnergy { defense1Towers = addMissile (toCoord 0 4) 0 })
 
+aPlayerWithAnEnergyTowerAtTwoTwo :: Player
+aPlayerWithAnEnergyTowerAtTwoTwo =
+  Player { energy                          = 0,
+           health                          = 0,
+           energyGenPerTurn                = 0,
+           energyTowersPerRow              = UV.empty,
+           attackTowersPerRow              = UV.empty,
+           energyTowersUnderConstruction   = 0,
+           energyTowers                    = addBuilding (toCoord 2 2) 0,
+           attackTowersUnderConstruction   = 0,
+           attack3Towers                   = 0,
+           attack2Towers                   = 0,
+           attack1Towers                   = 0,
+           attack0Towers                   = 0,
+           defenseTowersUnderConstruction2 = 0,
+           defenseTowersUnderConstruction1 = 0,
+           defenseTowersUnderConstruction0 = 0,
+           defense4Towers                  = 0,
+           defense3Towers                  = 0,
+           defense2Towers                  = 0,
+           defense1Towers                  = 0,
+           teslaTower0                     = 0,
+           teslaTower1                     = 0,
+           teslaTower0ConstructionTime     = 0,
+           teslaTower1ConstructionTime     = 0,
+           teslaTower0CooldownTime         = 0,
+           teslaTower1CooldownTime         = 0,
+           missiles0                       = 0,
+           missiles1                       = 0,
+           missiles2                       = 0,
+           missiles3                       = 0,
+           missilesOtherSide0              = 0,
+           missilesOtherSide1              = 0,
+           missilesOtherSide2              = 0,
+           missilesOtherSide3              = 0 }
+
+aPlayerWithAMissileOnTheOtherSideAtTwoTwo :: Player
+aPlayerWithAMissileOnTheOtherSideAtTwoTwo =
+  Player { energy                          = 0,
+           health                          = 0,
+           energyGenPerTurn                = 0,
+           energyTowersPerRow              = UV.empty,
+           attackTowersPerRow              = UV.empty,
+           energyTowersUnderConstruction   = 0,
+           energyTowers                    = 0,
+           attackTowersUnderConstruction   = 0,
+           attack3Towers                   = 0,
+           attack2Towers                   = 0,
+           attack1Towers                   = 0,
+           attack0Towers                   = 0,
+           defenseTowersUnderConstruction2 = 0,
+           defenseTowersUnderConstruction1 = 0,
+           defenseTowersUnderConstruction0 = 0,
+           defense4Towers                  = 0,
+           defense3Towers                  = 0,
+           defense2Towers                  = 0,
+           defense1Towers                  = 0,
+           teslaTower0                     = 0,
+           teslaTower1                     = 0,
+           teslaTower0ConstructionTime     = 0,
+           teslaTower1ConstructionTime     = 0,
+           teslaTower0CooldownTime         = 0,
+           teslaTower1CooldownTime         = 0,
+           missiles0                       = 0,
+           missiles1                       = 0,
+           missiles2                       = 0,
+           missiles3                       = 0,
+           missilesOtherSide0              = addMissile (toCoord 2 2) 0,
+           missilesOtherSide1              = 0,
+           missilesOtherSide2              = 0,
+           missilesOtherSide3              = 0 }
+
+anEmptyPlayer :: Player
+anEmptyPlayer = Player { energy                          = 0,
+                         health                          = 0,
+                         energyGenPerTurn                = 0,
+                         energyTowersPerRow              = UV.empty,
+                         attackTowersPerRow              = UV.empty,
+                         energyTowersUnderConstruction   = 0,
+                         energyTowers                    = 0,
+                         attackTowersUnderConstruction   = 0,
+                         attack3Towers                   = 0,
+                         attack2Towers                   = 0,
+                         attack1Towers                   = 0,
+                         attack0Towers                   = 0,
+                         defenseTowersUnderConstruction2 = 0,
+                         defenseTowersUnderConstruction1 = 0,
+                         defenseTowersUnderConstruction0 = 0,
+                         defense4Towers                  = 0,
+                         defense3Towers                  = 0,
+                         defense2Towers                  = 0,
+                         defense1Towers                  = 0,
+                         teslaTower0                     = 0,
+                         teslaTower1                     = 0,
+                         teslaTower0ConstructionTime     = 0,
+                         teslaTower1ConstructionTime     = 0,
+                         teslaTower0CooldownTime         = 0,
+                         teslaTower1CooldownTime         = 0,
+                         missiles0                       = 0,
+                         missiles1                       = 0,
+                         missiles2                       = 0,
+                         missiles3                       = 0,
+                         missilesOtherSide0              = 0,
+                         missilesOtherSide1              = 0,
+                         missilesOtherSide2              = 0,
+                         missilesOtherSide3              = 0 }
+
 collideSpec :: Spec
 collideSpec = do
   describe "collide" $ do
     it "should be implemented" $
-      True
+      collide aPlayerWithAMissileOnTheOtherSideAtTwoTwo aPlayerWithAnEnergyTowerAtTwoTwo
       `shouldBe`
-      True
+      (anEmptyPlayer, anEmptyPlayer)
+    it "shouldn't do anything when the missiles don't line up" $
+      collide aPlayerWithAMissileOnTheOtherSideAtTwoTwo anEmptyPlayer
+      `shouldBe`
+      (aPlayerWithAMissileOnTheOtherSideAtTwoTwo, anEmptyPlayer)
 
 moveCheckingBoundariesSpec :: Spec
 moveCheckingBoundariesSpec = do
