@@ -338,7 +338,7 @@ anEmptyPlayer = Player { energy                          = 0,
 collideSpec :: Spec
 collideSpec = do
   describe "collide" $ do
-    it "should be implemented" $
+    it "should remove an energy tower" $
       collide aPlayerWithAMissileOnTheOtherSideAtTwoTwo aPlayerWithAnEnergyTowerAtTwoTwo
       `shouldBe`
       (anEmptyPlayer, anEmptyPlayer)
@@ -346,6 +346,13 @@ collideSpec = do
       collide aPlayerWithAMissileOnTheOtherSideAtTwoTwo anEmptyPlayer
       `shouldBe`
       (aPlayerWithAMissileOnTheOtherSideAtTwoTwo, anEmptyPlayer)
+    it "shouldn't remove an energy tower which no missiles collided with" $
+      collide aPlayerWithAMissileOnTheOtherSideAtTwoTwo
+              (aPlayerWithAMissileOnTheOtherSideAtTwoTwo
+                 { energyTowers = addBuilding (toCoord 2 2) (addBuilding (toCoord 3 4) 0) })
+      `shouldBe`
+      (anEmptyPlayer, aPlayerWithAMissileOnTheOtherSideAtTwoTwo {
+          energyTowers = addBuilding (toCoord 3 4) 0 })
 
 moveCheckingBoundariesSpec :: Spec
 moveCheckingBoundariesSpec = do
