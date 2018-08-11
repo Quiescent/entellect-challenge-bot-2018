@@ -62,7 +62,7 @@ energyTowerConstructionTime :: Int
 energyTowerConstructionTime = 1
 
 teslaTowerCost :: Int
-teslaTowerCost = 300
+teslaTowerCost = 100
 
 teslaTowerHealth :: Int
 teslaTowerHealth = 5
