@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 BASE_DIRECTORY=$1
 GAMES=$(ls $1)
 
