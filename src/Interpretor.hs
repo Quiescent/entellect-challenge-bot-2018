@@ -560,7 +560,7 @@ chooseBuilding _ 1 ATTACK = Attack1
 chooseBuilding _ 0 ATTACK = Attack0
 
 chooseBuilding 20 _ DEFENSE = Defense4
-chooseBuilding 15 _ DEFENSE = Defense4
+chooseBuilding 15 _ DEFENSE = Defense3
 chooseBuilding 10 _ DEFENSE = Defense2
 chooseBuilding 5  _ DEFENSE = Defense1
 
