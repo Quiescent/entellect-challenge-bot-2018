@@ -13,7 +13,6 @@ module BitSetMap (Missiles,
                   removeBuilding,
                   moveMissilesLeft,
                   moveMissilesRight,
-                  interSectionIndices,
                   onlyOverlappingMissiles,
                   removeAllBuildings,
                   missilesWhichCollided,
@@ -22,7 +21,16 @@ module BitSetMap (Missiles,
                   missilesAboutToHitPlayer,
                   missilesAboutToTransfer,
                   countMissiles,
-                  countBuildings)
+                  countBuildings,
+                  onlyOverlappingBuildings,
+                  row0,
+                  row1,
+                  row2,
+                  row3,
+                  row4,
+                  row5,
+                  row6,
+                  row7)
   where
 
 import Data.Word
@@ -123,19 +131,34 @@ addAllBuildings = addAll
 buildingPlacementDifference :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
 buildingPlacementDifference = difference
 
+onlyOverlappingBuildings :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
+onlyOverlappingBuildings = (.&.)
+
 emptyBuildings :: BuildingPlacements
 emptyBuildings = 0
 
-interSectionIndices :: Missiles -> BuildingPlacements -> [Int]
-interSectionIndices missiles buildingPlacements =
-  go 0
-  where
-    intersection = missiles .&. buildingPlacements
-    go i
-      | i == placementWidth = []
-      | otherwise =
-        let i'   = i + 1
-            rest = (go (i' `seq` i'))
-        in if isSetAt i intersection
-           then i:rest
-           else rest
+-- Rows:
+
+row0 :: Word64
+row0 = 255
+
+row1 :: Word64
+row1 = row0 `shiftL` halfWay
+
+row2 :: Word64
+row2 = row0 `shiftL` (halfWay * 2)
+
+row3 :: Word64
+row3 = row0 `shiftL` (halfWay * 3)
+
+row4 :: Word64
+row4 = row0 `shiftL` (halfWay * 4)
+
+row5 :: Word64
+row5 = row0 `shiftL` (halfWay * 5)
+
+row6 :: Word64
+row6 = row0 `shiftL` (halfWay * 6)
+
+row7 :: Word64
+row7 = row0 `shiftL` (halfWay * 7)
