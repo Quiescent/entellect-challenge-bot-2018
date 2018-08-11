@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Interpretor (repl,
                     parseStateString,
@@ -67,36 +68,36 @@ instance FromJSON ScratchBuilding where
                     <*> v .: "buildingType"
                     <*> v .: "playerType"
 
-data Player = Player { energy                          :: Int,
-                       health                          :: Int,
-                       energyTowersUnderConstruction   :: BuildingPlacements,
-                       energyTowers                    :: BuildingPlacements,
-                       attackTowersUnderConstruction   :: BuildingPlacements,
-                       attack3Towers                   :: BuildingPlacements,
-                       attack2Towers                   :: BuildingPlacements,
-                       attack1Towers                   :: BuildingPlacements,
-                       attack0Towers                   :: BuildingPlacements,
-                       defenseTowersUnderConstruction2 :: BuildingPlacements,
-                       defenseTowersUnderConstruction1 :: BuildingPlacements,
-                       defenseTowersUnderConstruction0 :: BuildingPlacements,
-                       defense4Towers                  :: BuildingPlacements,
-                       defense3Towers                  :: BuildingPlacements,
-                       defense2Towers                  :: BuildingPlacements,
-                       defense1Towers                  :: BuildingPlacements,
-                       teslaTower0                     :: BuildingPlacements,
-                       teslaTower1                     :: BuildingPlacements,
-                       teslaTower0ConstructionTime     :: Int,
-                       teslaTower1ConstructionTime     :: Int,
-                       teslaTower0CooldownTime         :: Int,
-                       teslaTower1CooldownTime         :: Int,
-                       missiles0                       :: Missiles,
-                       missiles1                       :: Missiles,
-                       missiles2                       :: Missiles,
-                       missiles3                       :: Missiles,
-                       missilesOtherSide0              :: Missiles,
-                       missilesOtherSide1              :: Missiles,
-                       missilesOtherSide2              :: Missiles,
-                       missilesOtherSide3              :: Missiles }
+data Player = Player { energy                          :: !Int,
+                       health                          :: !Int,
+                       energyTowersUnderConstruction   :: !BuildingPlacements,
+                       energyTowers                    :: !BuildingPlacements,
+                       attackTowersUnderConstruction   :: !BuildingPlacements,
+                       attack3Towers                   :: !BuildingPlacements,
+                       attack2Towers                   :: !BuildingPlacements,
+                       attack1Towers                   :: !BuildingPlacements,
+                       attack0Towers                   :: !BuildingPlacements,
+                       defenseTowersUnderConstruction2 :: !BuildingPlacements,
+                       defenseTowersUnderConstruction1 :: !BuildingPlacements,
+                       defenseTowersUnderConstruction0 :: !BuildingPlacements,
+                       defense4Towers                  :: !BuildingPlacements,
+                       defense3Towers                  :: !BuildingPlacements,
+                       defense2Towers                  :: !BuildingPlacements,
+                       defense1Towers                  :: !BuildingPlacements,
+                       teslaTower0                     :: !BuildingPlacements,
+                       teslaTower1                     :: !BuildingPlacements,
+                       teslaTower0ConstructionTime     :: !Int,
+                       teslaTower1ConstructionTime     :: !Int,
+                       teslaTower0CooldownTime         :: !Int,
+                       teslaTower1CooldownTime         :: !Int,
+                       missiles0                       :: !Missiles,
+                       missiles1                       :: !Missiles,
+                       missiles2                       :: !Missiles,
+                       missiles3                       :: !Missiles,
+                       missilesOtherSide0              :: !Missiles,
+                       missilesOtherSide1              :: !Missiles,
+                       missilesOtherSide2              :: !Missiles,
+                       missilesOtherSide3              :: !Missiles }
               deriving (Show)
 
 instance Eq Player where
