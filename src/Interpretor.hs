@@ -20,6 +20,7 @@ import Data.Aeson (decode,
 import qualified Data.Vector                 as V
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.ByteString.Lazy        as B
+import Data.Bits
 import Control.DeepSeq
 import VectorIndex
 
@@ -181,14 +182,10 @@ instance Eq Player where
       teslaTower1ConstructionTimeA     == teslaTower1ConstructionTimeB &&
       teslaTower0CooldownTimeA         == teslaTower0CooldownTimeB &&
       teslaTower1CooldownTimeA         == teslaTower1CooldownTimeB &&
-      missiles0A                       == missiles0B &&
-      missiles1A                       == missiles1B &&
-      missiles2A                       == missiles2B &&
-      missiles3A                       == missiles3B &&
-      missilesOtherSide0B              == missilesOtherSide0A &&
-      missilesOtherSide1B              == missilesOtherSide1A &&
-      missilesOtherSide2B              == missilesOtherSide2A &&
-      missilesOtherSide3B              == missilesOtherSide3A
+      missiles0A `xor` missiles1A `xor` missiles2A `xor` missiles3A ==
+      missiles0B `xor` missiles1B `xor` missiles2B `xor` missiles3B &&
+      missilesOtherSide0B `xor` missilesOtherSide1B `xor` missilesOtherSide2B `xor` missilesOtherSide3B ==
+      missilesOtherSide0A `xor` missilesOtherSide1A `xor` missilesOtherSide2A `xor` missilesOtherSide3A
 
 instance NFData Player where
   rnf (Player energy'
