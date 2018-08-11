@@ -47,35 +47,20 @@ xPredicate p coord =
 
 type Cells = UV.Vector Coord
 
-myCells :: Cells
-myCells = allCells
+cells :: Cells
+cells = allCells
 
 -- myFrontCells :: Cells
 -- myFrontCells = UV.filter (xPredicate (== 7)) myCells
 
-myForwardCells :: Cells
-myForwardCells = UV.filter (xPredicate (>= 6)) myCells
+forwardCells :: Cells
+forwardCells = UV.filter (xPredicate (>= 6)) cells
 
 -- myMidToFrontCells :: Cells
 -- myMidToFrontCells = UV.filter (xPredicate (>= 2)) myCells
 
--- myBackCells :: Cells
--- myBackCells = UV.filter (xPredicate (<= 1)) myCells
-
-oponentsCells :: Cells
-oponentsCells = allCells
-
--- oponentsFrontCells :: Cells
--- oponentsFrontCells = UV.filter (xPredicate (== 8)) oponentsCells
-
-oponentsForwardCells :: Cells
-oponentsForwardCells = UV.filter (xPredicate (<= 9)) $ oponentsCells
-
--- oponentsMidToFrontCells :: Cells
--- oponentsMidToFrontCells = UV.filter (xPredicate (<= 13)) oponentsCells
-
--- oponentsBackCells :: Cells
--- oponentsBackCells = UV.filter (xPredicate (>= 14)) oponentsCells
+backCells :: Cells
+backCells = UV.filter (xPredicate (== 0)) cells
 
 type Moves = UV.Vector EfficientCommand
 
@@ -86,35 +71,20 @@ allMovesOfType :: BuildingType -> Cells -> Moves
 allMovesOfType buildingType' cells' =
   UV.map ((flip build) (buildingTypeToInt buildingType')) cells'
 
--- allMyBackEnergyTowerMoves :: Moves
--- allMyBackEnergyTowerMoves = allMovesOfType ENERGY myBackCells
+allBackEnergyTowerMoves :: Moves
+allBackEnergyTowerMoves = allMovesOfType ENERGY backCells
 
-allMyEnergyTowerMoves :: Moves
-allMyEnergyTowerMoves = allMovesOfType ENERGY myCells
+allEnergyTowerMoves :: Moves
+allEnergyTowerMoves = allMovesOfType ENERGY cells
 
-allMyDefenseTowerMoves :: Moves
-allMyDefenseTowerMoves = allMovesOfType DEFENSE myCells
+allDefenseTowerMoves :: Moves
+allDefenseTowerMoves = allMovesOfType DEFENSE cells
 
-allMyAttackTowerMoves :: Moves
-allMyAttackTowerMoves = allMovesOfType ATTACK myCells
+allAttackTowerMoves :: Moves
+allAttackTowerMoves = allMovesOfType ATTACK cells
 
-allMyFrontTeslaTowerMoves ::  Moves
-allMyFrontTeslaTowerMoves = allMovesOfType TESLA myForwardCells
-
--- allOponentsBackEnergyTowerMoves :: Moves
--- allOponentsBackEnergyTowerMoves = allMovesOfType ENERGY oponentsBackCells
-
-allOponentsEnergyTowerMoves :: Moves
-allOponentsEnergyTowerMoves = allMovesOfType ENERGY oponentsCells
-
-allOponentsDefenseTowerMoves :: Moves
-allOponentsDefenseTowerMoves = allMovesOfType DEFENSE oponentsCells
-
-allOponentsAttackTowerMoves :: Moves
-allOponentsAttackTowerMoves = allMovesOfType ATTACK oponentsCells
-
-allOponentsFrontTeslaTowerMoves ::  Moves
-allOponentsFrontTeslaTowerMoves = allMovesOfType TESLA oponentsForwardCells
+allFrontTeslaTowerMoves ::  Moves
+allFrontTeslaTowerMoves = allMovesOfType TESLA forwardCells
 
 switchAffordableMoves :: Moves -> Moves -> Moves -> Moves -> Int -> Int -> Moves
 switchAffordableMoves energyTowerMoves
@@ -138,14 +108,19 @@ switchAffordableMoves energyTowerMoves
 -- NOTE: Assumes that attack towers cost the same as defense towers
 switchMovesICanAfford :: Int -> Int -> Moves
 switchMovesICanAfford =
-  switchAffordableMoves allMyEnergyTowerMoves
-                        allMyDefenseTowerMoves
-                        allMyAttackTowerMoves
-                        allMyFrontTeslaTowerMoves
+  switchAffordableMoves allEnergyTowerMoves
+                        allDefenseTowerMoves
+                        allAttackTowerMoves
+                        allFrontTeslaTowerMoves
 
 myAvailableMoves :: GameState -> Moves
-myAvailableMoves (GameState { me = player@(Player { energy = energy' }) }) = do
-  UV.filter available affordableMoves
+myAvailableMoves (GameState { gameRound = gameRound',
+                              me        = player@(Player { energy = energy' }) }) =
+  if gameRound' < 12 -- TODO: Magic!
+  then if energy' >= energyTowerCost
+       then UV.filter available allBackEnergyTowerMoves
+       else UV.singleton nothingCommand
+  else UV.filter available affordableMoves
   where
     available 0       = True
     available command = let i = coordOfCommand command in availableCoord i player
@@ -154,14 +129,19 @@ myAvailableMoves (GameState { me = player@(Player { energy = energy' }) }) = do
 
 switchMovesOponentCanAfford :: Int -> Int -> Moves
 switchMovesOponentCanAfford =
-  switchAffordableMoves allOponentsEnergyTowerMoves
-                        allOponentsDefenseTowerMoves
-                        allOponentsAttackTowerMoves
-                        allOponentsFrontTeslaTowerMoves
+  switchAffordableMoves allEnergyTowerMoves
+                        allDefenseTowerMoves
+                        allAttackTowerMoves
+                        allFrontTeslaTowerMoves
 
 oponentsAvailableMoves :: GameState -> Moves
-oponentsAvailableMoves (GameState { oponent = player@(Player { energy = energy' }) }) =
-  UV.filter available affordableMoves
+oponentsAvailableMoves (GameState { gameRound = gameRound',
+                                    oponent   = player@(Player { energy = energy' }) }) =
+  if gameRound' < 12 -- TODO: Magic!
+  then if energy' >= energyTowerCost
+       then UV.filter available allBackEnergyTowerMoves
+       else UV.singleton nothingCommand
+  else UV.filter available affordableMoves
   where
     available 0       = True
     available command = let i = coordOfCommand command in availableCoord i player
