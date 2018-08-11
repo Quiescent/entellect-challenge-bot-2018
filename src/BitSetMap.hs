@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module BitSetMap (Missiles,
                   BuildingPlacements,
                   buildingPlacementsAreEmpty,
@@ -39,28 +41,31 @@ import Data.Bits
 import Coord
 
 notEmpty :: Word64 -> Bool
-notEmpty = (== 0)
+notEmpty !x = x == 0
 
 isSetAt :: Coord -> Word64 -> Bool
-isSetAt = flip testBit
+isSetAt !coord !word = testBit word coord
 
 setAt :: Coord -> Word64 -> Word64
-setAt = flip setBit
+setAt !coord !word = setBit word coord
 
 unSetAt :: Coord -> Word64 -> Word64
-unSetAt = flip clearBit
+unSetAt !coord !word = clearBit word coord
 
 addAll :: Word64 -> Word64 -> Word64
-addAll = (.|.)
+addAll !x !y = x .|. y
 
 removeAll :: Word64 -> Word64 -> Word64
-removeAll xs ys = (complement xs) .&. ys
+removeAll !xs !ys = (complement xs) .&. ys
 
 difference :: Word64 -> Word64 -> Word64
-difference = xor
+difference !x !y = x `xor` y
 
 count :: Word64 -> Int
-count = popCount
+count !x = popCount x
+
+intersection :: Word64 -> Word64 -> Word64
+intersection !x !y = x .&. y
 
 type Missiles = Word64
 
@@ -76,10 +81,10 @@ missilesAboutToHitPlayer = 9259542123273814144
 -- 1000000010000000100000001000000010000000100000001000000010000000
 
 onlyOverlappingMissiles :: Missiles -> Missiles -> Missiles
-onlyOverlappingMissiles = (.&.)
+onlyOverlappingMissiles = intersection
 
 missilesWhichCollided :: Missiles -> BuildingPlacements -> Missiles
-missilesWhichCollided = (.&.)
+missilesWhichCollided = intersection
 
 removeAllMissiles :: Missiles -> Missiles -> Missiles
 removeAllMissiles = removeAll
@@ -94,10 +99,10 @@ addAllMissiles :: Missiles -> Missiles -> Missiles
 addAllMissiles = addAll
 
 moveMissilesRight :: Missiles -> Missiles
-moveMissilesRight = (flip shiftR) 1
+moveMissilesRight !missiles = shiftR missiles 1
 
 moveMissilesLeft :: Missiles -> Missiles
-moveMissilesLeft = (flip shiftL) 1
+moveMissilesLeft !missiles = shiftL missiles 1
 
 emptyMissiles :: Missiles
 emptyMissiles = 0
@@ -132,7 +137,7 @@ buildingPlacementDifference :: BuildingPlacements -> BuildingPlacements -> Build
 buildingPlacementDifference = difference
 
 onlyOverlappingBuildings :: BuildingPlacements -> BuildingPlacements -> BuildingPlacements
-onlyOverlappingBuildings = (.&.)
+onlyOverlappingBuildings = intersection
 
 emptyBuildings :: BuildingPlacements
 emptyBuildings = 0
