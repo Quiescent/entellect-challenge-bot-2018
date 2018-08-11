@@ -236,9 +236,6 @@ playToEnd g initialState gameTree =
       else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
            in  playToEndIter (n - 1) advanceStateResult' gameTree''
 
-winLossModifier :: Float
-winLossModifier = resultBonusScore
-
 -- Moves are added to an accumulater by consing onto the front; thus,
 -- they are reversed when we arrive here.
 updateWin :: AdvanceStateResult -> M.GameTree -> M.GameTree
@@ -247,7 +244,7 @@ updateWin (_, moves, _) gameTree =
 
 incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
 incrementTreeFitness moves gameTree =
-  M.incrementDecrementBy moves winLossModifier gameTree
+  M.incrementDecrementBy moves 1.0 gameTree
 
 updateLoss :: AdvanceStateResult -> M.GameTree -> M.GameTree
 updateLoss (_, moves, _) gameTree =
@@ -255,7 +252,7 @@ updateLoss (_, moves, _) gameTree =
 
 decrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
 decrementTreeFitness moves gameTree =
-  M.incrementDecrementBy moves (-winLossModifier) gameTree
+  M.incrementDecrementBy moves (-1.0) gameTree
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth' }),
@@ -275,17 +272,19 @@ advanceState (g, moves, currentState) = do
   let myScoresAreEmpty       = isEmpty || (UV.null $ M.myScores       $ fromJust ourNode)
   let oponentsScoresAreEmpty = isEmpty || (UV.null $ M.oponentsScores $ fromJust ourNode)
   let myMoves                = myAvailableMoves currentState
+  let numberOfMyMoves        = fromIntegral $ UV.length myMoves
   let oponentsMoves          = oponentsAvailableMoves currentState
+  let numberOfOponentMoves   = fromIntegral $ UV.length oponentsMoves
   let oponentsScores         =
         if oponentsScoresAreEmpty
         then UV.map
-             ((1.0 /) . myIntermediateBoardScore . (flip updateOponentsMove currentState))
+             ((1.0 /) . (/ numberOfOponentMoves) . myIntermediateBoardScore . (flip updateOponentsMove currentState))
              oponentsMoves
         else M.oponentsScores $ fromJust ourNode
   let myScores =
         if myScoresAreEmpty
         then UV.map
-             (myIntermediateBoardScore . (flip updateMyMove currentState))
+             ((/ numberOfMyMoves) . myIntermediateBoardScore . (flip updateMyMove currentState))
              myMoves
         else M.myScores $ fromJust ourNode
   when (isEmpty || myScoresAreEmpty || oponentsScoresAreEmpty) $

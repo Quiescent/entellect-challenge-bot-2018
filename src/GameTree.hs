@@ -31,10 +31,12 @@ incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMove
     (myMove, oponentsMove) = unpackPackedCommand move
     increment scores       = do
       myOldScore <- MVector.read scores myMove
-      MVector.write scores myMove (myOldScore + x)
+      MVector.write scores myMove
+                    (myOldScore + (x / (fromIntegral $ UV.length myMoveScores)))
     decrement scores       = do
       oponentsOldScore <- MVector.read scores oponentsMove
-      MVector.write scores oponentsMove (oponentsOldScore - x)
+      MVector.write scores oponentsMove
+                    (oponentsOldScore - (x / (fromIntegral $ UV.length oponentsMoveScores)))
 
 addAt :: [PackedCommand] -> GameTree -> GameTree -> GameTree
 addAt []           subTreeToAdd _                                                   =
