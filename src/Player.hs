@@ -187,12 +187,12 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       allPlacements3  = addAllBuildings energyTowers2
                                         (addAllBuildings attack3Towers2
                                          (addAllBuildings attack2Towers2
-                                          (addAllBuildings attack2Towers2
+                                          (addAllBuildings attack1Towers2
                                            (addAllBuildings attack0Towers2
                                             (addAllBuildings defense4Towers2
                                              (addAllBuildings defense3Towers2
                                               (addAllBuildings defense2Towers2
-                                               (addAllBuildings defense2Towers2
+                                               (addAllBuildings defense1Towers2
                                                 (addAllBuildings teslaTower02
                                                  teslaTower12)))))))))
       collided3       = missilesWhichCollided missilesOtherSide3' allPlacements3
