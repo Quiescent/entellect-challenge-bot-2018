@@ -23,51 +23,59 @@ instance NFData Move where
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
-  turnsToMostExpensiveByMostExpensive state +
-  howMuchIAttackHisEnergyAndAttackTowers state
+  let futureState = advanceToFutureState state
+  in energyTowersDestroyed state futureState +
+     attackPowerDestroyed state futureState +
+     turnsToMostExpensiveByMostExpensive state
 
-howMuchIAttackHisEnergyAndAttackTowers :: GameState -> Float
-howMuchIAttackHisEnergyAndAttackTowers
-  (GameState { me      = (Player { attackTowersUnderConstruction = myAttackTowersUnderConstruction',
-                                   attack3Towers                 = myAttack3Towers',
-                                   attack2Towers                 = myAttack2Towers',
-                                   attack1Towers                 = myAttack1Towers',
-                                   attack0Towers                 = myAttack0Towers' }),
-               oponent = (Player { energyTowersUnderConstruction = energyTowersUnderConstruction',
-                                   energyTowers                  = energyTowers',
-                                   attackTowersUnderConstruction = attackTowersUnderConstruction',
-                                   attack3Towers                 = attack3Towers',
-                                   attack2Towers                 = attack2Towers',
-                                   attack1Towers                 = attack1Towers',
-                                   attack0Towers                 = attack0Towers' })}) =
-  let allMyAttack                = addAllBuildings myAttackTowersUnderConstruction'
-                                   (addAllBuildings myAttack3Towers'
-                                     (addAllBuildings myAttack2Towers'
-                                      (addAllBuildings myAttack1Towers'
-                                       myAttack0Towers')))
-      allOponentsAttackAndEnergy = addAllBuildings energyTowersUnderConstruction'
-                                   (addAllBuildings energyTowers'
-                                    (addAllBuildings attackTowersUnderConstruction'
-                                     (addAllBuildings attack3Towers'
-                                      (addAllBuildings attack2Towers'
-                                       (addAllBuildings attack1Towers'
-                                        attack0Towers')))))
-  in fromIntegral ((countBuildings (onlyOverlappingBuildings allMyAttack                row0) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row0)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row1) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row1)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row2) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row2)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row3) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row3)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row4) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row4)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row5) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row5)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row6) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row6)) +
-                   (countBuildings (onlyOverlappingBuildings allMyAttack                row7) *
-                    countBuildings (onlyOverlappingBuildings allOponentsAttackAndEnergy row7)))
+-- Unrolled for the compiler to optimise (there are 10 right now)
+advanceToFutureState :: GameState -> GameState
+advanceToFutureState =
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine .
+  tickEngine
+
+energyTowersDestroyed :: GameState -> GameState -> Float
+energyTowersDestroyed
+  (GameState { oponent = (Player { energyTowers                  = initialEnergyTowers,
+                                   energyTowersUnderConstruction = energyTowersUnderConstruction' }) })
+  (GameState { oponent = (Player { energyTowers                  = energyTowersAfter }) }) =
+  fromIntegral $ (countBuildings initialEnergyTowers +
+                  countBuildings energyTowersUnderConstruction') -
+                 (countBuildings energyTowersAfter)
+
+attackPowerDestroyed :: GameState -> GameState -> Float
+attackPowerDestroyed
+  (GameState {
+      oponent = (Player { attackTowersUnderConstruction = attackTowersUnderConstruction',
+                          attack3Towers                 = initialAttack3Towers,
+                          attack2Towers                 = initialAttack2Towers,
+                          attack1Towers                 = initialAttack1Towers,
+                          attack0Towers                 = initialAttack0Towers }) })
+  (GameState {
+      oponent = (Player { attack3Towers                 = attack3TowersAfter,
+                          attack2Towers                 = attack2TowersAfter,
+                          attack1Towers                 = attack1TowersAfter,
+                          attack0Towers                 = attack0TowersAfter }) }) =
+  fromIntegral $ (countBuildings
+                  (addAllBuildings attackTowersUnderConstruction'
+                   (addAllBuildings initialAttack3Towers
+                    (addAllBuildings initialAttack2Towers
+                     (addAllBuildings initialAttack1Towers
+                      initialAttack0Towers))))) -
+                  (countBuildings
+                   (addAllBuildings attack3TowersAfter
+                    (addAllBuildings attack2TowersAfter
+                     (addAllBuildings attack1TowersAfter
+                      attack0TowersAfter))))
+
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
