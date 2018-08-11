@@ -40,18 +40,16 @@ collideAndMoveMissiles :: GameState -> GameState
 collideAndMoveMissiles 
   state@(GameState { me      = me',
                      oponent = oponent'}) =
-  let (me1, oponent1)   = collide me' oponent'
-      (oponent2, me2)   = collide oponent1 me1
-      (me3, oponent3)   = moveCheckingBoundaries me2 oponent2
-      (oponent4, me4)   = moveCheckingBoundaries oponent3 me3
-      (me5, oponent5)   = collide me4 oponent4
-      (oponent6, me6)   = collide oponent5 me5
-      (me7, oponent7)   = moveCheckingBoundaries me6 oponent6
-      (oponent8, me8)   = moveCheckingBoundaries oponent7 me7
-      (me9, oponent9)   = collide me8 oponent8
-      (oponent10, me10) = collide oponent9 me9
-  in state { me      = me10,
-             oponent = oponent10 }
+  let (me1, oponent1) = moveCheckingBoundaries me' oponent'
+      (oponent2, me2) = moveCheckingBoundaries oponent1 me1
+      (me3, oponent3) = collide me2 oponent2
+      (oponent4, me4) = collide oponent3 me3
+      (me5, oponent5) = moveCheckingBoundaries me4 oponent4
+      (oponent6, me6) = moveCheckingBoundaries oponent5 me5
+      (me7, oponent7) = collide me6 oponent6
+      (oponent8, me8) = collide oponent7 me7
+  in state { me      = me8,
+             oponent = oponent8 }
 
 type UpdatePlayer = Player -> GameState -> GameState
 
