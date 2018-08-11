@@ -1,13 +1,13 @@
 {-# LANGUAGE BangPatterns #-}
 
 module Objective (myIntermediateBoardScore,
-                  resultBonusScore,
                   Move(..))
   where
 
 import Magic
 import Engine
-import Interpretor (Command, GameState(..))
+import Interpretor (Command, GameState(..), Player(..))
+import BitSetMap
 
 import Control.DeepSeq
 
@@ -23,9 +23,6 @@ instance NFData Move where
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore = turnsToMostExpensiveByMostExpensive
-
-resultBonusScore :: Float
-resultBonusScore = 9
 
 mostExpensiveTower :: Float
 mostExpensiveTower = fromIntegral $ maximum [attackTowerCost, defenseTowerCost, energyTowerCost]
@@ -44,5 +41,13 @@ turnsToMostExpensiveByMostExpensive =
   minBetweenEnergyPerTurnAndMostExpensive .
   (+ (fromIntegral energyPerTurn)) .
   fromIntegral .
-  energyGenPerTurn .
+  futureEnergyGenPerTurn .
   me
+
+-- Includes energy towers which are yet to be built
+futureEnergyGenPerTurn :: Player -> Int
+futureEnergyGenPerTurn player =
+  ((* energyTowerEnergyGeneratedPerTurn) $
+   countBuildings $
+   energyTowersUnderConstruction player) +
+  (energyGenPerTurn player)
