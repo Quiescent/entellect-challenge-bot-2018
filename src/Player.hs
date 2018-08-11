@@ -220,26 +220,32 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                 attack0Towers  = attack0Towers3,
                 defense4Towers = defense4Towers3,
                 defense3Towers = addAllBuildings
-                                 (buildingPlacementDifference defense4Towers' defense4Towers1)
+                                 (buildingPlacementDifference defense4Towers' defense4Towers0)
                                  (addAllBuildings
-                                  (buildingPlacementDifference defense4Towers1 defense4Towers2)
+                                  (buildingPlacementDifference defense4Towers0 defense4Towers1)
                                   (addAllBuildings
-                                   (buildingPlacementDifference defense4Towers2 defense4Towers3)
-                                   defense3Towers3)),
+                                   (buildingPlacementDifference defense4Towers1 defense4Towers2)
+                                   (addAllBuildings
+                                    (buildingPlacementDifference defense4Towers2 defense4Towers3)
+                                    defense3Towers3))),
                 defense2Towers = addAllBuildings
-                                 (buildingPlacementDifference defense3Towers' defense3Towers1)
+                                 (buildingPlacementDifference defense3Towers' defense3Towers0)
                                  (addAllBuildings
-                                  (buildingPlacementDifference defense3Towers1 defense3Towers2)
+                                  (buildingPlacementDifference defense3Towers0 defense3Towers1)
                                   (addAllBuildings
-                                   (buildingPlacementDifference defense3Towers2 defense3Towers3)
-                                   defense2Towers3)),
+                                   (buildingPlacementDifference defense3Towers1 defense3Towers2)
+                                   (addAllBuildings
+                                    (buildingPlacementDifference defense3Towers2 defense3Towers3)
+                                    defense2Towers3))),
                 defense1Towers = addAllBuildings
-                                 (buildingPlacementDifference defense2Towers' defense2Towers1)
+                                 (buildingPlacementDifference defense2Towers' defense2Towers0)
                                  (addAllBuildings
-                                  (buildingPlacementDifference defense2Towers1 defense2Towers2)
+                                  (buildingPlacementDifference defense2Towers0 defense2Towers1)
                                   (addAllBuildings
-                                   (buildingPlacementDifference defense2Towers2 defense2Towers3)
-                                   defense1Towers3)),
+                                   (buildingPlacementDifference defense2Towers1 defense2Towers2)
+                                   (addAllBuildings
+                                    (buildingPlacementDifference defense2Towers2 defense2Towers3)
+                                    defense1Towers3))),
                 teslaTower0 = teslaTower03,
                 teslaTower1 = teslaTower13 })
 
