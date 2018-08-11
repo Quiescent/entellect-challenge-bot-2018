@@ -125,9 +125,15 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       attack1Towers0  = removeAllBuildings collided0 attack1Towers'
       attack0Towers0  = removeAllBuildings collided0 attack0Towers'
       defense4Towers0 = removeAllBuildings collided0 defense4Towers'
-      defense3Towers0 = removeAllBuildings collided0 defense3Towers'
-      defense2Towers0 = removeAllBuildings collided0 defense2Towers'
-      defense1Towers0 = removeAllBuildings collided0 defense1Towers'
+      defense3Towers0 = addAllBuildings
+                        (buildingPlacementDifference defense4Towers' defense4Towers0)
+                        (removeAllBuildings collided0 defense3Towers')
+      defense2Towers0 = addAllBuildings
+                        (buildingPlacementDifference defense3Towers' (removeAllBuildings collided0 defense3Towers'))
+                        (removeAllBuildings collided0 defense2Towers')
+      defense1Towers0 = addAllBuildings
+                        (buildingPlacementDifference defense2Towers' (removeAllBuildings collided0 defense2Towers'))
+                        (removeAllBuildings collided0 defense1Towers')
       -- TODO: Reset the cooldown of the tesla tower if it was destroyed
       teslaTower00    = removeAllBuildings collided0 teslaTower0'
       teslaTower10    = removeAllBuildings collided0 teslaTower1'
@@ -151,9 +157,15 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       attack1Towers1  = removeAllBuildings collided1 attack1Towers0
       attack0Towers1  = removeAllBuildings collided1 attack0Towers0
       defense4Towers1 = removeAllBuildings collided1 defense4Towers0
-      defense3Towers1 = removeAllBuildings collided1 defense3Towers0
-      defense2Towers1 = removeAllBuildings collided1 defense2Towers0
-      defense1Towers1 = removeAllBuildings collided1 defense1Towers0
+      defense3Towers1 = addAllBuildings
+                        (buildingPlacementDifference defense4Towers0 defense4Towers1)
+                        (removeAllBuildings collided1 defense3Towers0)
+      defense2Towers1 = addAllBuildings
+                        (buildingPlacementDifference defense3Towers0 (removeAllBuildings collided1 defense3Towers0))
+                        (removeAllBuildings collided1 defense2Towers0)
+      defense1Towers1 = addAllBuildings
+                        (buildingPlacementDifference defense2Towers0 (removeAllBuildings collided1 defense2Towers0))
+                        (removeAllBuildings collided1 defense1Towers0)
       -- TODO: Reset the cooldown of the tesla tower if it was destroyed
       teslaTower01    = removeAllBuildings collided1 teslaTower00
       teslaTower11    = removeAllBuildings collided1 teslaTower10
@@ -177,9 +189,15 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       attack1Towers2  = removeAllBuildings collided2 attack1Towers1
       attack0Towers2  = removeAllBuildings collided2 attack0Towers1
       defense4Towers2 = removeAllBuildings collided2 defense4Towers1
-      defense3Towers2 = removeAllBuildings collided2 defense3Towers1
-      defense2Towers2 = removeAllBuildings collided2 defense2Towers1
-      defense1Towers2 = removeAllBuildings collided2 defense1Towers1
+      defense3Towers2 = addAllBuildings
+                        (buildingPlacementDifference defense4Towers1 defense4Towers2)
+                        (removeAllBuildings collided2 defense3Towers1)
+      defense2Towers2 = addAllBuildings
+                        (buildingPlacementDifference defense3Towers1 (removeAllBuildings collided2 defense3Towers1))
+                        (removeAllBuildings collided2 defense2Towers1)
+      defense1Towers2 = addAllBuildings
+                        (buildingPlacementDifference defense2Towers1 (removeAllBuildings collided2 defense2Towers1))
+                        (removeAllBuildings collided2 defense1Towers1)
       -- TODO: Reset the cooldown of the tesla tower if it was destroyed
       teslaTower02    = removeAllBuildings collided2 teslaTower01
       teslaTower12    = removeAllBuildings collided2 teslaTower11
@@ -203,9 +221,15 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       attack1Towers3  = removeAllBuildings collided3 attack1Towers2
       attack0Towers3  = removeAllBuildings collided3 attack0Towers2
       defense4Towers3 = removeAllBuildings collided3 defense4Towers2
-      defense3Towers3 = removeAllBuildings collided3 defense3Towers2
-      defense2Towers3 = removeAllBuildings collided3 defense2Towers2
-      defense1Towers3 = removeAllBuildings collided3 defense1Towers2
+      defense3Towers3 = addAllBuildings
+                        (buildingPlacementDifference defense4Towers2 defense4Towers3)
+                        (removeAllBuildings collided3 defense3Towers2)
+      defense2Towers3 = addAllBuildings
+                        (buildingPlacementDifference defense3Towers2 (removeAllBuildings collided3 defense3Towers2))
+                        (removeAllBuildings collided3 defense2Towers2)
+      defense1Towers3 = addAllBuildings
+                        (buildingPlacementDifference defense2Towers2 (removeAllBuildings collided3 defense2Towers2))
+                        (removeAllBuildings collided3 defense1Towers2)
       -- TODO: Reset the cooldown of the tesla tower if it was destroyed
       teslaTower03    = removeAllBuildings collided3 teslaTower02
       teslaTower13    = removeAllBuildings collided3 teslaTower12
@@ -219,35 +243,11 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                 attack1Towers  = attack1Towers3,
                 attack0Towers  = attack0Towers3,
                 defense4Towers = defense4Towers3,
-                defense3Towers = addAllBuildings
-                                 (buildingPlacementDifference defense4Towers' defense4Towers0)
-                                 (addAllBuildings
-                                  (buildingPlacementDifference defense4Towers0 defense4Towers1)
-                                  (addAllBuildings
-                                   (buildingPlacementDifference defense4Towers1 defense4Towers2)
-                                   (addAllBuildings
-                                    (buildingPlacementDifference defense4Towers2 defense4Towers3)
-                                    defense3Towers3))),
-                defense2Towers = addAllBuildings
-                                 (buildingPlacementDifference defense3Towers' defense3Towers0)
-                                 (addAllBuildings
-                                  (buildingPlacementDifference defense3Towers0 defense3Towers1)
-                                  (addAllBuildings
-                                   (buildingPlacementDifference defense3Towers1 defense3Towers2)
-                                   (addAllBuildings
-                                    (buildingPlacementDifference defense3Towers2 defense3Towers3)
-                                    defense2Towers3))),
-                defense1Towers = addAllBuildings
-                                 (buildingPlacementDifference defense2Towers' defense2Towers0)
-                                 (addAllBuildings
-                                  (buildingPlacementDifference defense2Towers0 defense2Towers1)
-                                  (addAllBuildings
-                                   (buildingPlacementDifference defense2Towers1 defense2Towers2)
-                                   (addAllBuildings
-                                    (buildingPlacementDifference defense2Towers2 defense2Towers3)
-                                    defense1Towers3))),
-                teslaTower0 = teslaTower03,
-                teslaTower1 = teslaTower13 })
+                defense3Towers = defense3Towers3,
+                defense2Towers = defense2Towers3,
+                defense1Towers = defense1Towers3,
+                teslaTower0    = teslaTower03,
+                teslaTower1    = teslaTower13 })
 
 moveCheckingBoundaries :: Player -> Player -> (Player, Player)
 moveCheckingBoundaries
