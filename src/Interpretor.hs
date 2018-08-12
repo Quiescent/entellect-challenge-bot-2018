@@ -507,7 +507,7 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
   let building'        = chooseBuilding int wctl (toBuildingType bt)
       coord'           = toCoord x' y'
       allTowers''      = addBuilding coord' allTowers'
-      allBuiltTowers'' = if ctl < 0 then allBuiltTowers' else addBuilding coord' allBuiltTowers'
+      allBuiltTowers'' = if ctl < 0 then addBuilding coord' allBuiltTowers' else allBuiltTowers'
       player'          = player { allTowers      = allTowers'',
                                   allBuiltTowers = allBuiltTowers'' }
   in case (ctl < 0, ctl, building') of
