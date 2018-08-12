@@ -215,15 +215,16 @@ searchDeeper best g initialState = searchDeeperIter g M.empty
 depth :: Int
 depth = 50
 
-type AdvanceStateResult = (StdGen, [PackedCommand], GameState)
+type AdvanceStateResult = (StdGen, [PackedCommand], GameState, Bool)
 
 playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
 playToEnd g initialState gameTree =
-  playToEndIter depth (g, [], initialState) gameTree
+  playToEndIter depth (g, [], initialState, False) gameTree
   where
     playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
-    playToEndIter 0 (_, _, _)                               gameTree' = gameTree'
-    playToEndIter n advanceStateResult@(_, _, currentState) gameTree' =
+    playToEndIter _ (_, _, _, True)                            gameTree' = gameTree'
+    playToEndIter 0 (_, _, _, _)                               gameTree' = gameTree'
+    playToEndIter n advanceStateResult@(_, _, currentState, _) gameTree' =
       if gameOver currentState
       then if iWon currentState
            then updateWin  advanceStateResult gameTree'
@@ -234,7 +235,7 @@ playToEnd g initialState gameTree =
 -- Moves are added to an accumulater by consing onto the front; thus,
 -- they are reversed when we arrive here.
 updateWin :: AdvanceStateResult -> M.GameTree -> M.GameTree
-updateWin (_, moves, _) gameTree =
+updateWin (_, moves, _, _) gameTree =
   incrementTreeFitness (reverse moves) gameTree
 
 incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
@@ -242,7 +243,7 @@ incrementTreeFitness moves gameTree =
   M.incrementDecrementBy moves 1.0 gameTree
 
 updateLoss :: AdvanceStateResult -> M.GameTree -> M.GameTree
-updateLoss (_, moves, _) gameTree =
+updateLoss (_, moves, _, _) gameTree =
   decrementTreeFitness (reverse moves) gameTree
 
 decrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
@@ -260,7 +261,7 @@ iWon (GameState { me      = (Player { health = myHealth' }),
   oponentsHealth' <= 0 && myHealth' > 0
 
 advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
-advanceState (g, moves, currentState) = do
+advanceState (g, moves, currentState, _) = do
   gameTree                  <- get
   let ourNode                = M.subTree moves gameTree
   let isEmpty                = isNothing ourNode
@@ -298,7 +299,8 @@ advanceState (g, moves, currentState) = do
         tickEngine currentState
   return (g''',
           (combineCommands indexOfMyMove indexOfOponentsMove):moves,
-          nextState)
+          nextState,
+          isEmpty)
 
 cdf :: UV.Vector Float -> UV.Vector Float
 cdf xs = normalised
