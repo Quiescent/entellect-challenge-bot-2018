@@ -89,7 +89,9 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                                      missilesOtherSide1 = missilesOtherSide1',
                                      missilesOtherSide2 = missilesOtherSide2',
                                      missilesOtherSide3 = missilesOtherSide3' })
-  player@(Player { energyTowers                = energyTowers',
+  player@(Player { allTowers                   = allTowers',
+                   allBuiltTowers              = allBuiltTowers',
+                   energyTowers                = energyTowers',
                    attack3Towers               = attack3Towers',
                    attack2Towers               = attack2Towers',
                    attack1Towers               = attack1Towers',
@@ -106,17 +108,7 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                    -- teslaTower1CooldownTime     = teslaTower1CooldownTime'
                  }) =
   -- First round of missiles
-  let allPlacements = addAllBuildings energyTowers'
-                                      (addAllBuildings attack3Towers'
-                                       (addAllBuildings attack2Towers'
-                                        (addAllBuildings attack1Towers'
-                                         (addAllBuildings attack0Towers'
-                                          (addAllBuildings defense4Towers'
-                                           (addAllBuildings defense3Towers'
-                                            (addAllBuildings defense2Towers'
-                                             (addAllBuildings defense1Towers'
-                                              (addAllBuildings teslaTower0'
-                                               teslaTower1')))))))))
+  let allPlacements   = allBuiltTowers'
       collided0       = missilesWhichCollided missilesOtherSide0' allPlacements
       missiles0After  = removeAllMissiles  collided0 missilesOtherSide0'
       energyTowers0   = removeAllBuildings collided0 energyTowers'
@@ -138,17 +130,7 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower00    = removeAllBuildings collided0 teslaTower0'
       teslaTower10    = removeAllBuildings collided0 teslaTower1'
       -- Second round of missiles
-      allPlacements1  = addAllBuildings energyTowers0
-                                        (addAllBuildings attack3Towers0
-                                         (addAllBuildings attack2Towers0
-                                          (addAllBuildings attack1Towers0
-                                           (addAllBuildings attack0Towers0
-                                            (addAllBuildings defense4Towers0
-                                             (addAllBuildings defense3Towers0
-                                              (addAllBuildings defense2Towers0
-                                               (addAllBuildings defense1Towers0
-                                                (addAllBuildings teslaTower00
-                                                 teslaTower10)))))))))
+      allPlacements1  = removeAllBuildings collided0 allBuiltTowers'
       collided1       = missilesWhichCollided missilesOtherSide1' allPlacements1
       missiles1After  = removeAllMissiles  collided1 missilesOtherSide1'
       energyTowers1   = removeAllBuildings collided1 energyTowers0
@@ -170,17 +152,7 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower01    = removeAllBuildings collided1 teslaTower00
       teslaTower11    = removeAllBuildings collided1 teslaTower10
       -- Third round of missiles
-      allPlacements2  = addAllBuildings energyTowers1
-                                        (addAllBuildings attack3Towers1
-                                         (addAllBuildings attack2Towers1
-                                          (addAllBuildings attack1Towers1
-                                           (addAllBuildings attack0Towers1
-                                            (addAllBuildings defense4Towers1
-                                             (addAllBuildings defense3Towers1
-                                              (addAllBuildings defense2Towers1
-                                               (addAllBuildings defense1Towers1
-                                                (addAllBuildings teslaTower01
-                                                 teslaTower11)))))))))
+      allPlacements2  = removeAllBuildings collided1 allPlacements1
       collided2       = missilesWhichCollided missilesOtherSide2' allPlacements2
       missiles2After  = removeAllMissiles  collided2 missilesOtherSide2'
       energyTowers2   = removeAllBuildings collided2 energyTowers1
@@ -202,17 +174,7 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower02    = removeAllBuildings collided2 teslaTower01
       teslaTower12    = removeAllBuildings collided2 teslaTower11
       -- Fourth round of missiles
-      allPlacements3  = addAllBuildings energyTowers2
-                                        (addAllBuildings attack3Towers2
-                                         (addAllBuildings attack2Towers2
-                                          (addAllBuildings attack1Towers2
-                                           (addAllBuildings attack0Towers2
-                                            (addAllBuildings defense4Towers2
-                                             (addAllBuildings defense3Towers2
-                                              (addAllBuildings defense2Towers2
-                                               (addAllBuildings defense1Towers2
-                                                (addAllBuildings teslaTower02
-                                                 teslaTower12)))))))))
+      allPlacements3  = removeAllBuildings collided2 allPlacements2
       collided3       = missilesWhichCollided missilesOtherSide3' allPlacements3
       missiles3After  = removeAllMissiles  collided3 missilesOtherSide3'
       energyTowers3   = removeAllBuildings collided3 energyTowers2
@@ -237,7 +199,11 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                            missilesOtherSide1 = missiles1After,
                            missilesOtherSide2 = missiles2After,
                            missilesOtherSide3 = missiles3After },
-       player { energyTowers   = energyTowers3,
+       player { allTowers      = removeAllBuildings
+                                 (buildingPlacementDifference allBuiltTowers' allPlacements3)
+                                 allTowers',
+                allBuiltTowers = allPlacements3,
+                energyTowers   = energyTowers3,
                 attack3Towers  = attack3Towers3,
                 attack2Towers  = attack2Towers3,
                 attack1Towers  = attack1Towers3,
@@ -293,7 +259,8 @@ moveCheckingBoundaries
 
 buildOnMap :: Coord -> Building -> Player -> Player
 buildOnMap coord building'
-  player@(Player { defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
+  player@(Player { allTowers                       = allTowers',
+                   defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
                    energyTowersUnderConstruction   = energyTowersUnderConstruction',
                    attackTowersUnderConstruction   = attackTowersUnderConstruction',
                    teslaTower0                     = teslaTower0',
@@ -314,8 +281,10 @@ buildOnMap coord building'
     x           -> error $
       "Attempted to build an invalid building state (constructed buildings have zero CD and full health): " ++ show x
   where
-    player' = player { energy = energy' - towerCost building' }
+    player' = player { energy    = energy' - towerCost building',
+                       allTowers = addBuilding coord allTowers' }
 
+-- TODO: Handle the allTowers and allBuiltTowers fields (!!!)
 deconstructAt :: Coord -> Player -> Player
 deconstructAt coord
   player@(Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
@@ -369,37 +338,4 @@ deconstructAt coord
   | otherwise                                                 = player
 
 availableCoord :: Coord -> Player -> Bool
-availableCoord coord
-  (Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
-            energyTowers                    = energyTowers',
-            attackTowersUnderConstruction   = attackTowersUnderConstruction',
-            attack3Towers                   = attack3Towers',
-            attack2Towers                   = attack2Towers',
-            attack1Towers                   = attack1Towers',
-            attack0Towers                   = attack0Towers',
-            defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
-            defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
-            defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
-            defense4Towers                  = defense4Towers',
-            defense3Towers                  = defense3Towers',
-            defense2Towers                  = defense2Towers',
-            defense1Towers                  = defense1Towers',
-            teslaTower0                     = teslaTower0',
-            teslaTower1                     = teslaTower1' }) =
-  not $ containsBuildingAt coord
-  (energyTowersUnderConstruction'   `addAllBuildings`
-   energyTowers'                    `addAllBuildings`
-   attackTowersUnderConstruction'   `addAllBuildings`
-   attack3Towers'                   `addAllBuildings`
-   attack2Towers'                   `addAllBuildings`
-   attack1Towers'                   `addAllBuildings`
-   attack0Towers'                   `addAllBuildings`
-   defenseTowersUnderConstruction2' `addAllBuildings`
-   defenseTowersUnderConstruction1' `addAllBuildings`
-   defenseTowersUnderConstruction0' `addAllBuildings`
-   defense4Towers'                  `addAllBuildings`
-   defense3Towers'                  `addAllBuildings`
-   defense2Towers'                  `addAllBuildings`
-   defense1Towers'                  `addAllBuildings`
-   teslaTower0'                     `addAllBuildings`
-   teslaTower1')
+availableCoord coord (Player { allTowers = allTowers' }) = not $ containsBuildingAt coord allTowers'

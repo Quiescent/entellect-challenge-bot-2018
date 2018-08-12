@@ -70,6 +70,8 @@ instance FromJSON ScratchBuilding where
 
 data Player = Player { energy                          :: !Int,
                        health                          :: !Int,
+                       allTowers                       :: !BuildingPlacements,
+                       allBuiltTowers                  :: !BuildingPlacements,
                        energyTowersUnderConstruction   :: !BuildingPlacements,
                        energyTowers                    :: !BuildingPlacements,
                        attackTowersUnderConstruction   :: !BuildingPlacements,
@@ -103,6 +105,8 @@ data Player = Player { energy                          :: !Int,
 instance Eq Player where
   (==) (Player energyA
                healthA
+               allTowersA
+               allBuiltTowersA
                energyTowersUnderConstructionA
                energyTowersA
                attackTowersUnderConstructionA
@@ -133,6 +137,8 @@ instance Eq Player where
                missilesOtherSide3A)
        (Player energyB
                healthB
+               allTowersB
+               allBuiltTowersB
                energyTowersUnderConstructionB
                energyTowersB
                attackTowersUnderConstructionB
@@ -163,6 +169,8 @@ instance Eq Player where
                missilesOtherSide3B)
     = energyA                          == energyB &&
       healthA                          == healthB &&
+      allTowersA                       == allTowersB &&
+      allBuiltTowersA                  == allBuiltTowersB &&
       energyTowersUnderConstructionA   == energyTowersUnderConstructionB &&
       energyTowersA                    == energyTowersB &&
       attackTowersUnderConstructionA   == attackTowersUnderConstructionB &&
@@ -191,6 +199,8 @@ instance Eq Player where
 instance NFData Player where
   rnf (Player energy'
               health'
+              allTowers'
+              allBuiltTowers'
               energyTowersUnderConstruction'
               energyTowers'
               attackTowersUnderConstruction'
@@ -221,6 +231,8 @@ instance NFData Player where
               missilesOtherSide3')
     = energy'                          `seq`
       health'                          `seq`
+      allTowers'                       `seq`
+      allBuiltTowers'                  `seq`
       energyTowersUnderConstruction'   `seq`
       energyTowers'                    `seq`
       attackTowersUnderConstruction'   `seq`
@@ -364,6 +376,8 @@ emptyPlayer = Player
   0
   0
   0
+  0
+  0
 
 emptyGameState :: GameState
 emptyGameState = GameState 0 emptyPlayer emptyPlayer
@@ -474,7 +488,9 @@ toBuildingType x         = error $ "Unknown building type: " ++ x
 
 accBuildingToPlayer :: Int -> Int -> ScratchBuilding -> Player -> Player
 accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
-  player@(Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
+  player@(Player { allTowers                       = allTowers',
+                   allBuiltTowers                  = allBuiltTowers', 
+                   energyTowersUnderConstruction   = energyTowersUnderConstruction',
                    energyTowers                    = energyTowers',
                    attackTowersUnderConstruction   = attackTowersUnderConstruction',
                    attack3Towers                   = attack3Towers',
@@ -488,33 +504,37 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
                    defense3Towers                  = defense3Towers',
                    defense2Towers                  = defense2Towers',
                    defense1Towers                  = defense1Towers' }) =
-  let building' = chooseBuilding int wctl (toBuildingType bt)
-      coord'    = toCoord x' y'
+  let building'        = chooseBuilding int wctl (toBuildingType bt)
+      coord'           = toCoord x' y'
+      allTowers''      = addBuilding coord' allTowers'
+      allBuiltTowers'' = if ctl < 0 then allBuiltTowers' else addBuilding coord' allBuiltTowers'
+      player'          = player { allTowers      = allTowers'',
+                                  allBuiltTowers = allBuiltTowers'' }
   in case (ctl < 0, ctl, building') of
-       (True,  _, Attack3)       -> player { attack3Towers  = addBuilding coord' attack3Towers' }
-       (True,  _, Attack2)       -> player { attack2Towers  = addBuilding coord' attack2Towers' }
-       (True,  _, Attack1)       -> player { attack1Towers  = addBuilding coord' attack1Towers' }
-       (True,  _, Attack0)       -> player { attack0Towers  = addBuilding coord' attack0Towers' }
-       (True,  _, Defense4)      -> player { defense4Towers = addBuilding coord' defense4Towers' }
-       (True,  _, Defense3)      -> player { defense3Towers = addBuilding coord' defense3Towers' }
-       (True,  _, Defense2)      -> player { defense2Towers = addBuilding coord' defense2Towers' }
-       (True,  _, Defense1)      -> player { defense1Towers = addBuilding coord' defense1Towers' }
-       (True,  _, EnergyTower)   -> player { energyTowers   = addBuilding coord' energyTowers' }
+       (True,  _, Attack3)       -> player' { attack3Towers  = addBuilding coord' attack3Towers' }
+       (True,  _, Attack2)       -> player' { attack2Towers  = addBuilding coord' attack2Towers' }
+       (True,  _, Attack1)       -> player' { attack1Towers  = addBuilding coord' attack1Towers' }
+       (True,  _, Attack0)       -> player' { attack0Towers  = addBuilding coord' attack0Towers' }
+       (True,  _, Defense4)      -> player' { defense4Towers = addBuilding coord' defense4Towers' }
+       (True,  _, Defense3)      -> player' { defense3Towers = addBuilding coord' defense3Towers' }
+       (True,  _, Defense2)      -> player' { defense2Towers = addBuilding coord' defense2Towers' }
+       (True,  _, Defense1)      -> player' { defense1Towers = addBuilding coord' defense1Towers' }
+       (True,  _, EnergyTower)   -> player' { energyTowers   = addBuilding coord' energyTowers' }
        -- TESLA Tower
-       (True,  _, _)             -> addTeslaTower coord' player building'
+       (True,  _, _)             -> addTeslaTower coord' player' building'
        -- Under Construction:
-       (False, 2, Defense4)      -> player { defenseTowersUnderConstruction2 =
+       (False, 2, Defense4)      -> player' { defenseTowersUnderConstruction2 =
                                                addBuilding coord' defenseTowersUnderConstruction2' }
-       (False, 1, Defense4)      -> player { defenseTowersUnderConstruction1 =
+       (False, 1, Defense4)      -> player' { defenseTowersUnderConstruction1 =
                                                addBuilding coord' defenseTowersUnderConstruction1' }
-       (False, 0, Defense4)      -> player { defenseTowersUnderConstruction0 =
+       (False, 0, Defense4)      -> player' { defenseTowersUnderConstruction0 =
                                                addBuilding coord' defenseTowersUnderConstruction0' }
-       (False, _, Attack0)       -> player { attackTowersUnderConstruction =
+       (False, _, Attack0)       -> player' { attackTowersUnderConstruction =
                                               addBuilding coord' attackTowersUnderConstruction' }
-       (False, _, EnergyTower)   -> player { energyTowersUnderConstruction =
+       (False, _, EnergyTower)   -> player' { energyTowersUnderConstruction =
                                               addBuilding coord' energyTowersUnderConstruction' }
         -- TESLA Tower Under Construction
-       (False, ctl', _)          -> addTeslaTowerUnderConstruction ctl' coord' player
+       (False, ctl', _)          -> addTeslaTowerUnderConstruction ctl' coord' player'
 
 addTeslaTower :: Coord -> Player -> Building -> Player
 addTeslaTower coord' player@(Player { teslaTower0 = teslaTower0' })

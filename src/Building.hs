@@ -47,7 +47,8 @@ updateBuildingProgress =
 
 updateBuildingProgress' :: Player -> Player
 updateBuildingProgress'
-  player@(Player { energyTowersUnderConstruction   = energyTowersUnderConstruction',
+  player@(Player { allBuiltTowers                  = allBuiltTowers',
+                   energyTowersUnderConstruction   = energyTowersUnderConstruction',
                    energyTowers                    = energyTowers',
                    attackTowersUnderConstruction   = attackTowersUnderConstruction',
                    attack0Towers                   = attack0Towers',
@@ -55,9 +56,21 @@ updateBuildingProgress'
                    defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
                    defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
                    defense4Towers                  = defense4Towers',
+                   teslaTower0                     = teslaTower0',
                    teslaTower0ConstructionTime     = teslaTower0ConstructionTime',
+                   teslaTower1                     = teslaTower1',
                    teslaTower1ConstructionTime     = teslaTower1ConstructionTime' }) =
-  player { energyTowersUnderConstruction   = emptyBuildings,
+  player { allBuiltTowers                  = addAllBuildings allBuiltTowers'
+                                             (addAllBuildings energyTowersUnderConstruction'
+                                              (addAllBuildings attackTowersUnderConstruction'
+                                               (addAllBuildings defenseTowersUnderConstruction0'
+                                                (addAllBuildings (if teslaTower0ConstructionTime' == 1
+                                                                  then teslaTower0'
+                                                                  else 0)
+                                                 (if teslaTower1ConstructionTime' == 1
+                                                                  then teslaTower1'
+                                                                  else 0))))),
+           energyTowersUnderConstruction   = emptyBuildings,
            energyTowers                    = addAllBuildings energyTowersUnderConstruction' energyTowers',
            attackTowersUnderConstruction   = emptyBuildings,
            attack0Towers                   = addAllBuildings attack0Towers' attackTowersUnderConstruction',
