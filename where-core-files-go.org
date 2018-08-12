@@ -1,0 +1,1 @@
+.stack-work/dist/<arch>/<cabal>/build/projname/projname-tmp/src/
