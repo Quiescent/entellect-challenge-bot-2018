@@ -130,10 +130,9 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower00    = removeAllBuildings collided0 teslaTower0'
       teslaTower10    = removeAllBuildings collided0 teslaTower1'
       -- Second round of missiles
-      allPlacements1  = removeAllBuildings collided0
-                                           (addAllBuildings allBuiltTowers'
-                                            (addAllBuildings defense3Towers0
-                                             (addAllBuildings defense2Towers0 defense1Towers0)))
+      allPlacements1  = (addAllBuildings (removeAllBuildings collided0 allBuiltTowers')
+                         (addAllBuildings defense3Towers0
+                          (addAllBuildings defense2Towers0 defense1Towers0)))
       collided1       = missilesWhichCollided missilesOtherSide1' allPlacements1
       missiles1After  = removeAllMissiles  collided1 missilesOtherSide1'
       energyTowers1   = removeAllBuildings collided1 energyTowers0
@@ -155,10 +154,9 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower01    = removeAllBuildings collided1 teslaTower00
       teslaTower11    = removeAllBuildings collided1 teslaTower10
       -- Third round of missiles
-      allPlacements2  = removeAllBuildings collided1
-                                           (addAllBuildings allPlacements1
-                                            (addAllBuildings defense3Towers1
-                                             (addAllBuildings defense2Towers1 defense1Towers1)))
+      allPlacements2  = (addAllBuildings (removeAllBuildings collided1 allPlacements1)
+                         (addAllBuildings defense3Towers1
+                          (addAllBuildings defense2Towers1 defense1Towers1)))
       collided2       = missilesWhichCollided missilesOtherSide2' allPlacements2
       missiles2After  = removeAllMissiles  collided2 missilesOtherSide2'
       energyTowers2   = removeAllBuildings collided2 energyTowers1
@@ -180,10 +178,9 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower02    = removeAllBuildings collided2 teslaTower01
       teslaTower12    = removeAllBuildings collided2 teslaTower11
       -- Fourth round of missiles
-      allPlacements3  = removeAllBuildings collided2
-                                           (addAllBuildings allPlacements2
-                                            (addAllBuildings defense3Towers2
-                                             (addAllBuildings defense2Towers2 defense1Towers2)))
+      allPlacements3  = (addAllBuildings (removeAllBuildings collided2 allPlacements2)
+                         (addAllBuildings defense3Towers2
+                          (addAllBuildings defense2Towers2 defense1Towers2)))
       collided3       = missilesWhichCollided missilesOtherSide3' allPlacements3
       missiles3After  = removeAllMissiles  collided3 missilesOtherSide3'
       energyTowers3   = removeAllBuildings collided3 energyTowers2
@@ -205,10 +202,9 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
       teslaTower03    = removeAllBuildings collided3 teslaTower02
       teslaTower13    = removeAllBuildings collided3 teslaTower12
       -- Final result
-      allPlacements4  = removeAllBuildings collided3
-                                           (addAllBuildings allPlacements3
-                                            (addAllBuildings defense3Towers3
-                                             (addAllBuildings defense2Towers3 defense1Towers3)))
+      allPlacements4  = (addAllBuildings (removeAllBuildings collided3 allPlacements3)
+                         (addAllBuildings defense3Towers3
+                          (addAllBuildings defense2Towers3 defense1Towers3)))
   in (playerWithMissiles { missilesOtherSide0 = missiles0After,
                            missilesOtherSide1 = missiles1After,
                            missilesOtherSide2 = missiles2After,
