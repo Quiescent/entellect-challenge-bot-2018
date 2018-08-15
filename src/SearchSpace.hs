@@ -203,52 +203,82 @@ cmpByFst (x, _) (y, _) = compare x y
 
 type Scores = UV.Vector Float
 
--- TODO: Start chunking execution
+ticksBeforeDiscarding :: Int
+ticksBeforeDiscarding = 1000
+
 searchDeeper :: MVar Command -> StdGen -> GameState -> IO ()
-searchDeeper best g initialState = searchDeeperIter g' treeOne treeTwo treeThree treeFour
+searchDeeper best g initialState =
+  searchDeeperIter ticksBeforeDiscarding
+                   g'
+                   treeOne
+                   treeTwo
+                   treeThree
+                   treeFour
   where
-    searchDeeperIter :: StdGen -> M.GameTree -> M.GameTree -> M.GameTree -> M.GameTree -> IO ()
-    searchDeeperIter h searchTree1 searchTree2 searchTree3 searchTree4 = do
-      putStrLn "Tick"
-      -- Tree 1
-      let (h', h1)          = split h
-      let searchTree1'      = playToEnd h1 division1 initialState searchTree1
-      let scores1           = M.myScores searchTree1
-      let indexOfBestSoFar1 = UV.maxIndex scores1
-      let scoreOfBestSoFar1 = scores1 `uVectorIndex` indexOfBestSoFar1
-      let bestSoFarThunk1   = toCommand (division1 `uVectorIndex` indexOfBestSoFar1)
-      -- Tree 2
-      let (h2, h3)          = split h1
-      let searchTree2'      = playToEnd h2 division2 initialState searchTree2
-      let scores2           = M.myScores searchTree2
-      let indexOfBestSoFar2 = UV.maxIndex scores2
-      let scoreOfBestSoFar2 = scores2 `uVectorIndex` indexOfBestSoFar2
-      let bestSoFarThunk2   = toCommand (division2 `uVectorIndex` indexOfBestSoFar2)
-      -- Tree 3
-      let (h4, _)           = split h2
-      let searchTree3'      = playToEnd h3 division3 initialState searchTree3
-      let scores3           = M.myScores searchTree3
-      let indexOfBestSoFar3 = UV.maxIndex scores3
-      let scoreOfBestSoFar3 = scores3 `uVectorIndex` indexOfBestSoFar3
-      let bestSoFarThunk3   = toCommand (division3 `uVectorIndex` indexOfBestSoFar3)
-      -- Tree 4
-      let searchTree4'      = playToEnd h4 division4 initialState searchTree4
-      let scores4           = M.myScores searchTree4
-      let indexOfBestSoFar4 = UV.maxIndex scores4
-      let scoreOfBestSoFar4 = scores4 `uVectorIndex` indexOfBestSoFar4
-      let bestSoFarThunk4   = toCommand (division4 `uVectorIndex` indexOfBestSoFar4)
-      -- Aggregate
-      let bestSoFarThunk    =
+    searchDeeperIter :: Int -> StdGen -> M.GameTree -> M.GameTree -> M.GameTree -> M.GameTree -> IO ()
+    searchDeeperIter !discardCountDown
+                     h
+                     searchTree1
+                     searchTree2
+                     searchTree3
+                     searchTree4 =
+     let discardNow        = discardCountDown == 0
+         discardCountDown' = if discardNow then ticksBeforeDiscarding else (discardCountDown - 1)
+         (searchTree1',
+          searchTree2',
+          searchTree3',
+          searchTree4')    = if discardNow
+                             then discardPoorPerformers searchTree1
+                                                        searchTree2
+                                                        searchTree3
+                                                        searchTree4
+                             else (searchTree1, searchTree2, searchTree3, searchTree4)
+         -- Tree 1
+         (h', h1)          = split h
+         searchTree1''     = playToEnd h1 division1 initialState searchTree1'
+         scores1           = M.myScores searchTree1'
+         indexOfBestSoFar1 = UV.maxIndex scores1
+         scoreOfBestSoFar1 = scores1 `uVectorIndex` indexOfBestSoFar1
+         bestSoFarThunk1   = toCommand (division1 `uVectorIndex` indexOfBestSoFar1)
+         -- Tree 2
+         (h2, h3)          = split h1
+         searchTree2''     = playToEnd h2 division2 initialState searchTree2'
+         scores2           = M.myScores searchTree2'
+         indexOfBestSoFar2 = UV.maxIndex scores2
+         scoreOfBestSoFar2 = scores2 `uVectorIndex` indexOfBestSoFar2
+         bestSoFarThunk2   = toCommand (division2 `uVectorIndex` indexOfBestSoFar2)
+         -- Tree 3
+         (h4, _)           = split h2
+         searchTree3''     = playToEnd h3 division3 initialState searchTree3'
+         scores3           = M.myScores searchTree3'
+         indexOfBestSoFar3 = UV.maxIndex scores3
+         scoreOfBestSoFar3 = scores3 `uVectorIndex` indexOfBestSoFar3
+         bestSoFarThunk3   = toCommand (division3 `uVectorIndex` indexOfBestSoFar3)
+         -- Tree 4
+         searchTree4''     = playToEnd h4 division4 initialState searchTree4'
+         scores4           = M.myScores searchTree4'
+         indexOfBestSoFar4 = UV.maxIndex scores4
+         scoreOfBestSoFar4 = scores4 `uVectorIndex` indexOfBestSoFar4
+         bestSoFarThunk4   = toCommand (division4 `uVectorIndex` indexOfBestSoFar4)
+         -- Aggregate
+         bestSoFarThunk    =
             snd $
             L.maximumBy cmpByFst $
             ([(scoreOfBestSoFar1, bestSoFarThunk1),
                (scoreOfBestSoFar2, bestSoFarThunk2),
                (scoreOfBestSoFar3, bestSoFarThunk3),
                (scoreOfBestSoFar4, bestSoFarThunk4)] `using` parList rdeepseq)
-      -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
-      bestSoFar           <- evaluate (bestSoFarThunk `using` rdeepseq)
-      putMVar best $ (bestSoFar `deepseq` bestSoFar)
-      searchDeeperIter h' searchTree1' searchTree2' searchTree3' searchTree4'
+      in do
+        -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
+        bestSoFar <- evaluate (bestSoFarThunk `using` rdeepseq)
+        putMVar best $ (bestSoFar `deepseq` bestSoFar)
+        putStrLn "Tick"
+        searchDeeperIter discardCountDown'
+                         h'
+                         searchTree1''
+                         searchTree2''
+                         searchTree3''
+                         searchTree4''
     moves         = myAvailableMoves initialState
     (g',
      division1,
@@ -260,6 +290,11 @@ searchDeeper best g initialState = searchDeeperIter g' treeOne treeTwo treeThree
     treeTwo       = initialMove initialState division2 oponentsMoves
     treeThree     = initialMove initialState division3 oponentsMoves
     treeFour      = initialMove initialState division4 oponentsMoves
+
+
+discardPoorPerformers :: M.GameTree -> M.GameTree -> M.GameTree -> M.GameTree -> (M.GameTree, M.GameTree, M.GameTree, M.GameTree)
+discardPoorPerformers searchTree1 searchTree2 searchTree3 searchTree4 =
+  (searchTree1, searchTree2, searchTree3, searchTree4)
 
 depth :: Int
 depth = 50
