@@ -1,9 +1,10 @@
 {
-	"author": "Edward John Steere",
-	"email": "edward.steere@gmail.com",
-	"nickName": "Quiescent",
-	"botLocation": "/bin",
-	"botFileName": "EntelectChallenge2018-exe",
-	"botLanguage": "haskell"
+    "author": "Edward John Steere",
+    "email": "edward.steere@gmail.com",
+    "nickName": "Quiescent",
+    "botLocation": "/bin",
+    "botFileName": "EntelectChallenge2018-exe",
+    "botLanguage": "haskell",
+    "arguments": "-N4"
 }
 

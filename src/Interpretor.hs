@@ -4,6 +4,7 @@
 {-# LANGUAGE BangPatterns #-}
 
 module Interpretor (repl,
+                    commandFilePath,
                     parseStateString,
                     Player(..),
                     Missile,
@@ -640,8 +641,5 @@ instance Show Command where
     in show x' ++ "," ++ show y' ++ ","  ++ "3"
   show NothingCommand = ""
 
-printCommand :: Command ->  IO ()
-printCommand = writeFile commandFilePath . show
-
-repl :: (GameState -> IO Command) -> IO ()
-repl evaluate = readGameState >>= evaluate >>= printCommand
+repl :: (GameState -> IO ()) -> IO ()
+repl evaluate = readGameState >>= evaluate

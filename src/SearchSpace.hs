@@ -1,12 +1,15 @@
 {-# LANGUAGE BangPatterns #-}
 
+-- TODO fix the game tree so that it can also be empty...
+
 module SearchSpace (advanceState,
                     myAvailableMoves,
                     oponentsAvailableMoves,
                     search)
   where
 
-import Interpretor (GameState(..),
+import Interpretor (commandFilePath,
+                    GameState(..),
                     Player(..),
                     BuildingType(..))
 import Player
@@ -21,26 +24,22 @@ import VectorIndex
 import qualified GameTree as M
 
 import Data.Int
-import System.Clock
 import Data.Maybe
+import System.Clock
 import System.Random
 import Control.Monad.State.Lazy
-import qualified Data.Vector.Unboxed         as UV
-import qualified Data.IntMap                 as IM
-import qualified Data.Vector.Unboxed.Mutable as MVector
-import qualified Data.List                   as L
+import qualified Data.Vector.Unboxed as UV
+import qualified Data.IntMap         as IM
+import qualified Data.List           as L
 
-import Control.Concurrent (killThread,
-                           tryTakeMVar,
-                           newEmptyMVar,
-                           putMVar,
+import Control.Concurrent (readChan,
+                           newChan,
+                           writeChan,
                            forkIO,
-                           threadDelay,
-                           MVar)
+                           Chan)
 
-import Control.Parallel.Strategies (using, rdeepseq, parList)
+import Control.Parallel.Strategies (using, rdeepseq)
 import Control.Exception (evaluate)
-import Control.DeepSeq (deepseq)
 
 xPredicate :: (Int -> Bool) -> Coord -> Bool
 xPredicate p coord =
@@ -171,138 +170,75 @@ maxSearchTime = 1900000000
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time
 
-delayTime :: Int
-delayTime = 10
+printCommand :: Command ->  IO ()
+printCommand = writeFile commandFilePath . show
 
 -- TODO: implement an initial sleep so that this thread doesn't steel computation time
-search :: StdGen -> GameState -> IO Command
+search :: StdGen -> GameState -> IO ()
 search g state' = do
   let clock          = Realtime
   startTime         <- getTime clock
   let startTimeNanos = timeToNanos startTime
-  bestMove          <- newEmptyMVar
-  threadId          <- forkIO $ searchDeeper bestMove g state'
-  let searchIter bestSoFar = do
-        bestMoveSoFar <- tryTakeMVar bestMove
-        timeNow       <- getTime clock
-        let newBest = if isJust bestMoveSoFar
-                      then fromJust bestMoveSoFar
-                      else bestSoFar
-        let timeSoFar  = timeToNanos timeNow - startTimeNanos
-        if timeSoFar < maxSearchTime
-          then do
-            threadDelay delayTime
-            searchIter newBest
-          else do
-            killThread threadId -- this had no effect :(
-            return newBest
-  searchIter undefined -- It's not quitting the program here :/
+  bestMove1          <- newChan
+  bestMove2          <- newChan
+  bestMove3          <- newChan
+  bestMove4          <- newChan
+  _                  <- forkIO $ searchDeeper bestMove1 g state'
+  _                  <- forkIO $ searchDeeper bestMove2 g state'
+  _                  <- forkIO $ searchDeeper bestMove3 g state'
+  _                  <- forkIO $ searchDeeper bestMove4 g state'
+  let searchIter = do
+        (bestScore1, bestMove1') <- readChan bestMove1
+        (bestScore2, bestMove2') <- readChan bestMove2
+        (bestScore3, bestMove3') <- readChan bestMove3
+        (bestScore4, bestMove4') <- readChan bestMove4
+        timeNow                  <- getTime clock
+        let best = snd $ L.maximumBy cmpByFst $ [(bestScore1, bestMove1'),
+                                                 (bestScore2, bestMove2'),
+                                                 (bestScore3, bestMove3'),
+                                                 (bestScore4, bestMove4')]
+        let timeSoFar = timeToNanos timeNow - startTimeNanos
+        putStrLn "Tick"
+        printCommand best
+        when (timeSoFar < maxSearchTime) $ searchIter
+  searchIter
 
 cmpByFst :: (Float, Command) -> (Float, Command) -> Ordering
 cmpByFst (x, _) (y, _) = compare x y
 
 type Scores = UV.Vector Float
 
-ticksBeforeDiscarding :: Int
-ticksBeforeDiscarding = 1000
+ticksBeforeComms :: Int
+ticksBeforeComms = 100
 
-searchDeeper :: MVar Command -> StdGen -> GameState -> IO ()
+searchDeeper :: Chan (Float, Command) -> StdGen -> GameState -> IO ()
 searchDeeper best g initialState =
-  searchDeeperIter ticksBeforeDiscarding
-                   g'
-                   treeOne
-                   treeTwo
-                   treeThree
-                   treeFour
+  searchDeeperIter ticksBeforeComms g M.empty
   where
-    searchDeeperIter :: Int -> StdGen -> M.GameTree -> M.GameTree -> M.GameTree -> M.GameTree -> IO ()
-    searchDeeperIter !discardCountDown
-                     h
-                     searchTree1
-                     searchTree2
-                     searchTree3
-                     searchTree4 =
-     let discardNow        = discardCountDown == 0
-         discardCountDown' = if discardNow then ticksBeforeDiscarding else (discardCountDown - 1)
-         (searchTree1',
-          searchTree2',
-          searchTree3',
-          searchTree4')    = if discardNow
-                             then discardPoorPerformers searchTree1
-                                                        searchTree2
-                                                        searchTree3
-                                                        searchTree4
-                             else (searchTree1, searchTree2, searchTree3, searchTree4)
-         -- Tree 1
-         (h', h1)          = split h
-         searchTree1''     = playToEnd h1 division1 initialState searchTree1'
-         scores1           = M.myScores searchTree1'
-         indexOfBestSoFar1 = UV.maxIndex scores1
-         scoreOfBestSoFar1 = scores1 `uVectorIndex` indexOfBestSoFar1
-         bestSoFarThunk1   = toCommand (division1 `uVectorIndex` indexOfBestSoFar1)
-         -- Tree 2
-         (h2, h3)          = split h1
-         searchTree2''     = playToEnd h2 division2 initialState searchTree2'
-         scores2           = M.myScores searchTree2'
-         indexOfBestSoFar2 = UV.maxIndex scores2
-         scoreOfBestSoFar2 = scores2 `uVectorIndex` indexOfBestSoFar2
-         bestSoFarThunk2   = toCommand (division2 `uVectorIndex` indexOfBestSoFar2)
-         -- Tree 3
-         (h4, _)           = split h2
-         searchTree3''     = playToEnd h3 division3 initialState searchTree3'
-         scores3           = M.myScores searchTree3'
-         indexOfBestSoFar3 = UV.maxIndex scores3
-         scoreOfBestSoFar3 = scores3 `uVectorIndex` indexOfBestSoFar3
-         bestSoFarThunk3   = toCommand (division3 `uVectorIndex` indexOfBestSoFar3)
-         -- Tree 4
-         searchTree4''     = playToEnd h4 division4 initialState searchTree4'
-         scores4           = M.myScores searchTree4'
-         indexOfBestSoFar4 = UV.maxIndex scores4
-         scoreOfBestSoFar4 = scores4 `uVectorIndex` indexOfBestSoFar4
-         bestSoFarThunk4   = toCommand (division4 `uVectorIndex` indexOfBestSoFar4)
-         -- Aggregate
-         bestSoFarThunk    =
-            snd $
-            L.maximumBy cmpByFst $
-            ([(scoreOfBestSoFar1, bestSoFarThunk1),
-               (scoreOfBestSoFar2, bestSoFarThunk2),
-               (scoreOfBestSoFar3, bestSoFarThunk3),
-               (scoreOfBestSoFar4, bestSoFarThunk4)] `using` parList rdeepseq)
+    searchDeeperIter :: Int -> StdGen -> M.GameTree -> IO ()
+    searchDeeperIter !commsCountDown h searchTree =
+     let (h', h'')        = split h
+         commsCountDown'  = if commsCountDown == 0 then ticksBeforeComms else (commsCountDown - 1)
+         searchTree'      = playToEnd h'' initialState searchTree
+         scores           = M.myScores searchTree'
+         indexOfBestSoFar = UV.maxIndex scores
+         scoreOfBestSoFar = scores `uVectorIndex` indexOfBestSoFar
+         bestSoFarThunk   = toCommand (moves `uVectorIndex` indexOfBestSoFar)
       in do
         -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
         bestSoFar <- evaluate (bestSoFarThunk `using` rdeepseq)
-        putMVar best $ (bestSoFar `deepseq` bestSoFar)
-        putStrLn "Tick"
-        searchDeeperIter discardCountDown'
-                         h'
-                         searchTree1''
-                         searchTree2''
-                         searchTree3''
-                         searchTree4''
-    moves         = myAvailableMoves initialState
-    (g',
-     division1,
-     division2,
-     division3,
-     division4)   = fourRandomPartitions g moves
-    oponentsMoves = oponentsAvailableMoves initialState
-    treeOne       = initialMove initialState division1 oponentsMoves
-    treeTwo       = initialMove initialState division2 oponentsMoves
-    treeThree     = initialMove initialState division3 oponentsMoves
-    treeFour      = initialMove initialState division4 oponentsMoves
+        when (commsCountDown == 0) $ writeChan best (scoreOfBestSoFar, bestSoFar)
+        searchDeeperIter commsCountDown' h' searchTree'
+    moves = myAvailableMoves initialState
 
-
-discardPoorPerformers :: M.GameTree -> M.GameTree -> M.GameTree -> M.GameTree -> (M.GameTree, M.GameTree, M.GameTree, M.GameTree)
-discardPoorPerformers searchTree1 searchTree2 searchTree3 searchTree4 =
-  (searchTree1, searchTree2, searchTree3, searchTree4)
 
 depth :: Int
 depth = 50
 
 type AdvanceStateResult = (StdGen, [PackedCommand], GameState, Bool)
 
-playToEnd :: StdGen -> Moves -> GameState -> M.GameTree -> M.GameTree
-playToEnd g initialMoves initialState gameTree =
+playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
+playToEnd g initialState gameTree =
   playToEndIter depth (g, [], initialState, False) gameTree
   where
     updateEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
@@ -310,6 +246,7 @@ playToEnd g initialMoves initialState gameTree =
       if iWon currentState
       then updateWin  advanceStateResult gameTree'
       else updateLoss advanceStateResult gameTree'
+    -- TODO inline and transfer into secondary loop.
     playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
     playToEndIter n advanceStateResult@(_, _, currentState, True) gameTree' =
       if gameOver currentState
@@ -320,7 +257,7 @@ playToEnd g initialMoves initialState gameTree =
     playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
       if gameOver currentState
       then updateEnding currentState advanceStateResult gameTree'
-      else let (advanceStateResult', gameTree'') = runState (advanceState initialMoves advanceStateResult) gameTree'
+      else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
            in  playToEndIter (n - 1) advanceStateResult' gameTree''
 
 -- Moves are added to an accumulater by consing onto the front; thus,
@@ -351,18 +288,13 @@ iWon (GameState { me      = (Player { health = myHealth' }),
                   oponent = (Player { health = oponentsHealth' }) }) =
   oponentsHealth' <= 0 && myHealth' > 0
 
-initialMove :: GameState -> Moves -> Moves -> M.GameTree
-initialMove currentState myMoves oponentsMoves =
-  let oponentsScores = oponentsNormalisedScores currentState oponentsMoves
-      myScores       = myNormalisedScores currentState myMoves
-  in M.GameTree myScores IM.empty oponentsScores
-
-advanceState :: Moves -> AdvanceStateResult -> State M.GameTree AdvanceStateResult
-advanceState myInitialMoves (g, moves, currentState, _) = do
+-- I'm traversing the tree every time.  This is not necessary!!!
+advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
+advanceState (g, moves, currentState, _) = do
   gameTree          <- get
   let ourNode        = M.subTree moves gameTree
   let isEmpty        = isNothing ourNode
-  let myMoves        = if moves == [] then myInitialMoves else myAvailableMoves currentState
+  let myMoves        = myAvailableMoves currentState
   let oponentsMoves  = oponentsAvailableMoves currentState
   let oponentsScores =
         if isEmpty
@@ -376,12 +308,13 @@ advanceState myInitialMoves (g, moves, currentState, _) = do
   let (indexOfMyMove, myMove', _)                = chooseAMove g'  myMoves myScores
   let (indexOfOponentsMove, oponentsMove', g''') = chooseAMove g'' oponentsMoves oponentsScores
   let nextState = makeMoves myMove' oponentsMove' currentState
+  let moves'    =
+        if isEmpty
+        then moves
+        else (combineCommands indexOfMyMove indexOfOponentsMove):moves
   when isEmpty $
     put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
-  return (g''',
-          (combineCommands indexOfMyMove indexOfOponentsMove):moves,
-          nextState,
-          isEmpty)
+  return (g''', moves', nextState, isEmpty)
 
 makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
 makeMoves myMove' oponentsMove' =
@@ -456,33 +389,3 @@ chooseOne g moves scores =
 lastIfNothing :: Int -> Maybe Int -> Maybe Int
 lastIfNothing _         x@(Just _) = x
 lastIfNothing lastIndex Nothing    = Just lastIndex
-
-fourRandomPartitions :: RandomGen g => g -> Moves -> (g, Moves, Moves, Moves, Moves)
-fourRandomPartitions g moves =
-  (g',
-   UV.slice start    (start'   - start)       shuffled,
-   UV.slice start'   (start''  - start')      shuffled,
-   UV.slice start''  (start''' - start'')     shuffled,
-   UV.slice start''' (movesLength - start''') shuffled)
-  where
-    shuffled                 = UV.map (uVectorIndex moves) shuffledIndices
-    remaining                = movesLength `mod` 4
-    runLength                = movesLength `div` 4
-    start                    = 0
-    start'                   = runLength             + if remaining >= 1 then 1 else 0
-    start''                  = start'    + runLength + if remaining >= 2 then 1 else 0
-    start'''                 = start''   + runLength + if remaining >= 3 then 1 else 0
-    movesLength              = UV.length moves
-    indices                  = UV.generate movesLength id
-    (g', shuffledIndices)    = shuffleIter g (movesLength - 1) indices
-    shuffleIter :: RandomGen g => g -> Int -> UV.Vector Int -> (g, UV.Vector Int)
-    shuffleIter g'' 0 indices' = (g'', indices')
-    shuffleIter g'' n indices' =
-      let (value, g''') = next g''
-          swapIdx      = value `mod` n
-          swap xs      = do
-            swapValue1 <- MVector.read xs swapIdx
-            swapValue2 <- MVector.read xs       n
-            MVector.write xs swapIdx swapValue2
-            MVector.write xs n       swapValue1
-      in shuffleIter g''' (n - 1) (UV.modify swap indices')
