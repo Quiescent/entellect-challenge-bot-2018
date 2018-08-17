@@ -54,9 +54,14 @@ addAt (move:moves) subTreeToAdd (GameTree myMoveScores branches oponentsMoveScor
   let updatedSubTree = M.adjust (addAt moves subTreeToAdd) move branches
   in GameTree myMoveScores updatedSubTree oponentsMoveScores
 
--- TODO: Implement
 mergeTrees :: GameTree -> GameTree -> GameTree
-mergeTrees x _ = x
+mergeTrees EmptyTree y                                   = y
+mergeTrees x         EmptyTree                           = x
+mergeTrees (GameTree myScores1 myBranches1 enemyScores1)
+           (GameTree myScores2 myBranches2 enemyScores2) =
+  (GameTree (UV.zipWith (+) myScores1 myScores2)
+            (M.unionWith mergeTrees myBranches1 myBranches2)
+            (UV.zipWith (+) enemyScores1 enemyScores2))
 
 empty :: GameTree
 empty = EmptyTree
