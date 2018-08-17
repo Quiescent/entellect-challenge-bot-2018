@@ -347,7 +347,7 @@ oponentsNormalisedScores :: GameState -> Moves -> Scores
 oponentsNormalisedScores gameState =
   normaliseScores .
   UV.map
-  ((1.0 /) . (1 + ) . myIntermediateBoardScore . (flip updateOponentsMove gameState))
+  ((1 + ) . oponentsIntermediateBoardScore . (flip updateOponentsMove gameState))
 
 normaliseScores :: Scores -> Scores
 normaliseScores xs =

@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 
-module Objective (myIntermediateBoardScore,
+module Objective (oponentsIntermediateBoardScore,
+                  myIntermediateBoardScore,
                   Move(..))
   where
 
@@ -20,11 +21,17 @@ instance NFData Move where
     (rnf oponentsMove') `seq`
     ()
 
+oponentsIntermediateBoardScore :: GameState -> Float
+oponentsIntermediateBoardScore state =
+  let futureState = advanceToFutureState state
+  in energyTowersDestroyed (oponent state) (oponent futureState) +
+     attackPowerDestroyed  (oponent state) (oponent futureState)
+
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
   let futureState = advanceToFutureState state
-  in energyTowersDestroyed state futureState +
-     attackPowerDestroyed state futureState
+  in energyTowersDestroyed (me state) (me futureState) +
+     attackPowerDestroyed  (me state) (me futureState)
 
 -- Unrolled for the compiler to optimise (there are 10 right now)
 advanceToFutureState :: GameState -> GameState
@@ -40,28 +47,26 @@ advanceToFutureState =
   tickEngine .
   tickEngine
 
-energyTowersDestroyed :: GameState -> GameState -> Float
+energyTowersDestroyed :: Player -> Player -> Float
 energyTowersDestroyed
-  (GameState { oponent = (Player { energyTowers                  = initialEnergyTowers,
-                                   energyTowersUnderConstruction = energyTowersUnderConstruction' }) })
-  (GameState { oponent = (Player { energyTowers                  = energyTowersAfter }) }) =
+  (Player { energyTowers                  = initialEnergyTowers,
+            energyTowersUnderConstruction = energyTowersUnderConstruction' })
+  (Player { energyTowers                  = energyTowersAfter }) =
   fromIntegral $ (countBuildings initialEnergyTowers +
                   countBuildings energyTowersUnderConstruction') -
                  (countBuildings energyTowersAfter)
 
-attackPowerDestroyed :: GameState -> GameState -> Float
+attackPowerDestroyed :: Player -> Player -> Float
 attackPowerDestroyed
-  (GameState {
-      oponent = (Player { attackTowersUnderConstruction = attackTowersUnderConstruction',
-                          attack3Towers                 = initialAttack3Towers,
-                          attack2Towers                 = initialAttack2Towers,
-                          attack1Towers                 = initialAttack1Towers,
-                          attack0Towers                 = initialAttack0Towers }) })
-  (GameState {
-      oponent = (Player { attack3Towers                 = attack3TowersAfter,
-                          attack2Towers                 = attack2TowersAfter,
-                          attack1Towers                 = attack1TowersAfter,
-                          attack0Towers                 = attack0TowersAfter }) }) =
+  (Player { attackTowersUnderConstruction = attackTowersUnderConstruction',
+            attack3Towers                 = initialAttack3Towers,
+            attack2Towers                 = initialAttack2Towers,
+            attack1Towers                 = initialAttack1Towers,
+            attack0Towers                 = initialAttack0Towers })
+  (Player { attack3Towers                 = attack3TowersAfter,
+            attack2Towers                 = attack2TowersAfter,
+            attack1Towers                 = attack1TowersAfter,
+            attack0Towers                 = attack0TowersAfter }) =
   fromIntegral $ (countBuildings
                   (addAllBuildings attackTowersUnderConstruction'
                    (addAllBuildings initialAttack3Towers
