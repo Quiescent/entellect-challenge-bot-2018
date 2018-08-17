@@ -1,4 +1,5 @@
 module GameTree (GameTree(..),
+                 mergeTrees,
                  subTree,
                  addAt,
                  empty,
@@ -52,6 +53,10 @@ addAt (move:[])    subTreeToAdd (GameTree myMoveScores branches oponentsMoveScor
 addAt (move:moves) subTreeToAdd (GameTree myMoveScores branches oponentsMoveScores) =
   let updatedSubTree = M.adjust (addAt moves subTreeToAdd) move branches
   in GameTree myMoveScores updatedSubTree oponentsMoveScores
+
+-- TODO: Implement
+mergeTrees :: GameTree -> GameTree -> GameTree
+mergeTrees x _ = x
 
 empty :: GameTree
 empty = EmptyTree

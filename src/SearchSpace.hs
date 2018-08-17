@@ -180,13 +180,17 @@ search g state' = do
   startTime         <- getTime clock
   let startTimeNanos = timeToNanos startTime
   bestMove1          <- newChan
+  neighbour1         <- newChan
   bestMove2          <- newChan
+  neighbour2         <- newChan
   bestMove3          <- newChan
+  neighbour3         <- newChan
   bestMove4          <- newChan
-  _                  <- forkIO $ searchDeeper bestMove1 g state'
-  _                  <- forkIO $ searchDeeper bestMove2 g state'
-  _                  <- forkIO $ searchDeeper bestMove3 g state'
-  _                  <- forkIO $ searchDeeper bestMove4 g state'
+  neighbour4         <- newChan
+  _                  <- forkIO $ searchDeeper bestMove1 neighbour2 neighbour4 g state'
+  _                  <- forkIO $ searchDeeper bestMove2 neighbour3 neighbour1 g state'
+  _                  <- forkIO $ searchDeeper bestMove3 neighbour4 neighbour2 g state'
+  _                  <- forkIO $ searchDeeper bestMove4 neighbour1 neighbour3 g state'
   let searchIter = do
         (bestScore1, bestMove1') <- readChan bestMove1
         (bestScore2, bestMove2') <- readChan bestMove2
@@ -211,8 +215,11 @@ type Scores = UV.Vector Float
 ticksBeforeComms :: Int
 ticksBeforeComms = 100
 
-searchDeeper :: Chan (Float, Command) -> StdGen -> GameState -> IO ()
-searchDeeper best g initialState =
+commsMidPoint :: Int
+commsMidPoint = 50
+
+searchDeeper :: Chan (Float, Command) -> Chan M.GameTree -> Chan M.GameTree -> StdGen -> GameState -> IO ()
+searchDeeper best commTo commFrom g initialState =
   searchDeeperIter ticksBeforeComms g M.empty
   where
     searchDeeperIter :: Int -> StdGen -> M.GameTree -> IO ()
@@ -227,8 +234,15 @@ searchDeeper best g initialState =
       in do
         -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
         bestSoFar <- evaluate (bestSoFarThunk `using` rdeepseq)
-        when (commsCountDown == 0) $ writeChan best (scoreOfBestSoFar, bestSoFar)
-        searchDeeperIter commsCountDown' h' searchTree'
+        if (commsCountDown == 0) then do
+          writeChan best (scoreOfBestSoFar, bestSoFar)
+          neighbourTree <- readChan commFrom
+          searchDeeperIter commsCountDown' h' $ M.mergeTrees searchTree' neighbourTree
+        else if (commsCountDown == commsMidPoint)
+             then do
+               writeChan commTo searchTree'
+               searchDeeperIter commsCountDown' h' searchTree'
+             else searchDeeperIter commsCountDown' h' searchTree'
     moves = myAvailableMoves initialState
 
 
