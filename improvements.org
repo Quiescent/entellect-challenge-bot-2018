@@ -122,17 +122,39 @@ appropriate.
      The last heuristic looked purely at the damage I dealt to the opponents
      energy and attack towers and was very effective.
    :END:
-** TODO Implement a dot-product version of the heuristic
-** TODO Implement a bitset version of the engine
-** TODO Don't use a prio queue for construction
-** TODO Use Accelerate for the top-level vector calculations
-** TODO At a certain energy, go for the kill
-** TODO Use a faster PRNG
+** DONE Implement a dot-product version of the heuristic
+   CLOSED: [2018-08-18 Sat 13:24]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-18 Sat 13:24] \\
+     This proved to be very ineffective and I think that it's because it
+     doesn't really capture the reality of the situation and is difficult
+     to balance with the energy heuristic.
+   :END:
+** DONE Implement a bitset version of the engine
+   CLOSED: [2018-08-18 Sat 13:25]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-18 Sat 13:25] \\
+     This has been very effective.  It now does a series of branch less
+     bitwise operations to go from one state to the next.
+   :END:
+** DONE Don't use a prio queue for construction
+   CLOSED: [2018-08-18 Sat 13:26]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-18 Sat 13:26] \\
+     This was accomplished with the bitwise implementation.
+   :END:
+** TODO [#A] Implement Better Tests
+** TODO [#A] Implement a better way of merging trees
+It needs to take into account the DC offset from the base fitness.
+** TODO [#A] Balance the Heuristic with towers lost
+** TODO [#B] Use Accelerate for the top-level vector calculations
+** TODO [#B] At a certain energy, go for the kill
+** TODO [#B] Make a type for each row state
+** TODO [#B] Do some maths!!!
+** TODO [#C] Use a faster PRNG
 Investigate: http://hackage.haskell.org/package/mwc-random
-** TODO Use Vector Algorithms binary search for `chooseOne'
-** TODO Add rewrite rules and always use map* varients of functions
-** TODO Make a type for each row state
-** TODO Do some maths!!!
+** TODO [#C] Use Vector Algorithms binary search for `chooseOne'
+** TODO [#C] Add rewrite rules and always use map* varients of functions
 ** ABANDONED  Use a deficit algorithm for the hits taken rather than absolute
    :LOGBOOK:
    - Note taken on [2018-08-07 Tue 07:49] \\
