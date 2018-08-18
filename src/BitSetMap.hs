@@ -25,6 +25,7 @@ module BitSetMap (Missiles,
                   countMissiles,
                   countBuildings,
                   onlyOverlappingBuildings,
+                  fullBoard,
                   row0,
                   row1,
                   row2,
@@ -167,3 +168,8 @@ row6 = row0 `shiftL` (halfWay * 6)
 
 row7 :: Word64
 row7 = row0 `shiftL` (halfWay * 7)
+
+-- Boards:
+
+fullBoard :: Word64
+fullBoard = 18446744073709551615

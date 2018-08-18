@@ -28,6 +28,8 @@ spec =
 aPlayer :: Player
 aPlayer = (Player { energy                          = 0,
                     health                          = 25,
+                    allTowers                       = 0,
+                    allBuiltTowers                  = 0,
                     energyTowersUnderConstruction   = 0,
                     energyTowers                    = addMissile (toCoord 3 4) 0,
                     attackTowersUnderConstruction   = 0,
@@ -60,6 +62,8 @@ aPlayer = (Player { energy                          = 0,
 aPlayerWithNonZeroEnergy :: Player
 aPlayerWithNonZeroEnergy = (Player { energy                          = 10,
                                      health                          = 15,
+                                     allTowers                       = 0,
+                                     allBuiltTowers                  = 0,
                                      energyTowersUnderConstruction   = 0,
                                      energyTowers                    = addMissile (toCoord 3 4)
                                                                        (addMissile (toCoord 0 3) 0),
@@ -223,6 +227,8 @@ aPlayerWithAnEnergyTowerAtTwoTwo :: Player
 aPlayerWithAnEnergyTowerAtTwoTwo =
   Player { energy                          = 0,
            health                          = 0,
+           allTowers                       = addBuilding (toCoord 2 2) 0,
+           allBuiltTowers                  = addBuilding (toCoord 2 2) 0,
            energyTowersUnderConstruction   = 0,
            energyTowers                    = addBuilding (toCoord 2 2) 0,
            attackTowersUnderConstruction   = 0,
@@ -256,6 +262,8 @@ aPlayerWithAMissileOnTheOtherSideAtTwoTwo :: Player
 aPlayerWithAMissileOnTheOtherSideAtTwoTwo =
   Player { energy                          = 0,
            health                          = 0,
+           allTowers                       = 0,
+           allBuiltTowers                  = 0,
            energyTowersUnderConstruction   = 0,
            energyTowers                    = 0,
            attackTowersUnderConstruction   = 0,
@@ -289,6 +297,8 @@ aPlayerWithAMissileOnTwoTwo :: Player
 aPlayerWithAMissileOnTwoTwo =
   Player { energy                          = 0,
            health                          = 0,
+           allTowers                       = 0,
+           allBuiltTowers                  = 0,
            energyTowersUnderConstruction   = 0,
            energyTowers                    = 0,
            attackTowersUnderConstruction   = 0,
@@ -321,6 +331,8 @@ aPlayerWithAMissileOnTwoTwo =
 anEmptyPlayer :: Player
 anEmptyPlayer = Player { energy                          = 0,
                          health                          = 0,
+                         allTowers                       = 0,
+                         allBuiltTowers                  = 0,
                          energyTowersUnderConstruction   = 0,
                          energyTowers                    = 0,
                          attackTowersUnderConstruction   = 0,
@@ -364,10 +376,14 @@ collideSpec = do
     it "shouldn't remove an energy tower which no missiles collided with" $
       collide aPlayerWithAMissileOnTheOtherSideAtTwoTwo
               (aPlayerWithAMissileOnTheOtherSideAtTwoTwo
-                 { energyTowers = addBuilding (toCoord 2 2) (addBuilding (toCoord 3 4) 0) })
+                 { allTowers      = addBuilding (toCoord 2 2) (addBuilding (toCoord 3 4) 0),
+                   allBuiltTowers = addBuilding (toCoord 2 2) (addBuilding (toCoord 3 4) 0),
+                   energyTowers   = addBuilding (toCoord 2 2) (addBuilding (toCoord 3 4) 0) })
       `shouldBe`
       (anEmptyPlayer, aPlayerWithAMissileOnTheOtherSideAtTwoTwo {
-          energyTowers = addBuilding (toCoord 3 4) 0 })
+          allTowers      = addBuilding (toCoord 3 4) 0,
+          allBuiltTowers = addBuilding (toCoord 3 4) 0,
+          energyTowers   = addBuilding (toCoord 3 4) 0 })
 
 aPlayerWithAMissileOnSevenTwo :: Player
 aPlayerWithAMissileOnSevenTwo =
@@ -404,17 +420,20 @@ updateMoveSpec = do
     it "should build an attack tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ATTACK)) aPlayer
       `shouldBe`
-      aPlayer { attackTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
+      aPlayer { allTowers                     = addBuilding (toCoord 6 2) 0,
+                attackTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
                 energy                        = -30 }
     it "should build a defense tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) DEFENSE)) aPlayer
       `shouldBe`
-      aPlayer { defenseTowersUnderConstruction2 = addBuilding (toCoord 6 2) 0,
+      aPlayer { allTowers                       = addBuilding (toCoord 6 2) 0,
+                defenseTowersUnderConstruction2 = addBuilding (toCoord 6 2) 0,
                 energy                          = -30 }
     it "should build a energy tower at the given coordinates when given that command" $
       updateMove (toEfficientCommand (Build (toCoord 6 2) ENERGY)) aPlayer
       `shouldBe`
-      aPlayer { energyTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
+      aPlayer { allTowers                     = addBuilding (toCoord 6 2) 0,
+                energyTowersUnderConstruction = addBuilding (toCoord 6 2) 0,
                 energy                        = -20 }
 
 -- TODO (!!!) implement the missile movement/collission spec here !!!

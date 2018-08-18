@@ -349,36 +349,36 @@ emptyPlayer :: Player
 emptyPlayer = Player
   0
   0
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
+  emptyBuildings
   0
   0
   0
   0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
+  emptyMissiles
+  emptyMissiles
+  emptyMissiles
+  emptyMissiles
+  emptyMissiles
+  emptyMissiles
+  emptyMissiles
+  emptyMissiles
 
 emptyGameState :: GameState
 emptyGameState = GameState 0 emptyPlayer emptyPlayer

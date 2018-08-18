@@ -30,64 +30,68 @@ expectedSimpleStateString =
   (GameState { gameRound = 11,
                me        = (Player { energy                          = 37,
                                      health                          = 30,
-                                     energyTowersUnderConstruction   = 0,
-                                     energyTowers                    = 0,
-                                     attackTowersUnderConstruction   = 0,
-                                     attack3Towers                   = 0,
-                                     attack2Towers                   = 0,
-                                     attack1Towers                   = 0,
-                                     attack0Towers                   = 0,
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = 0,
-                                     defenseTowersUnderConstruction0 = 0,
-                                     defense4Towers                  = 0,
-                                     defense3Towers                  = 0,
-                                     defense2Towers                  = 0,
-                                     defense1Towers                  = 0,
-                                     teslaTower0                     = 0,
-                                     teslaTower1                     = 0,
+                                     allTowers                       = emptyBuildings,
+                                     allBuiltTowers                  = emptyBuildings,
+                                     energyTowersUnderConstruction   = emptyBuildings,
+                                     energyTowers                    = emptyBuildings,
+                                     attackTowersUnderConstruction   = emptyBuildings,
+                                     attack3Towers                   = emptyBuildings,
+                                     attack2Towers                   = emptyBuildings,
+                                     attack1Towers                   = emptyBuildings,
+                                     attack0Towers                   = emptyBuildings,
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = emptyBuildings,
+                                     defenseTowersUnderConstruction0 = emptyBuildings,
+                                     defense4Towers                  = emptyBuildings,
+                                     defense3Towers                  = emptyBuildings,
+                                     defense2Towers                  = emptyBuildings,
+                                     defense1Towers                  = emptyBuildings,
+                                     teslaTower0                     = emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
                                      teslaTower0ConstructionTime     = 0,
                                      teslaTower1ConstructionTime     = 0,
                                      teslaTower0CooldownTime         = 0,
                                      teslaTower1CooldownTime         = 0,
-                                     missiles0                       = 0,
-                                     missiles1                       = 0,
-                                     missiles2                       = 0,
-                                     missiles3                       = 0,
-                                     missilesOtherSide0              = 0,
-                                     missilesOtherSide1              = 0,
-                                     missilesOtherSide2              = 0,
-                                     missilesOtherSide3              = 0 }),
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = emptyMissiles,
+                                     missilesOtherSide1              = emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles }),
                oponent   = (Player { energy                          = 53,
                                      health                          = 100,
-                                     energyTowersUnderConstruction   = 0,
-                                     energyTowers                    = 0,
-                                     attackTowersUnderConstruction   = 0,
-                                     attack3Towers                   = 0,
-                                     attack2Towers                   = 0,
-                                     attack1Towers                   = 0,
-                                     attack0Towers                   = 0,
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = 0,
-                                     defenseTowersUnderConstruction0 = 0,
-                                     defense4Towers                  = 0,
-                                     defense3Towers                  = 0,
-                                     defense2Towers                  = 0,
-                                     defense1Towers                  = 0,
-                                     teslaTower0                     = 0,
-                                     teslaTower1                     = 0,
+                                     allTowers                       = emptyBuildings,
+                                     allBuiltTowers                  = emptyBuildings,
+                                     energyTowersUnderConstruction   = emptyBuildings,
+                                     energyTowers                    = emptyBuildings,
+                                     attackTowersUnderConstruction   = emptyBuildings,
+                                     attack3Towers                   = emptyBuildings,
+                                     attack2Towers                   = emptyBuildings,
+                                     attack1Towers                   = emptyBuildings,
+                                     attack0Towers                   = emptyBuildings,
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = emptyBuildings,
+                                     defenseTowersUnderConstruction0 = emptyBuildings,
+                                     defense4Towers                  = emptyBuildings,
+                                     defense3Towers                  = emptyBuildings,
+                                     defense2Towers                  = emptyBuildings,
+                                     defense1Towers                  = emptyBuildings,
+                                     teslaTower0                     = emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
                                      teslaTower0ConstructionTime     = 0,
                                      teslaTower1ConstructionTime     = 0,
                                      teslaTower0CooldownTime         = 0,
                                      teslaTower1CooldownTime         = 0,
-                                     missiles0                       = 0,
-                                     missiles1                       = 0,
-                                     missiles2                       = 0,
-                                     missiles3                       = 0,
-                                     missilesOtherSide0              = 0,
-                                     missilesOtherSide1              = 0,
-                                     missilesOtherSide2              = 0,
-                                     missilesOtherSide3              = 0 })})
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = emptyMissiles,
+                                     missilesOtherSide1              = emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles })})
   
 stateStringWithFinishedTowers :: B.ByteString
 stateStringWithFinishedTowers = "{\"gameDetails\": {\"round\": 11,\"maxRounds\": 400,\"mapWidth\": 16,\"mapHeight\": 8,\"roundIncomeEnergy\": 5,\"buildingPrices\": {\"TESLA\": 300,\"DEFENSE\": 30,\"ATTACK\": 30,\"ENERGY\": 20},\"buildingsStats\": {\"TESLA\": {\"health\": 5,\"constructionTime\": 11,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 10,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"DEFENSE\": {\"health\": 20,\"constructionTime\": 4,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 0,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"ATTACK\": {\"health\": 5,\"constructionTime\": 2,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 1,\"weaponCooldownPeriod\": 3,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"ENERGY\": {\"health\": 5,\"constructionTime\": 2,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 0,\"energyGeneratedPerTurn\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 1}}},\"players\": [{\"playerType\": \"A\",\"energy\": 37,\"health\": 30,\"hitsTaken\": 14,\"score\": 451},{\"playerType\": \"B\",\"energy\": 53,\"health\": 100,\"hitsTaken\": 0,\"score\": 2093}],\"gameMap\": [[{\"x\": 0,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 0,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 0,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 0,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 0,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 1,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 1,\"buildings\": [{\"health\": 10,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 3,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 4,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 5,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 1,\"buildings\": [{\"health\": 10,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 6,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 1,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 1,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 1,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 1,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 1,\"y\": 2,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 2,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 0,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 5,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 3,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 4,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 4,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 1,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 4,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 5,\"buildings\": [{\"health\": 15,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 1,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 10,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 11,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 12,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 13,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"}]]}"
@@ -95,85 +99,142 @@ stateStringWithFinishedTowers = "{\"gameDetails\": {\"round\": 11,\"maxRounds\":
 expectedWithFinishedTowersStateString :: GameState
 expectedWithFinishedTowersStateString =
   (GameState { gameRound = 11,
-               me        = (Player { energy             = 37,
-                                     health             = 30,
-                                     energyTowersUnderConstruction = 0,
-                                     energyTowers = addBuilding (toCoord 0 3)
-                                                    (addBuilding (toCoord 5 3) 0),
-                                     attackTowersUnderConstruction = 0,
-                                     attack3Towers = 0,
-                                     attack2Towers = 0,
-                                     attack1Towers = 0,
-                                     attack0Towers = 0,
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = 0,
-                                     defenseTowersUnderConstruction0 = 0,
-                                     defense4Towers = addBuilding (toCoord 1 1)
-                                                      (addBuilding (toCoord 4 1)
-                                                       (addBuilding (toCoord 5 1) 0)),
-                                     defense3Towers = 0,
-                                     defense2Towers = addBuilding (toCoord 3 1)
-                                                      (addBuilding (toCoord 6 1) 0),
-                                     defense1Towers = addBuilding (toCoord 1 2) 0,
-                                     teslaTower0 = 0,
-                                     teslaTower1 = 0,
-                                     teslaTower0ConstructionTime = 0,
-                                     teslaTower1ConstructionTime = 0,
-                                     teslaTower0CooldownTime = 0,
-                                     teslaTower1CooldownTime = 0,
-                                     missiles0 = 0,
-                                     missiles1 = 0,
-                                     missiles2 = 0,
-                                     missiles3 = 0,
-                                     missilesOtherSide0 = 0,
-                                     missilesOtherSide1 = 0,
-                                     missilesOtherSide2 = 0,
-                                     missilesOtherSide3 = 0 }),
-               oponent   = (Player { energy             = 53,
-                                     health             = 100,
-                                     energyTowersUnderConstruction = 0,
-                                     energyTowers = addBuilding (toCoord 15 0)
-                                                    (addBuilding (toCoord 15 1)
-                                                      (addBuilding (toCoord 15 2)
-                                                       (addBuilding (toCoord 15 3)
-                                                         (addBuilding (toCoord 15 4)
-                                                           (addBuilding (toCoord 15 5)
-                                                            (addBuilding (toCoord 15 6) 0)))))),
-                                     attackTowersUnderConstruction = 0,
-                                     attack3Towers = addBuilding (toCoord 14 2)
-                                                     (addBuilding (toCoord 12 5)
-                                                      (addBuilding (toCoord 9 6) 0)),
-                                     attack2Towers = addBuilding (toCoord 14 1)
-                                                     (addBuilding (toCoord 11 5)
-                                                      (addBuilding (toCoord 14 5) 0)),
-                                     attack1Towers = addBuilding (toCoord 9 4)
-                                                     (addBuilding (toCoord 9 5) 0),
-                                     attack0Towers = addBuilding (toCoord 10 5)
-                                                     (addBuilding (toCoord 13 5) 0),
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = 0,
-                                     defenseTowersUnderConstruction0 = 0,
-                                     defense4Towers = addBuilding (toCoord 8 0)
-                                                      (addBuilding (toCoord 8 2)
-                                                       (addBuilding (toCoord 8 4)
-                                                        (addBuilding (toCoord 8 5) 0))),
-                                     defense3Towers = 0,
-                                     defense2Towers = 0,
-                                     defense1Towers = 0,
-                                     teslaTower0 = 0,
-                                     teslaTower1 = 0,
-                                     teslaTower0ConstructionTime = 0,
-                                     teslaTower1ConstructionTime = 0,
-                                     teslaTower0CooldownTime = 0,
-                                     teslaTower1CooldownTime = 0,
-                                     missiles0 = 0,
-                                     missiles1 = 0,
-                                     missiles2 = 0,
-                                     missiles3 = 0,
-                                     missilesOtherSide0 = 0,
-                                     missilesOtherSide1 = 0,
-                                     missilesOtherSide2 = 0,
-                                     missilesOtherSide3 = 0 })})
+               me        = (Player { energy                          = 37,
+                                     health                          = 30,
+                                     allTowers                       = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3)
+                                                                        (addBuilding (toCoord 1 1)
+                                                                         (addBuilding (toCoord 4 1)
+                                                                          (addBuilding (toCoord 5 1)
+                                                                           (addBuilding (toCoord 3 1)
+                                                                            (addBuilding (toCoord 6 1)
+                                                                             (addBuilding (toCoord 1 2) emptyBuildings))))))),
+                                     allBuiltTowers                  = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3)
+                                                                        (addBuilding (toCoord 1 1)
+                                                                         (addBuilding (toCoord 4 1)
+                                                                          (addBuilding (toCoord 5 1)
+                                                                           (addBuilding (toCoord 3 1)
+                                                                            (addBuilding (toCoord 6 1)
+                                                                             (addBuilding (toCoord 1 2) emptyBuildings))))))),
+                                     energyTowersUnderConstruction   = emptyBuildings,
+                                     energyTowers                    = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3) emptyBuildings),
+                                     attackTowersUnderConstruction   = emptyBuildings,
+                                     attack3Towers                   = emptyBuildings,
+                                     attack2Towers                   = emptyBuildings,
+                                     attack1Towers                   = emptyBuildings,
+                                     attack0Towers                   = emptyBuildings,
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = emptyBuildings,
+                                     defenseTowersUnderConstruction0 = emptyBuildings,
+                                     defense4Towers                  = addBuilding (toCoord 1 1)
+                                                                       (addBuilding (toCoord 4 1)
+                                                                        (addBuilding (toCoord 5 1) emptyBuildings)),
+                                     defense3Towers                  = emptyBuildings,
+                                     defense2Towers                  = addBuilding (toCoord 3 1)
+                                                                       (addBuilding (toCoord 6 1) emptyBuildings),
+                                     defense1Towers                  = addBuilding (toCoord 1 2) emptyBuildings,
+                                     teslaTower0                     = emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
+                                     teslaTower0ConstructionTime     = 0,
+                                     teslaTower1ConstructionTime     = 0,
+                                     teslaTower0CooldownTime         = 0,
+                                     teslaTower1CooldownTime         = 0,
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = emptyMissiles,
+                                     missilesOtherSide1              = emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles }),
+               oponent   = (Player { energy                          = 53,
+                                     health                          = 100,
+                                     allTowers                       = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6)
+                                                                             (addBuilding (toCoord 14 2)
+                                                                              (addBuilding (toCoord 12 5)
+                                                                               (addBuilding (toCoord 9 6)
+                                                                                (addBuilding (toCoord 14 1)
+                                                                                 (addBuilding (toCoord 11 5)
+                                                                                  (addBuilding (toCoord 14 5)
+                                                                                   (addBuilding (toCoord 9 4)
+                                                                                    (addBuilding (toCoord 9 5)
+                                                                                     (addBuilding (toCoord 10 5)
+                                                                                      (addBuilding (toCoord 13 5)
+                                                                                       (addBuilding (toCoord 8 0)
+                                                                                        (addBuilding (toCoord 8 2)
+                                                                                         (addBuilding (toCoord 8 4)
+                                                                                          (addBuilding (toCoord 8 5) emptyBuildings)))))))))))))))))))),
+                                     allBuiltTowers                  = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6)
+                                                                             (addBuilding (toCoord 14 2)
+                                                                              (addBuilding (toCoord 12 5)
+                                                                               (addBuilding (toCoord 9 6)
+                                                                                (addBuilding (toCoord 14 1)
+                                                                                 (addBuilding (toCoord 11 5)
+                                                                                  (addBuilding (toCoord 14 5)
+                                                                                   (addBuilding (toCoord 9 4)
+                                                                                    (addBuilding (toCoord 9 5)
+                                                                                     (addBuilding (toCoord 10 5)
+                                                                                      (addBuilding (toCoord 13 5)
+                                                                                       (addBuilding (toCoord 8 0)
+                                                                                        (addBuilding (toCoord 8 2)
+                                                                                         (addBuilding (toCoord 8 4)
+                                                                                          (addBuilding (toCoord 8 5) emptyBuildings)))))))))))))))))))),
+                                     energyTowersUnderConstruction   = emptyBuildings,
+                                     energyTowers                    = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6) emptyBuildings)))))),
+                                     attackTowersUnderConstruction   = emptyBuildings,
+                                     attack3Towers                   = addBuilding (toCoord 14 2)
+                                                                       (addBuilding (toCoord 12 5)
+                                                                        (addBuilding (toCoord 9 6) emptyBuildings)),
+                                     attack2Towers                   = addBuilding (toCoord 14 1)
+                                                                       (addBuilding (toCoord 11 5)
+                                                                        (addBuilding (toCoord 14 5) emptyBuildings)),
+                                     attack1Towers                   = addBuilding (toCoord 9 4)
+                                                                       (addBuilding (toCoord 9 5) emptyBuildings),
+                                     attack0Towers                   = addBuilding (toCoord 10 5)
+                                                                       (addBuilding (toCoord 13 5) emptyBuildings),
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = emptyBuildings,
+                                     defenseTowersUnderConstruction0 = emptyBuildings,
+                                     defense4Towers                  = addBuilding (toCoord 8 0)
+                                                                       (addBuilding (toCoord 8 2)
+                                                                        (addBuilding (toCoord 8 4) emptyBuildings)),
+                                     defense3Towers                  = addBuilding (toCoord 8 5) emptyBuildings,
+                                     defense2Towers                  = emptyBuildings,
+                                     defense1Towers                  = emptyBuildings,
+                                     teslaTower0                     = emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
+                                     teslaTower0ConstructionTime     = 0,
+                                     teslaTower1ConstructionTime     = 0,
+                                     teslaTower0CooldownTime         = 0,
+                                     teslaTower1CooldownTime         = 0,
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = emptyMissiles,
+                                     missilesOtherSide1              = emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles })})
 
 stateStringWithFinishedAndUnfinishedTowers :: B.ByteString
 stateStringWithFinishedAndUnfinishedTowers = "{\"gameDetails\": {\"round\": 11,\"maxRounds\": 400,\"mapWidth\": 16,\"mapHeight\": 8,\"roundIncomeEnergy\": 5,\"buildingPrices\": {\"TESLA\": 300,\"DEFENSE\": 30,\"ATTACK\": 30,\"ENERGY\": 20},\"buildingsStats\": {\"TESLA\": {\"health\": 5,\"constructionTime\": 11,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 10,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"DEFENSE\": {\"health\": 20,\"constructionTime\": 4,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 0,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"ATTACK\": {\"health\": 5,\"constructionTime\": 2,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 1,\"weaponCooldownPeriod\": 3,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"ENERGY\": {\"health\": 5,\"constructionTime\": 2,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 0,\"energyGeneratedPerTurn\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 1}}},\"players\": [{\"playerType\": \"A\",\"energy\": 37,\"health\": 30,\"hitsTaken\": 14,\"score\": 451},{\"playerType\": \"B\",\"energy\": 53,\"health\": 100,\"hitsTaken\": 0,\"score\": 2093}],\"gameMap\": [[{\"x\": 0,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 0,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 0,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 0,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 0,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": 1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 0,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 1,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 1,\"buildings\": [{\"health\": 10,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 3,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 4,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 5,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 1,\"buildings\": [{\"health\": 10,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 6,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 1,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 1,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 1,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 1,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 1,\"y\": 2,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 2,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 0,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 5,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": 0,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 10,\"destroyMultiplier\": 1,\"constructionScore\": 1,\"energyGeneratedPerTurn\": 0,\"maxRange\": 9,\"buildingType\": \"TESLA\",\"energyPerShot\": 100,\"x\": 7,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": 1,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 10,\"destroyMultiplier\": 1,\"constructionScore\": 1,\"energyGeneratedPerTurn\": 0,\"maxRange\": 9,\"buildingType\": \"TESLA\",\"energyPerShot\": 100,\"x\": 8,\"y\": 3,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 3,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 4,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 4,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 1,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 4,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 5,\"buildings\": [{\"health\": 15,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 1,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 10,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 11,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 12,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 13,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 6,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": 0,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": 0,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 10,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"}]]}"
@@ -183,83 +244,146 @@ expectedWithFinishedAndUnfinishedTowersStateString =
   (GameState { gameRound = 11,
                me        = (Player { energy                          = 37,
                                      health                          = 30,
-                                     energyTowersUnderConstruction   = 0,
+                                     allTowers                       = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3)
+                                                                        (addBuilding (toCoord 1 1)
+                                                                         (addBuilding (toCoord 4 1)
+                                                                          (addBuilding (toCoord 5 1)
+                                                                           (addBuilding (toCoord 3 1)
+                                                                            (addBuilding (toCoord 6 1)
+                                                                             (addBuilding (toCoord 1 2)
+                                                                              (addBuilding (toCoord 7 3)
+                                                                               (addBuilding (toCoord 0 1) emptyBuildings))))))))),
+                                     allBuiltTowers                  = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3)
+                                                                        (addBuilding (toCoord 1 1)
+                                                                         (addBuilding (toCoord 4 1)
+                                                                          (addBuilding (toCoord 5 1)
+                                                                           (addBuilding (toCoord 3 1)
+                                                                            (addBuilding (toCoord 6 1)
+                                                                             (addBuilding (toCoord 1 2) emptyBuildings))))))),
+
+                                     energyTowersUnderConstruction   = emptyBuildings,
                                      energyTowers                    = addBuilding (toCoord 0 3)
-                                                                       (addBuilding (toCoord 5 3) 0),
-                                     attackTowersUnderConstruction   = 0,
-                                     attack3Towers                   = 0,
-                                     attack2Towers                   = 0,
-                                     attack1Towers                   = 0,
-                                     attack0Towers                   = 0,
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = addBuilding (toCoord 0 1) 0,
-                                     defenseTowersUnderConstruction0 = 0,
+                                                                       (addBuilding (toCoord 5 3) emptyBuildings),
+                                     attackTowersUnderConstruction   = emptyBuildings,
+                                     attack3Towers                   = emptyBuildings,
+                                     attack2Towers                   = emptyBuildings,
+                                     attack1Towers                   = emptyBuildings,
+                                     attack0Towers                   = emptyBuildings,
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = addBuilding (toCoord 0 1) emptyBuildings,
+                                     defenseTowersUnderConstruction0 = emptyBuildings,
                                      defense4Towers                  = addBuilding (toCoord 1 1)
                                                                        (addBuilding (toCoord 4 1)
-                                                                        (addBuilding (toCoord 5 1) 0)),
-                                     defense3Towers                  = 0,
+                                                                        (addBuilding (toCoord 5 1) emptyBuildings)),
+                                     defense3Towers                  = emptyBuildings,
                                      defense2Towers                  = addBuilding (toCoord 3 1)
-                                                                       (addBuilding (toCoord 6 1) 0),
-                                     defense1Towers                  = addBuilding (toCoord 1 2) 0,
-                                     teslaTower0                     = addBuilding (toCoord 7 3) 0,
-                                     teslaTower1                     = 0,
+                                                                       (addBuilding (toCoord 6 1) emptyBuildings),
+                                     defense1Towers                  = addBuilding (toCoord 1 2) emptyBuildings,
+                                     teslaTower0                     = addBuilding (toCoord 7 3) emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
                                      teslaTower0ConstructionTime     = 0,
                                      teslaTower1ConstructionTime     = 0,
                                      teslaTower0CooldownTime         = 0,
                                      teslaTower1CooldownTime         = 0,
-                                     missiles0                       = 0,
-                                     missiles1                       = 0,
-                                     missiles2                       = 0,
-                                     missiles3                       = 0,
-                                     missilesOtherSide0              = 0,
-                                     missilesOtherSide1              = 0,
-                                     missilesOtherSide2              = 0,
-                                     missilesOtherSide3              = 0 }),
-               oponent   = (Player { energy             = 53,
-                                     health             = 100,
-                                     energyTowersUnderConstruction = 0,
-                                     energyTowers = addBuilding (toCoord 15 0)
-                                                    (addBuilding (toCoord 15 1)
-                                                      (addBuilding (toCoord 15 2)
-                                                       (addBuilding (toCoord 15 3)
-                                                         (addBuilding (toCoord 15 4)
-                                                           (addBuilding (toCoord 15 5)
-                                                            (addBuilding (toCoord 15 6) 0)))))),
-                                     attackTowersUnderConstruction = addBuilding (toCoord 10 6) 0,
-                                     attack3Towers = addBuilding (toCoord 14 2)
-                                                     (addBuilding (toCoord 12 5)
-                                                      (addBuilding (toCoord 9 6) 0)),
-                                     attack2Towers = addBuilding (toCoord 14 1)
-                                                     (addBuilding (toCoord 11 5)
-                                                      (addBuilding (toCoord 14 5) 0)),
-                                     attack1Towers = addBuilding (toCoord 9 4)
-                                                     (addBuilding (toCoord 9 5) 0),
-                                     attack0Towers = addBuilding (toCoord 10 5)
-                                                     (addBuilding (toCoord 13 5) 0),
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = 0,
-                                     defenseTowersUnderConstruction0 = addBuilding (toCoord 8 6) 0,
-                                     defense4Towers = addBuilding (toCoord 8 0)
-                                                      (addBuilding (toCoord 8 2)
-                                                       (addBuilding (toCoord 8 4)
-                                                        (addBuilding (toCoord 8 5) 0))),
-                                     defense3Towers = 0,
-                                     defense2Towers = 0,
-                                     defense1Towers = 0,
-                                     teslaTower0 = addBuilding (toCoord 8 3) 0,
-                                     teslaTower1 = 0,
-                                     teslaTower0ConstructionTime = 1,
-                                     teslaTower1ConstructionTime = 0,
-                                     teslaTower0CooldownTime = 0,
-                                     teslaTower1CooldownTime = 0,
-                                     missiles0 = 0,
-                                     missiles1 = 0,
-                                     missiles2 = 0,
-                                     missiles3 = 0,
-                                     missilesOtherSide0 = 0,
-                                     missilesOtherSide1 = 0,
-                                     missilesOtherSide2 = 0,
-                                     missilesOtherSide3 = 0 })})
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = emptyMissiles,
+                                     missilesOtherSide1              = emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles }),
+               oponent   = (Player { energy                          = 53,
+                                     health                          = 100,
+                                     allTowers                       = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6)
+                                                                             (addBuilding (toCoord 14 2)
+                                                                              (addBuilding (toCoord 12 5)
+                                                                               (addBuilding (toCoord 9 6)
+                                                                                (addBuilding (toCoord 14 1)
+                                                                                 (addBuilding (toCoord 11 5)
+                                                                                  (addBuilding (toCoord 14 5)
+                                                                                   (addBuilding (toCoord 9 4)
+                                                                                    (addBuilding (toCoord 9 5)
+                                                                                     (addBuilding (toCoord 10 5)
+                                                                                      (addBuilding (toCoord 13 5)
+                                                                                       (addBuilding (toCoord 8 0)
+                                                                                        (addBuilding (toCoord 8 2)
+                                                                                         (addBuilding (toCoord 8 4)
+                                                                                          (addBuilding (toCoord 8 5)
+                                                                                           (addBuilding (toCoord 8 3) 
+                                                                                            (addBuilding (toCoord 10 6)
+                                                                                             (addBuilding (toCoord 8 6) emptyBuildings))))))))))))))))))))))),
+                                     allBuiltTowers                  = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6)
+                                                                             (addBuilding (toCoord 14 2)
+                                                                              (addBuilding (toCoord 12 5)
+                                                                               (addBuilding (toCoord 9 6)
+                                                                                (addBuilding (toCoord 14 1)
+                                                                                 (addBuilding (toCoord 11 5)
+                                                                                  (addBuilding (toCoord 14 5)
+                                                                                   (addBuilding (toCoord 9 4)
+                                                                                    (addBuilding (toCoord 9 5)
+                                                                                     (addBuilding (toCoord 10 5)
+                                                                                      (addBuilding (toCoord 13 5)
+                                                                                       (addBuilding (toCoord 8 0)
+                                                                                        (addBuilding (toCoord 8 2)
+                                                                                         (addBuilding (toCoord 8 4)
+                                                                                          (addBuilding (toCoord 8 5) emptyBuildings)))))))))))))))))))),
+                                     energyTowersUnderConstruction   = emptyBuildings,
+                                     energyTowers                    = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6) emptyBuildings)))))),
+                                     attackTowersUnderConstruction   = addBuilding (toCoord 10 6) emptyBuildings,
+                                     attack3Towers                   = addBuilding (toCoord 14 2)
+                                                                       (addBuilding (toCoord 12 5)
+                                                                        (addBuilding (toCoord 9 6) emptyBuildings)),
+                                     attack2Towers                   = addBuilding (toCoord 14 1)
+                                                                       (addBuilding (toCoord 11 5)
+                                                                        (addBuilding (toCoord 14 5) emptyBuildings)),
+                                     attack1Towers                   = addBuilding (toCoord 9 4)
+                                                                       (addBuilding (toCoord 9 5) emptyBuildings),
+                                     attack0Towers                   = addBuilding (toCoord 10 5)
+                                                                       (addBuilding (toCoord 13 5) emptyBuildings),
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = emptyBuildings,
+                                     defenseTowersUnderConstruction0 = addBuilding (toCoord 8 6) emptyBuildings,
+                                     defense4Towers                  = addBuilding (toCoord 8 0)
+                                                                       (addBuilding (toCoord 8 2)
+                                                                        (addBuilding (toCoord 8 4) emptyBuildings)),
+                                     defense3Towers                  = addBuilding (toCoord 8 5) emptyBuildings,
+                                     defense2Towers                  = emptyBuildings,
+                                     defense1Towers                  = emptyBuildings,
+                                     teslaTower0                     = addBuilding (toCoord 8 3) emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
+                                     teslaTower0ConstructionTime     = 1,
+                                     teslaTower1ConstructionTime     = 0,
+                                     teslaTower0CooldownTime         = 0,
+                                     teslaTower1CooldownTime         = 0,
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = emptyMissiles,
+                                     missilesOtherSide1              = emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles })})
 
 stateStringWithFinishedAndUnfinishedTowersAndMissiles :: B.ByteString
 stateStringWithFinishedAndUnfinishedTowersAndMissiles = "{\"gameDetails\": {\"round\": 11,\"maxRounds\": 400,\"mapWidth\": 16,\"mapHeight\": 8,\"roundIncomeEnergy\": 5,\"buildingPrices\": {\"TESLA\": 300,\"DEFENSE\": 30,\"ATTACK\": 30,\"ENERGY\": 20},\"buildingsStats\": {\"TESLA\": {\"health\": 5,\"constructionTime\": 11,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 10,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"DEFENSE\": {\"health\": 20,\"constructionTime\": 4,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 0,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"ATTACK\": {\"health\": 5,\"constructionTime\": 2,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 1,\"weaponCooldownPeriod\": 3,\"energyGeneratedPerTurn\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 1},\"ENERGY\": {\"health\": 5,\"constructionTime\": 2,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownPeriod\": 0,\"energyGeneratedPerTurn\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 1}}},\"players\": [{\"playerType\": \"A\",\"energy\": 37,\"health\": 30,\"hitsTaken\": 14,\"score\": 451},{\"playerType\": \"B\",\"energy\": 53,\"health\": 100,\"hitsTaken\": 0,\"score\": 2093}],\"gameMap\": [[{\"x\": 0,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 0,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 0,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 0,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 0,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 0,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": 1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 0,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 1,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 1,\"buildings\": [{\"health\": 10,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 3,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 4,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 1,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 5,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 1,\"buildings\": [{\"health\": 10,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 6,\"y\": 1,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 1,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 10,\"y\": 1,\"playerType\": \"B\"},{\"damage\": 5,\"speed\": 2,\"x\": 10,\"y\": 1,\"playerType\": \"A\"},{\"damage\": 5,\"speed\": 2,\"x\": 10,\"y\": 1,\"playerType\": \"A\"}],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 1,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 1,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 1,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 1,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 1,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 1,\"y\": 2,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 2,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 4,\"y\": 2,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 2,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 2,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 12,\"y\": 2,\"playerType\": \"B\"}],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 2,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 2,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 2,\"playerType\": \"B\"}],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 15,\"y\": 2,\"playerType\": \"A\"}],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 0,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 5,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": 0,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 10,\"destroyMultiplier\": 1,\"constructionScore\": 1,\"energyGeneratedPerTurn\": 0,\"maxRange\": 9,\"buildingType\": \"TESLA\",\"energyPerShot\": 100,\"x\": 7,\"y\": 3,\"playerType\": \"A\"}],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": 1,\"price\": 300,\"weaponDamage\": 20,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 10,\"destroyMultiplier\": 1,\"constructionScore\": 1,\"energyGeneratedPerTurn\": 0,\"maxRange\": 9,\"buildingType\": \"TESLA\",\"energyPerShot\": 100,\"x\": 8,\"y\": 3,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 3,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 3,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 3,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 4,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 3,\"y\": 4,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 4,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 4,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 1,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 4,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 4,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 4,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 5,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 2,\"y\": 5,\"playerType\": \"B\"},{\"damage\": 5,\"speed\": 2,\"x\": 2,\"y\": 5,\"playerType\": \"B\"},{\"damage\": 5,\"speed\": 2,\"x\": 2,\"y\": 5,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 5,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 3,\"y\": 5,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 5,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 5,\"y\": 5,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 5,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 5,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 7,\"y\": 5,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 5,\"buildings\": [{\"health\": 15,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 1,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 10,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 10,\"y\": 5,\"playerType\": \"B\"},{\"damage\": 5,\"speed\": 2,\"x\": 10,\"y\": 5,\"playerType\": \"B\"}],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 11,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 12,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 13,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 2,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 14,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 5,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 5,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 6,\"buildings\": [],\"missiles\": [{\"damage\": 5,\"speed\": 2,\"x\": 7,\"y\": 6,\"playerType\": \"B\"}],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 6,\"buildings\": [{\"health\": 20,\"constructionTimeLeft\": 0,\"price\": 30,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 10,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"DEFENSE\",\"x\": 8,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 3,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 9,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": 0,\"price\": 30,\"weaponDamage\": 5,\"weaponSpeed\": 2,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 3,\"destroyMultiplier\": 1,\"constructionScore\": 15,\"energyGeneratedPerTurn\": 0,\"buildingType\": \"ATTACK\",\"x\": 10,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 6,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 6,\"buildings\": [{\"health\": 5,\"constructionTimeLeft\": -1,\"price\": 20,\"weaponDamage\": 0,\"weaponSpeed\": 0,\"weaponCooldownTimeLeft\": 0,\"weaponCooldownPeriod\": 0,\"destroyMultiplier\": 1,\"constructionScore\": 3,\"energyGeneratedPerTurn\": 3,\"buildingType\": \"ENERGY\",\"x\": 15,\"y\": 6,\"playerType\": \"B\"}],\"missiles\": [],\"cellOwner\": \"B\"}],[{\"x\": 0,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 1,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 2,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 3,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 4,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 5,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 6,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 7,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"A\"},{\"x\": 8,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 9,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 10,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 11,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 12,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 13,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 14,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"},{\"x\": 15,\"y\": 7,\"buildings\": [],\"missiles\": [],\"cellOwner\": \"B\"}]]}"
@@ -267,99 +391,161 @@ stateStringWithFinishedAndUnfinishedTowersAndMissiles = "{\"gameDetails\": {\"ro
 expectedWithFinishedAndUnfinishedTowersStateStringAndMissiles :: GameState
 expectedWithFinishedAndUnfinishedTowersStateStringAndMissiles =
   (GameState { gameRound = 11,
-               me        = (Player { energy             = 37,
-                                     health             = 30,
-                                     energyTowersUnderConstruction   = 0,
+               me        = (Player { energy                          = 37,
+                                     health                          = 30,
+                                     allTowers                       = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3)
+                                                                        (addBuilding (toCoord 1 1)
+                                                                         (addBuilding (toCoord 4 1)
+                                                                          (addBuilding (toCoord 5 1)
+                                                                           (addBuilding (toCoord 3 1)
+                                                                            (addBuilding (toCoord 6 1)
+                                                                             (addBuilding (toCoord 1 2)
+                                                                              (addBuilding (toCoord 7 3)
+                                                                               (addBuilding (toCoord 0 1) emptyBuildings))))))))),
+                                     allBuiltTowers                  = addBuilding (toCoord 0 3)
+                                                                       (addBuilding (toCoord 5 3)
+                                                                        (addBuilding (toCoord 1 1)
+                                                                         (addBuilding (toCoord 4 1)
+                                                                          (addBuilding (toCoord 5 1)
+                                                                           (addBuilding (toCoord 3 1)
+                                                                            (addBuilding (toCoord 6 1)
+                                                                             (addBuilding (toCoord 1 2) emptyBuildings))))))),
+                                     energyTowersUnderConstruction   = emptyBuildings,
                                      energyTowers                    = addBuilding (toCoord 0 3)
-                                                                       (addBuilding (toCoord 5 3) 0),
-                                     attackTowersUnderConstruction   = 0,
-                                     attack3Towers                   = 0,
-                                     attack2Towers                   = 0,
-                                     attack1Towers                   = 0,
-                                     attack0Towers                   = 0,
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = addBuilding (toCoord 0 1) 0,
-                                     defenseTowersUnderConstruction0 = 0,
+                                                                       (addBuilding (toCoord 5 3) emptyBuildings),
+                                     attackTowersUnderConstruction   = emptyBuildings,
+                                     attack3Towers                   = emptyBuildings,
+                                     attack2Towers                   = emptyBuildings,
+                                     attack1Towers                   = emptyBuildings,
+                                     attack0Towers                   = emptyBuildings,
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = addBuilding (toCoord 0 1) emptyBuildings,
+                                     defenseTowersUnderConstruction0 = emptyBuildings,
                                      defense4Towers                  = addBuilding (toCoord 1 1)
                                                                        (addBuilding (toCoord 4 1)
-                                                                        (addBuilding (toCoord 5 1) 0)),
-                                     defense3Towers                  = 0,
+                                                                        (addBuilding (toCoord 5 1) emptyBuildings)),
+                                     defense3Towers                  = emptyBuildings,
                                      defense2Towers                  = addBuilding (toCoord 3 1)
-                                                                       (addBuilding (toCoord 6 1) 0),
-                                     defense1Towers                  = addBuilding (toCoord 1 2) 0,
-                                     teslaTower0                     = addBuilding (toCoord 7 3) 0,
-                                     teslaTower1                     = 0,
+                                                                       (addBuilding (toCoord 6 1) emptyBuildings),
+                                     defense1Towers                  = addBuilding (toCoord 1 2) emptyBuildings,
+                                     teslaTower0                     = addBuilding (toCoord 7 3) emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
                                      teslaTower0ConstructionTime     = 0,
                                      teslaTower1ConstructionTime     = 0,
                                      teslaTower0CooldownTime         = 0,
                                      teslaTower1CooldownTime         = 0,
-                                     missiles0                       = 0,
-                                     missiles1                       = 0,
-                                     missiles2                       = 0,
-                                     missiles3                       = 0,
+                                     missiles0                       = emptyMissiles,
+                                     missiles1                       = emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
                                      -- TODO: These missiles are
                                      -- probably wrong.  I need to
                                      -- figure out what they'll look
                                      -- like on the other side.
                                      missilesOtherSide0              = addMissile (toCoord 15 2)
-                                                                        (addMissile (toCoord 10 1) 0),
-                                     missilesOtherSide1              = addMissile (toCoord 10 1) 0,
-                                     missilesOtherSide2              = 0,
-                                     missilesOtherSide3              = 0 }),
-               oponent   = (Player { energy             = 53,
-                                     health             = 100,
-                                     energyTowersUnderConstruction = 0,
-                                     energyTowers = addBuilding (toCoord 15 0)
-                                                    (addBuilding (toCoord 15 1)
-                                                      (addBuilding (toCoord 15 2)
-                                                       (addBuilding (toCoord 15 3)
-                                                         (addBuilding (toCoord 15 4)
-                                                           (addBuilding (toCoord 15 5)
-                                                            (addBuilding (toCoord 15 6) 0)))))),
-                                     attackTowersUnderConstruction = addBuilding (toCoord 10 6) 0,
-                                     attack3Towers = addBuilding (toCoord 14 2)
-                                                     (addBuilding (toCoord 12 5)
-                                                      (addBuilding (toCoord 9 6) 0)),
-                                     attack2Towers = addBuilding (toCoord 14 1)
-                                                     (addBuilding (toCoord 11 5)
-                                                      (addBuilding (toCoord 14 5) 0)),
-                                     attack1Towers = addBuilding (toCoord 9 4)
-                                                     (addBuilding (toCoord 9 5) 0),
-                                     attack0Towers = addBuilding (toCoord 10 5)
-                                                     (addBuilding (toCoord 13 5) 0),
-                                     defenseTowersUnderConstruction2 = 0,
-                                     defenseTowersUnderConstruction1 = 0,
-                                     defenseTowersUnderConstruction0 = addBuilding (toCoord 8 6) 0,
-                                     defense4Towers = addBuilding (toCoord 8 0)
-                                                      (addBuilding (toCoord 8 2)
-                                                       (addBuilding (toCoord 8 4)
-                                                        (addBuilding (toCoord 8 5) 0))),
-                                     defense3Towers = 0,
-                                     defense2Towers = 0,
-                                     defense1Towers = 0,
-                                     teslaTower0 = addBuilding (toCoord 8 3) 0,
-                                     teslaTower1 = 0,
-                                     teslaTower0ConstructionTime = 1,
-                                     teslaTower1ConstructionTime = 0,
-                                     teslaTower0CooldownTime = 0,
-                                     teslaTower1CooldownTime = 0,
+                                                                        (addMissile (toCoord 10 1) emptyBuildings),
+                                     missilesOtherSide1              = addMissile (toCoord 10 1) emptyMissiles,
+                                     missilesOtherSide2              = emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles }),
+               oponent   = (Player { energy                          = 53,
+                                     health                          = 100,
+                                     allTowers                       = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6)
+                                                                             (addBuilding (toCoord 14 2)
+                                                                              (addBuilding (toCoord 12 5)
+                                                                               (addBuilding (toCoord 9 6)
+                                                                                (addBuilding (toCoord 14 1)
+                                                                                 (addBuilding (toCoord 11 5)
+                                                                                  (addBuilding (toCoord 14 5)
+                                                                                   (addBuilding (toCoord 9 4)
+                                                                                    (addBuilding (toCoord 9 5)
+                                                                                     (addBuilding (toCoord 10 5)
+                                                                                      (addBuilding (toCoord 13 5)
+                                                                                       (addBuilding (toCoord 8 0)
+                                                                                        (addBuilding (toCoord 8 2)
+                                                                                         (addBuilding (toCoord 8 4)
+                                                                                          (addBuilding (toCoord 8 5)
+                                                                                           (addBuilding (toCoord 8 3) 
+                                                                                            (addBuilding (toCoord 10 6)
+                                                                                             (addBuilding (toCoord 8 6) emptyBuildings))))))))))))))))))))))),
+                                     allBuiltTowers                  = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6)
+                                                                             (addBuilding (toCoord 14 2)
+                                                                              (addBuilding (toCoord 12 5)
+                                                                               (addBuilding (toCoord 9 6)
+                                                                                (addBuilding (toCoord 14 1)
+                                                                                 (addBuilding (toCoord 11 5)
+                                                                                  (addBuilding (toCoord 14 5)
+                                                                                   (addBuilding (toCoord 9 4)
+                                                                                    (addBuilding (toCoord 9 5)
+                                                                                     (addBuilding (toCoord 10 5)
+                                                                                      (addBuilding (toCoord 13 5)
+                                                                                       (addBuilding (toCoord 8 0)
+                                                                                        (addBuilding (toCoord 8 2)
+                                                                                         (addBuilding (toCoord 8 4)
+                                                                                          (addBuilding (toCoord 8 5) emptyBuildings)))))))))))))))))))),
+                                     energyTowersUnderConstruction   = emptyBuildings,
+                                     energyTowers                    = addBuilding (toCoord 15 0)
+                                                                       (addBuilding (toCoord 15 1)
+                                                                        (addBuilding (toCoord 15 2)
+                                                                         (addBuilding (toCoord 15 3)
+                                                                          (addBuilding (toCoord 15 4)
+                                                                           (addBuilding (toCoord 15 5)
+                                                                            (addBuilding (toCoord 15 6) emptyBuildings)))))),
+                                     attackTowersUnderConstruction   = addBuilding (toCoord 10 6) emptyBuildings,
+                                     attack3Towers                   = addBuilding (toCoord 14 2)
+                                                                       (addBuilding (toCoord 12 5)
+                                                                        (addBuilding (toCoord 9 6) emptyBuildings)),
+                                     attack2Towers                   = addBuilding (toCoord 14 1)
+                                                                       (addBuilding (toCoord 11 5)
+                                                                        (addBuilding (toCoord 14 5) emptyBuildings)),
+                                     attack1Towers                   = addBuilding (toCoord 9 4)
+                                                                       (addBuilding (toCoord 9 5) emptyBuildings),
+                                     attack0Towers                   = addBuilding (toCoord 10 5)
+                                                                       (addBuilding (toCoord 13 5) emptyBuildings),
+                                     defenseTowersUnderConstruction2 = emptyBuildings,
+                                     defenseTowersUnderConstruction1 = emptyBuildings,
+                                     defenseTowersUnderConstruction0 = addBuilding (toCoord 8 6) emptyBuildings,
+                                     defense4Towers                  = addBuilding (toCoord 8 0)
+                                                                       (addBuilding (toCoord 8 2)
+                                                                        (addBuilding (toCoord 8 4) emptyBuildings)),
+                                     defense3Towers                  = addBuilding (toCoord 8 5) emptyBuildings,
+                                     defense2Towers                  = emptyBuildings,
+                                     defense1Towers                  = emptyBuildings,
+                                     teslaTower0                     = addBuilding (toCoord 8 3) emptyBuildings,
+                                     teslaTower1                     = emptyBuildings,
+                                     teslaTower0ConstructionTime     = 1,
+                                     teslaTower1ConstructionTime     = 0,
+                                     teslaTower0CooldownTime         = 0,
+                                     teslaTower1CooldownTime         = 0,
                                      -- TODO: These missiles are
                                      -- probably wrong.  I need to
                                      -- figure out what they look like
                                      -- on the other side.
-                                     missiles0 = addMissile (toCoord 10 5)
-                                                 (addMissile (toCoord 12 2)
-                                                  (addMissile (toCoord 10 1) 0)),
-                                     missiles1 = addMissile (toCoord 10 5) 0,
-                                     missiles2 = 0,
-                                     missiles3 = 0,
-                                     missilesOtherSide0 = addMissile (toCoord 7 6)
-                                                          (addMissile (toCoord 7 5)
-                                                           (addMissile (toCoord 5 5)
-                                                            (addMissile (toCoord 3 5)
-                                                             (addMissile (toCoord 2 5)
-                                                              (addMissile (toCoord 3 4)
-                                                               (addMissile (toCoord 4 2) 0)))))),
-                                     missilesOtherSide1 = addMissile (toCoord 2 5) 0,
-                                     missilesOtherSide2 = addMissile (toCoord 2 5) 0,
-                                     missilesOtherSide3 = 0 })})
+                                     missiles0                       = addMissile (toCoord 10 5)
+                                                                       (addMissile (toCoord 12 2)
+                                                                        (addMissile (toCoord 10 1) emptyBuildings)),
+                                     missiles1                       = addMissile (toCoord 10 5) emptyMissiles,
+                                     missiles2                       = emptyMissiles,
+                                     missiles3                       = emptyMissiles,
+                                     missilesOtherSide0              = addMissile (toCoord 7 6)
+                                                                       (addMissile (toCoord 7 5)
+                                                                        (addMissile (toCoord 5 5)
+                                                                         (addMissile (toCoord 3 5)
+                                                                          (addMissile (toCoord 2 5)
+                                                                           (addMissile (toCoord 3 4)
+                                                                            (addMissile (toCoord 4 2) emptyBuildings)))))),
+                                     missilesOtherSide1              = addMissile (toCoord 2 5) emptyMissiles,
+                                     missilesOtherSide2              = addMissile (toCoord 2 5) emptyMissiles,
+                                     missilesOtherSide3              = emptyMissiles })})
