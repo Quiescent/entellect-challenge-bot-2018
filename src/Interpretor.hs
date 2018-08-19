@@ -6,6 +6,7 @@
 module Interpretor (repl,
                     commandFilePath,
                     parseStateString,
+                    emptyPlayer,
                     Player(..),
                     Missile,
                     BuildingType(..),
