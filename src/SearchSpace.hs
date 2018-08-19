@@ -293,7 +293,7 @@ updateWin (_, moves, _, _) gameTree =
   incrementTreeFitness (reverse moves) gameTree
 
 winLossAmplifier :: Float
-winLossAmplifier = 1
+winLossAmplifier = 5
 
 incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
 incrementTreeFitness moves gameTree =
