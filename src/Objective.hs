@@ -24,14 +24,16 @@ instance NFData Move where
 oponentsIntermediateBoardScore :: GameState -> Float
 oponentsIntermediateBoardScore state =
   let futureState = advanceToFutureState state
-  in energyTowersDestroyed (me state) (me futureState) +
-     attackPowerDestroyed  (me state) (me futureState)
+  in energyTowersDestroyed (me      state) (me      futureState) +
+     attackPowerDestroyed  (me      state) (me      futureState) -
+     energyTowersDestroyed (oponent state) (oponent futureState)
 
 myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore state =
   let futureState = advanceToFutureState state
   in energyTowersDestroyed (oponent state) (oponent futureState) +
-     attackPowerDestroyed  (oponent state) (oponent futureState)
+     attackPowerDestroyed  (oponent state) (oponent futureState) -
+     energyTowersDestroyed (me      state) (me      futureState)
 
 -- Unrolled for the compiler to optimise (there are 10 right now)
 advanceToFutureState :: GameState -> GameState
