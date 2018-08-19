@@ -179,7 +179,10 @@ The solution is to average the scores.
      your opponent.  To be conservative I think that I'll make it two.
    - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 13:41]
    :END:
-** TODO [#A] Add having two less attack towers to the loss condition for a game
+** IN_PROGRESS [#A] Add having two less attack towers to the loss condition for a game
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 15:35]
+   :END:
 ** TODO [#A] Test `advanceState'
 ** TODO [#B] Use Accelerate for the top-level vector calculations
 ** TODO [#B] At a certain energy, go for the kill
