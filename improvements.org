@@ -158,9 +158,16 @@ appropriate.
    :END:
 It needs to take into account the DC offset from the base fitness.
 The solution is to average the scores.
-** IN_PROGRESS [#A] Balance the Heuristic with towers lost
+** DONE [#A] Balance the Heuristic with towers lost
+   CLOSED: [2018-08-19 Sun 13:40]
    :LOGBOOK:
+   - CLOSING NOTE [2018-08-19 Sun 13:40] \\
+     Implemented by subtracting energy towers lost
    - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 13:03]
+   :END:
+** IN_PROGRESS [#A] Allow energy towers to be built at the front for defence
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 13:41]
    :END:
 ** TODO [#A] Test `advanceState'
 ** TODO [#B] Use Accelerate for the top-level vector calculations
