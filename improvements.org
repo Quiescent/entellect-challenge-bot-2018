@@ -143,11 +143,20 @@ appropriate.
    - CLOSING NOTE [2018-08-18 Sat 13:26] \\
      This was accomplished with the bitwise implementation.
    :END:
-** TODO [#A] Implement Better Tests
-** TODO [#A] Implement a better way of merging trees
+** DONE [#A] Implement Better Tests
+   CLOSED: [2018-08-19 Sun 11:01]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-19 Sun 11:01] \\
+     Got the tests working and implemented one for the objective.
+   :END:
+** IN_PROGRESS [#A] Implement a better way of merging trees
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 11:02]
+   :END:
 It needs to take into account the DC offset from the base fitness.
 The solution is to average the scores.
 ** TODO [#A] Balance the Heuristic with towers lost
+** TODO [#A] Test `advanceState'
 ** TODO [#B] Use Accelerate for the top-level vector calculations
 ** TODO [#B] At a certain energy, go for the kill
 ** TODO [#B] Make a type for each row state
