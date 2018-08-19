@@ -4,6 +4,7 @@ TAGS
 
 # Project (stack) files
 .stack-work/
+.stack-work-profile/
 EntelectChallenge2018.cabal
 
 # Compiled files
