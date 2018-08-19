@@ -2,6 +2,8 @@ module ObjectiveSpec where
 
 import Interpretor
 import Objective
+import BitSetMap
+import Coord
 
 import Test.Hspec
 
@@ -20,6 +22,18 @@ myIntermediateBoardScoreSpec = do
       myIntermediateBoardScore emptyState
       `shouldBe`
       0
+    it "should produce a score of 1 when there is an energy tower to destroy on the other side" $
+      myIntermediateBoardScore (emptyState {
+                                   me = emptyPlayer {
+                                       allTowers      = addBuilding (toCoord 0 2) 0,
+                                       allBuiltTowers = addBuilding (toCoord 0 2) 0,
+                                       attack0Towers  = addBuilding (toCoord 0 2) 0 },
+                                   oponent = emptyPlayer {
+                                       allTowers      = addBuilding (toCoord 0 2) 0,
+                                       allBuiltTowers = addBuilding (toCoord 0 2) 0,
+                                       energyTowers   = addBuilding (toCoord 0 2) 0 }})
+      `shouldBe`
+      1
 
 oponentsIntermediateBoardScoreSpec :: Spec
 oponentsIntermediateBoardScoreSpec = do
@@ -28,3 +42,15 @@ oponentsIntermediateBoardScoreSpec = do
       oponentsIntermediateBoardScore emptyState
       `shouldBe`
       0
+    it "should produce a score of 1 when there is an energy tower to destroy on the other side" $
+      oponentsIntermediateBoardScore (emptyState {
+                                         oponent = emptyPlayer {
+                                             allTowers      = addBuilding (toCoord 0 2) 0,
+                                             allBuiltTowers = addBuilding (toCoord 0 2) 0,
+                                             attack0Towers  = addBuilding (toCoord 0 2) 0 },
+                                         me = emptyPlayer {
+                                             allTowers      = addBuilding (toCoord 0 2) 0,
+                                             allBuiltTowers = addBuilding (toCoord 0 2) 0,
+                                             energyTowers   = addBuilding (toCoord 0 2) 0 }})
+      `shouldBe`
+      1
