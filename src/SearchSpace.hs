@@ -93,8 +93,14 @@ allForwardDefenseTowerMoves = allMovesOfType DEFENSE forwardCells
 allMidToFrontAttackTowerMoves :: Moves
 allMidToFrontAttackTowerMoves = allMovesOfType ATTACK midToFrontCells
 
-allTwobackEnergyTowerMoves :: Moves
-allTwobackEnergyTowerMoves = allMovesOfType ENERGY twoBackCells
+allForwardEnergyTowerMoves :: Moves
+allForwardEnergyTowerMoves = allMovesOfType ENERGY forwardCells
+
+usefulEnergyMoves :: Moves
+usefulEnergyMoves = allTwoBackEnergyTowerMoves UV.++ allForwardEnergyTowerMoves
+
+allTwoBackEnergyTowerMoves :: Moves
+allTwoBackEnergyTowerMoves = allMovesOfType ENERGY twoBackCells
 
 allFrontTeslaTowerMoves ::  Moves
 allFrontTeslaTowerMoves = allMovesOfType TESLA frontCells
@@ -121,7 +127,7 @@ switchAffordableMoves energyTowerMoves
 -- NOTE: Assumes that attack towers cost the same as defense towers
 switchMovesICanAfford :: Int -> Int -> Moves
 switchMovesICanAfford =
-  switchAffordableMoves allTwobackEnergyTowerMoves
+  switchAffordableMoves usefulEnergyMoves
                         allForwardDefenseTowerMoves
                         allMidToFrontAttackTowerMoves
                         allFrontTeslaTowerMoves
@@ -145,7 +151,7 @@ myAvailableMoves (GameState { gameRound = gameRound',
 
 switchMovesOponentCanAfford :: Int -> Int -> Moves
 switchMovesOponentCanAfford =
-  switchAffordableMoves allTwobackEnergyTowerMoves
+  switchAffordableMoves usefulEnergyMoves
                         allForwardDefenseTowerMoves
                         allMidToFrontAttackTowerMoves
                         allFrontTeslaTowerMoves
