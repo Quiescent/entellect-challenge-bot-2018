@@ -29,7 +29,9 @@ main = do
   let playMoveForRound = \ currentState round' -> do
         putStrLn $ "Round: " ++ show round'
         playerOneMove <- readPlayerCommand $ playerOneDir round'
+        putStrLn $ "Player 1's move: " ++ show playerOneMove
         playerTwoMove <- fmap transposePlayerTwosMove $ readPlayerCommand $ playerTwoDir round'
+        putStrLn $ "Player 2's move: " ++ show playerTwoMove
         reportedState <- parseState $ playerOneDir (round' + 1)
         let updatedState = updateMyMove (toEfficientCommand playerOneMove) $ updateOponentsMove (toEfficientCommand playerTwoMove) $ tickEngine currentState
         if reportedState /= updatedState
