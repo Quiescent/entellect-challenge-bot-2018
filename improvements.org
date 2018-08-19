@@ -146,6 +146,7 @@ appropriate.
 ** TODO [#A] Implement Better Tests
 ** TODO [#A] Implement a better way of merging trees
 It needs to take into account the DC offset from the base fitness.
+The solution is to average the scores.
 ** TODO [#A] Balance the Heuristic with towers lost
 ** TODO [#B] Use Accelerate for the top-level vector calculations
 ** TODO [#B] At a certain energy, go for the kill
