@@ -165,10 +165,21 @@ The solution is to average the scores.
      Implemented by subtracting energy towers lost
    - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 13:03]
    :END:
-** IN_PROGRESS [#A] Allow energy towers to be built at the front for defence
+** DONE [#A] Allow energy towers to be built at the front for defence
+   CLOSED: [2018-08-19 Sun 15:28]
    :LOGBOOK:
+   - CLOSING NOTE [2018-08-19 Sun 15:28] \\
+     Implemented and seems to be effective; however, the reason that I'm
+     losing is that Louis' bot wins the attack tower game.
+
+     My latest theory is that the game is won or lost in the moves which
+     lead to a one tower advantage in the early game.  If this is the case
+     then I can have an early game win/lose heuristic which says that
+     you've lost the early game if you have one fewer attack tower than
+     your opponent.  To be conservative I think that I'll make it two.
    - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 13:41]
    :END:
+** TODO [#A] Add having two less attack towers to the loss condition for a game
 ** TODO [#A] Test `advanceState'
 ** TODO [#B] Use Accelerate for the top-level vector calculations
 ** TODO [#B] At a certain energy, go for the kill
