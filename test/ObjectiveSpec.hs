@@ -34,6 +34,21 @@ myIntermediateBoardScoreSpec = do
                                        energyTowers   = addBuilding (toCoord 0 2) 0 }})
       `shouldBe`
       1
+    it "should produce a score of 2 when there are two energy towers in a row (if the tower is far enough forward)" $
+      myIntermediateBoardScore (emptyState {
+                                   me = emptyPlayer {
+                                       allTowers      = addBuilding (toCoord 3 2) 0,
+                                       allBuiltTowers = addBuilding (toCoord 3 2) 0,
+                                       attack0Towers  = addBuilding (toCoord 3 2) 0 },
+                                   oponent = emptyPlayer {
+                                       allTowers      = addBuilding (toCoord 0 2)
+                                                        (addBuilding (toCoord 3 2) 0),
+                                       allBuiltTowers = addBuilding (toCoord 0 2)
+                                                        (addBuilding (toCoord 3 2) 0),
+                                       energyTowers   = addBuilding (toCoord 0 2)
+                                                        (addBuilding (toCoord 3 2) 0) }})
+      `shouldBe`
+      2
 
 oponentsIntermediateBoardScoreSpec :: Spec
 oponentsIntermediateBoardScoreSpec = do
@@ -54,3 +69,18 @@ oponentsIntermediateBoardScoreSpec = do
                                              energyTowers   = addBuilding (toCoord 0 2) 0 }})
       `shouldBe`
       1
+    it "should produce a score of 2 when there are two energy towers in a row (if the tower is far enough forward)" $
+      oponentsIntermediateBoardScore (emptyState {
+                                         oponent = emptyPlayer {
+                                             allTowers      = addBuilding (toCoord 3 2) 0,
+                                             allBuiltTowers = addBuilding (toCoord 3 2) 0,
+                                             attack0Towers  = addBuilding (toCoord 3 2) 0 },
+                                         me = emptyPlayer {
+                                             allTowers      = addBuilding (toCoord 0 2)
+                                                              (addBuilding (toCoord 3 2) 0),
+                                             allBuiltTowers = addBuilding (toCoord 0 2)
+                                                              (addBuilding (toCoord 3 2) 0),
+                                             energyTowers   = addBuilding (toCoord 0 2)
+                                                              (addBuilding (toCoord 3 2) 0) }})
+      `shouldBe`
+      2
