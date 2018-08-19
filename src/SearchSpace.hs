@@ -21,6 +21,7 @@ import Coord
 import Magic
 import EfficientCommand
 import VectorIndex
+import BitSetMap
 import qualified GameTree as M
 
 import Data.Int
@@ -257,10 +258,14 @@ depth = 50
 
 type AdvanceStateResult = (StdGen, [PackedCommand], GameState, Bool)
 
+minimumTurnsIntoTheFuture :: Int
+minimumTurnsIntoTheFuture = 5
+
 playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
 playToEnd g initialState gameTree =
   playToEndIter depth (g, [], initialState, False) gameTree
   where
+    startingTurn = gameRound initialState
     updateEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
     updateEnding currentState advanceStateResult gameTree' =
       if iWon currentState
@@ -275,7 +280,8 @@ playToEnd g initialState gameTree =
            in  playToEndIter (n - 1) advanceStateResult' gameTree'
     playToEndIter 0 (_, _, _, _)                                  gameTree' = gameTree'
     playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
-      if gameOver currentState
+      if ((startingTurn - (gameRound currentState) > minimumTurnsIntoTheFuture) && attackTowerGameOver currentState) ||
+         gameOver currentState
       then updateEnding currentState advanceStateResult gameTree'
       else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
            in  playToEndIter (n - 1) advanceStateResult' gameTree''
@@ -286,9 +292,12 @@ updateWin :: AdvanceStateResult -> M.GameTree -> M.GameTree
 updateWin (_, moves, _, _) gameTree =
   incrementTreeFitness (reverse moves) gameTree
 
+winLossAmplifier :: Float
+winLossAmplifier = 1
+
 incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
 incrementTreeFitness moves gameTree =
-  M.incrementDecrementBy moves 1.0 gameTree
+  M.incrementDecrementBy moves winLossAmplifier gameTree
 
 updateLoss :: AdvanceStateResult -> M.GameTree -> M.GameTree
 updateLoss (_, moves, _, _) gameTree =
@@ -296,7 +305,37 @@ updateLoss (_, moves, _, _) gameTree =
 
 decrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
 decrementTreeFitness moves gameTree =
-  M.incrementDecrementBy moves (-1.0) gameTree
+  M.incrementDecrementBy moves (-winLossAmplifier) gameTree
+
+attackDeficit :: GameState -> Int
+attackDeficit
+  (GameState { me      =
+               (Player { attack0Towers                 = myAttack0Towers,
+                         attack1Towers                 = myAttack1Towers,
+                         attack2Towers                 = myAttack2Towers,
+                         attack3Towers                 = myAttack3Towers,
+                         attackTowersUnderConstruction = myAttackTowersUnderConstruction }),
+               oponent =
+               (Player { attack0Towers                 = oponentsAttack0Towers,
+                         attack1Towers                 = oponentsAttack1Towers,
+                         attack2Towers                 = oponentsAttack2Towers,
+                         attack3Towers                 = oponentsAttack3Towers,
+                         attackTowersUnderConstruction = oponentsAttackTowersUnderConstruction }) }) =
+  (countBuildings myAttack0Towers +
+   countBuildings myAttack1Towers +
+   countBuildings myAttack2Towers +
+   countBuildings myAttack3Towers +
+   countBuildings myAttackTowersUnderConstruction) -
+  (countBuildings oponentsAttack0Towers +
+   countBuildings oponentsAttack1Towers +
+   countBuildings oponentsAttack2Towers +
+   countBuildings oponentsAttack3Towers +
+   countBuildings oponentsAttackTowersUnderConstruction)
+
+attackTowerGameOver :: GameState -> Bool
+attackTowerGameOver gameState =
+  attackDeficit gameState < -2 ||
+  attackDeficit gameState > 2
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth' }),
@@ -304,8 +343,9 @@ gameOver (GameState { me      = (Player { health = myHealth' }),
   myHealth' <= 0 || oponentsHealth' <= 0
 
 iWon :: GameState -> Bool
-iWon (GameState { me      = (Player { health = myHealth' }),
-                  oponent = (Player { health = oponentsHealth' }) }) =
+iWon gameState@(GameState { me      = (Player { health = myHealth' }),
+                            oponent = (Player { health = oponentsHealth' }) }) =
+  attackDeficit gameState > 2 ||
   oponentsHealth' <= 0 && myHealth' > 0
 
 -- I'm traversing the tree every time.  This is not necessary!!!
