@@ -4,6 +4,8 @@
 
 ;;; Code:
 
+(require 'hi-lock)
+
 (defun quiescent-highlight-towers ()
   "Highlight towers in replays."
   (interactive)
