@@ -8,6 +8,7 @@
   "Highlight towers in replays."
   (interactive)
   (progn
+    (hi-lock-set-pattern "[><]"                      'hi-red-b)
     (hi-lock-set-pattern "\\[[0-9>< ]*e[ 0-9><]*\\]" 'hi-blue-b)
     (hi-lock-set-pattern "\\[[0-9>< ]*E[ 0-9><]*\\]" 'hi-blue-b)
     (hi-lock-set-pattern "\\[[0-9>< ]*a[ 0-9><]*\\]" 'hi-red-b)
