@@ -266,11 +266,6 @@ playToEnd g initialState gameTree =
   playToEndIter depth (g, [], initialState, False) gameTree
   where
     startingTurn = gameRound initialState
-    updateEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
-    updateEnding currentState advanceStateResult gameTree' =
-      if iWon currentState
-      then updateWin  advanceStateResult gameTree'
-      else updateLoss advanceStateResult gameTree'
     -- TODO inline and transfer into secondary loop.
     playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
     playToEndIter n advanceStateResult@(_, _, currentState, True) gameTree' =
@@ -278,33 +273,56 @@ playToEnd g initialState gameTree =
       then updateEnding currentState advanceStateResult gameTree'
       else let advanceStateResult' = playRandomly advanceStateResult
            in  playToEndIter (n - 1) advanceStateResult' gameTree'
-    playToEndIter 0 (_, _, _, _)                                  gameTree' = gameTree'
+    playToEndIter 0 advanceStateResult                            gameTree' = updateLengthenGameEnding gameTree' advanceStateResult
     playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
-      if ((startingTurn - (gameRound currentState) > minimumTurnsIntoTheFuture) && attackTowerGameOver currentState) ||
-         gameOver currentState
-      then updateEnding currentState advanceStateResult gameTree'
-      else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
-           in  playToEndIter (n - 1) advanceStateResult' gameTree''
+      if ((startingTurn - (gameRound currentState) > minimumTurnsIntoTheFuture) && attackTowerGameOver currentState)
+      then updateAttackTowerEnding currentState advanceStateResult gameTree'
+      else if gameOver currentState
+           then updateEnding currentState advanceStateResult gameTree'
+           else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
+                in  playToEndIter (n - 1) advanceStateResult' gameTree''
+
+genuineWinLossAmplifier :: Float
+genuineWinLossAmplifier = 5
+
+updateEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateEnding currentState advanceStateResult gameTree' =
+  if iWon currentState
+  then updateWin  genuineWinLossAmplifier advanceStateResult gameTree'
+  else updateLoss genuineWinLossAmplifier advanceStateResult gameTree'
+
+earlyWinLossAmplifier :: Float
+earlyWinLossAmplifier = genuineWinLossAmplifier / 4
+
+updateAttackTowerEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateAttackTowerEnding gameState advanceStateResult gameTree =
+  if attackDeficit gameState > 2
+  then updateWin  earlyWinLossAmplifier advanceStateResult gameTree
+  else updateLoss earlyWinLossAmplifier advanceStateResult gameTree
+
+lengthenWinLossAmplifier :: Float
+lengthenWinLossAmplifier = genuineWinLossAmplifier / 2
+
+updateLengthenGameEnding :: M.GameTree -> AdvanceStateResult -> M.GameTree
+updateLengthenGameEnding gameTree (_, moves, _, _) =
+  M.incrementIncrementBy moves lengthenWinLossAmplifier gameTree
 
 -- Moves are added to an accumulater by consing onto the front; thus,
 -- they are reversed when we arrive here.
-updateWin :: AdvanceStateResult -> M.GameTree -> M.GameTree
-updateWin (_, moves, _, _) gameTree =
-  incrementTreeFitness (reverse moves) gameTree
+updateWin :: Float -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateWin winLossAmplifier (_, moves, _, _) gameTree =
+  incrementTreeFitness winLossAmplifier (reverse moves) gameTree
 
-winLossAmplifier :: Float
-winLossAmplifier = 5
-
-incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
-incrementTreeFitness moves gameTree =
+incrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
+incrementTreeFitness winLossAmplifier moves gameTree =
   M.incrementDecrementBy moves winLossAmplifier gameTree
 
-updateLoss :: AdvanceStateResult -> M.GameTree -> M.GameTree
-updateLoss (_, moves, _, _) gameTree =
-  decrementTreeFitness (reverse moves) gameTree
+updateLoss :: Float -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateLoss winLossAmplifier (_, moves, _, _) gameTree =
+  decrementTreeFitness winLossAmplifier (reverse moves) gameTree
 
-decrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
-decrementTreeFitness moves gameTree =
+decrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
+decrementTreeFitness winLossAmplifier moves gameTree =
   M.incrementDecrementBy moves (-winLossAmplifier) gameTree
 
 attackDeficit :: GameState -> Int
@@ -343,9 +361,8 @@ gameOver (GameState { me      = (Player { health = myHealth' }),
   myHealth' <= 0 || oponentsHealth' <= 0
 
 iWon :: GameState -> Bool
-iWon gameState@(GameState { me      = (Player { health = myHealth' }),
-                            oponent = (Player { health = oponentsHealth' }) }) =
-  attackDeficit gameState > 2 ||
+iWon (GameState { me      = (Player { health = myHealth' }),
+                  oponent = (Player { health = oponentsHealth' }) }) =
   oponentsHealth' <= 0 && myHealth' > 0
 
 -- I'm traversing the tree every time.  This is not necessary!!!

@@ -7,6 +7,7 @@ module GameTree (GameTree(..),
                  myScores,
                  isEmpty,
                  oponentsScores,
+                 incrementIncrementBy,
                  incrementDecrementBy)
   where
 
@@ -43,6 +44,23 @@ incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMove
       oponentsOldScore <- MVector.read scores oponentsMove
       MVector.write scores oponentsMove
                     (oponentsOldScore - (x / (fromIntegral $ UV.length oponentsMoveScores)))
+
+incrementIncrementBy :: [PackedCommand] -> Float -> GameTree -> GameTree
+incrementIncrementBy _            _ EmptyTree = EmptyTree
+incrementIncrementBy []           _ tree      = tree
+incrementIncrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
+  let updatedSubTree = M.adjust (incrementIncrementBy moves x) move branches
+  in GameTree (UV.modify incrementMe myMoveScores) updatedSubTree (UV.modify incrementOponent oponentsMoveScores)
+  where
+    (myMove, oponentsMove) = unpackPackedCommand move
+    incrementMe scores       = do
+      myOldScore <- MVector.read scores myMove
+      MVector.write scores myMove
+                    (myOldScore + (x / (fromIntegral $ UV.length myMoveScores)))
+    incrementOponent scores       = do
+      myOldScore <- MVector.read scores oponentsMove
+      MVector.write scores myMove
+                    (myOldScore + (x / (fromIntegral $ UV.length myMoveScores)))
 
 addAt :: [PackedCommand] -> GameTree -> GameTree -> GameTree
 addAt _            subTreeToAdd EmptyTree                                           = subTreeToAdd
