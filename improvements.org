@@ -179,9 +179,18 @@ The solution is to average the scores.
      your opponent.  To be conservative I think that I'll make it two.
    - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 13:41]
    :END:
-** IN_PROGRESS [#A] Add having two less attack towers to the loss condition for a game
+** DONE [#A] Add having two less attack towers to the loss condition for a game
+   CLOSED: [2018-08-20 Mon 08:05]
    :LOGBOOK:
+   - CLOSING NOTE [2018-08-20 Mon 08:05] \\
+     This seems to improve things a little bit; however the bot can't find
+     the right move and I think that it's because it doesn't value moves
+     which lead to games which last 50 turns or longer.
    - State "IN_PROGRESS" from "TODO"       [2018-08-19 Sun 15:35]
+   :END:
+** IN_PROGRESS [#A] Add varying weights for different win conditions
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-08-20 Mon 08:06]
    :END:
 ** TODO [#A] Test `advanceState'
 ** TODO [#B] Use Accelerate for the top-level vector calculations
