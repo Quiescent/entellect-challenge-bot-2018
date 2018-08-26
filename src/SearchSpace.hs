@@ -91,14 +91,23 @@ allBackEnergyTowerMoves = allMovesOfType ENERGY backCells
 allForwardDefenseTowerMoves :: Moves
 allForwardDefenseTowerMoves = allMovesOfType DEFENSE forwardCells
 
+allMidToFrontDefenseTowerMoves :: Moves
+allMidToFrontDefenseTowerMoves = allMovesOfType DEFENSE midToFrontCells
+
 allMidToFrontAttackTowerMoves :: Moves
 allMidToFrontAttackTowerMoves = allMovesOfType ATTACK midToFrontCells
 
 allForwardEnergyTowerMoves :: Moves
 allForwardEnergyTowerMoves = allMovesOfType ENERGY forwardCells
 
+allMidToFrontEnergyTowerMoves :: Moves
+allMidToFrontEnergyTowerMoves = allMovesOfType ENERGY midToFrontCells
+
 usefulEnergyMoves :: Moves
 usefulEnergyMoves = allTwoBackEnergyTowerMoves UV.++ allForwardEnergyTowerMoves
+
+oponentsPotentialEnergyMoves :: Moves
+oponentsPotentialEnergyMoves = allTwoBackEnergyTowerMoves UV.++ allMidToFrontEnergyTowerMoves
 
 allTwoBackEnergyTowerMoves :: Moves
 allTwoBackEnergyTowerMoves = allMovesOfType ENERGY twoBackCells
@@ -152,8 +161,8 @@ myAvailableMoves (GameState { gameRound = gameRound',
 
 switchMovesOponentCanAfford :: Int -> Int -> Moves
 switchMovesOponentCanAfford =
-  switchAffordableMoves usefulEnergyMoves
-                        allForwardDefenseTowerMoves
+  switchAffordableMoves oponentsPotentialEnergyMoves
+                        allMidToFrontDefenseTowerMoves
                         allMidToFrontAttackTowerMoves
                         allFrontTeslaTowerMoves
 
