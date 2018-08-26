@@ -197,13 +197,31 @@ The solution is to average the scores.
      then go for the kill, but I'll think about it some more and see.
    - State "IN_PROGRESS" from "TODO"       [2018-08-20 Mon 08:06]
    :END:
-** TODO [#A] Remove the constraint on where the opponent can build defence and energy
+** DONE [#A] Remove the constraint on where the opponent can build defence and energy
+   CLOSED: [2018-08-26 Sun 15:31]
+   :LOGBOOK:
+   - CLOSING NOTE [2018-08-26 Sun 15:31] \\
+     Added different moves for the opponent and I now can "see" the
+     opponents defensive moves to counter my attack from the back line
+     move.
+   :END:
+The problem which I'm fixing here is that the opponent can counteract
+an attack with backward attack towers with defence and backward attack
+towers of his own, but I don't see it.
+** IN_PROGRESS [#A] Improve the heuristic for whether I win the Attack Tower Game
+   :LOGBOOK:
+   - State "IN_PROGRESS" from "TODO"       [2018-08-26 Sun 15:36]
+   :END:
+I should only consider it a win if I get ahead and without anything
+being placed in the next 5 turns do I maintain the lead, otherwise I
+could find a state where I've won the attack tower game, only to lose
+it in two turns.
 ** TODO [#A] Implement different strategies based on board state and turn
 *** TODO If turn is below (20?) and opponent has attack towers
-Only allow attack towers in rows w/o attack towers
+Only allow attack towers in rows w/ attack towers
 *** TODO If I win the attack tower game
  - go for the energy towers;
- - go for the kill
+ - go for the kill;
 ** TODO [#A] Test `advanceState'
 ** TODO [#B] Use Accelerate for the top-level vector calculations
 ** TODO [#B] At a certain energy, go for the kill
