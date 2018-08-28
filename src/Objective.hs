@@ -2,12 +2,24 @@
 
 module Objective (oponentsIntermediateBoardScore,
                   myIntermediateBoardScore,
+                  playToEnd,
                   Move(..))
   where
 
 import Engine
 import Interpretor (Command, GameState(..), Player(..))
 import BitSetMap
+import EfficientCommand
+import GameState
+import AvailableMoves
+import VectorIndex
+import qualified GameTree    as M
+import qualified Data.IntMap as IM
+
+import Data.Maybe
+import System.Random
+import Control.Monad.State.Lazy
+import qualified Data.Vector.Unboxed as UV
 
 import Control.DeepSeq
 
@@ -22,61 +34,224 @@ instance NFData Move where
     ()
 
 oponentsIntermediateBoardScore :: GameState -> Float
-oponentsIntermediateBoardScore state =
-  let futureState = advanceToFutureState state
-  in energyTowersDestroyed (me      state) (me      futureState) +
-     attackPowerDestroyed  (me      state) (me      futureState) -
-     energyTowersDestroyed (oponent state) (oponent futureState)
+oponentsIntermediateBoardScore _ = 1
 
 myIntermediateBoardScore :: GameState -> Float
-myIntermediateBoardScore state =
-  let futureState = advanceToFutureState state
-  in energyTowersDestroyed (oponent state) (oponent futureState) +
-     attackPowerDestroyed  (oponent state) (oponent futureState) -
-     energyTowersDestroyed (me      state) (me      futureState)
+myIntermediateBoardScore _ = 1
 
--- Unrolled for the compiler to optimise (there are 10 right now)
-advanceToFutureState :: GameState -> GameState
-advanceToFutureState =
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine .
-  tickEngine
+depth :: Int
+depth = 50
 
-energyTowersDestroyed :: Player -> Player -> Float
-energyTowersDestroyed
-  (Player { energyTowers                  = initialEnergyTowers,
-            energyTowersUnderConstruction = energyTowersUnderConstruction' })
-  (Player { energyTowers                  = energyTowersAfter }) =
-  fromIntegral $ (countBuildings initialEnergyTowers +
-                  countBuildings energyTowersUnderConstruction') -
-                 (countBuildings energyTowersAfter)
+type AdvanceStateResult = (StdGen, [PackedCommand], GameState, Bool)
 
-attackPowerDestroyed :: Player -> Player -> Float
-attackPowerDestroyed
-  (Player { attackTowersUnderConstruction = attackTowersUnderConstruction',
-            attack3Towers                 = initialAttack3Towers,
-            attack2Towers                 = initialAttack2Towers,
-            attack1Towers                 = initialAttack1Towers,
-            attack0Towers                 = initialAttack0Towers })
-  (Player { attack3Towers                 = attack3TowersAfter,
-            attack2Towers                 = attack2TowersAfter,
-            attack1Towers                 = attack1TowersAfter,
-            attack0Towers                 = attack0TowersAfter }) =
-  fromIntegral $ (countBuildings
-                  (addAllBuildings attackTowersUnderConstruction'
-                   (addAllBuildings initialAttack3Towers
-                    (addAllBuildings initialAttack2Towers
-                     (addAllBuildings initialAttack1Towers
-                      initialAttack0Towers))))) -
-                  (countBuildings
-                   (addAllBuildings attack3TowersAfter
-                    (addAllBuildings attack2TowersAfter
-                     (addAllBuildings attack1TowersAfter
-                      attack0TowersAfter))))
+minimumTurnsIntoTheFuture :: Int
+minimumTurnsIntoTheFuture = 5
+
+playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
+playToEnd g initialState gameTree =
+  playToEndIter depth (g, [], initialState, False) gameTree
+  where
+    startingTurn = gameRound initialState
+    -- TODO inline and transfer into secondary loop.
+    playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
+    playToEndIter n advanceStateResult@(_, _, currentState, True) gameTree' =
+      if gameOver currentState
+      then updateEnding currentState advanceStateResult gameTree'
+      else let advanceStateResult' = playRandomly advanceStateResult
+           in  playToEndIter (n - 1) advanceStateResult' gameTree'
+    -- playToEndIter 0 advanceStateResult                            gameTree' = updateLengthenGameEnding gameTree' advanceStateResult
+    playToEndIter 0 _                                             gameTree' = gameTree'
+    playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
+      if ((startingTurn - (gameRound currentState) > minimumTurnsIntoTheFuture) && attackTowerGameOver currentState)
+      then updateAttackTowerEnding currentState advanceStateResult gameTree'
+      else if gameOver currentState
+           then updateEnding currentState advanceStateResult gameTree'
+           else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
+                in  playToEndIter (n - 1) advanceStateResult' gameTree''
+
+genuineWinLossAmplifier :: Float
+genuineWinLossAmplifier = 1
+
+updateEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateEnding currentState advanceStateResult gameTree' =
+  if iWon currentState
+  then updateWin  genuineWinLossAmplifier advanceStateResult gameTree'
+  else updateLoss genuineWinLossAmplifier advanceStateResult gameTree'
+
+earlyWinLossAmplifier :: Float
+earlyWinLossAmplifier = genuineWinLossAmplifier
+
+updateAttackTowerEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateAttackTowerEnding gameState advanceStateResult gameTree =
+  if attackDeficit gameState > 2
+  then updateWin  earlyWinLossAmplifier advanceStateResult gameTree
+  else updateLoss earlyWinLossAmplifier advanceStateResult gameTree
+
+-- lengthenWinLossAmplifier :: Float
+-- lengthenWinLossAmplifier = genuineWinLossAmplifier
+
+-- updateLengthenGameEnding :: M.GameTree -> AdvanceStateResult -> M.GameTree
+-- updateLengthenGameEnding gameTree (_, moves, _, _) =
+--   M.incrementIncrementBy moves lengthenWinLossAmplifier gameTree
+
+-- Moves are added to an accumulater by consing onto the front; thus,
+-- they are reversed when we arrive here.
+updateWin :: Float -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateWin winLossAmplifier (_, moves, _, _) gameTree =
+  incrementTreeFitness winLossAmplifier (reverse moves) gameTree
+
+incrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
+incrementTreeFitness winLossAmplifier moves gameTree =
+  M.incrementDecrementBy moves winLossAmplifier gameTree
+
+updateLoss :: Float -> AdvanceStateResult -> M.GameTree -> M.GameTree
+updateLoss winLossAmplifier (_, moves, _, _) gameTree =
+  decrementTreeFitness winLossAmplifier (reverse moves) gameTree
+
+decrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
+decrementTreeFitness winLossAmplifier moves gameTree =
+  M.incrementDecrementBy moves (-winLossAmplifier) gameTree
+
+attackDeficit :: GameState -> Int
+attackDeficit
+  (GameState { me      =
+               (Player { attack0Towers                 = myAttack0Towers,
+                         attack1Towers                 = myAttack1Towers,
+                         attack2Towers                 = myAttack2Towers,
+                         attack3Towers                 = myAttack3Towers,
+                         attackTowersUnderConstruction = myAttackTowersUnderConstruction }),
+               oponent =
+               (Player { attack0Towers                 = oponentsAttack0Towers,
+                         attack1Towers                 = oponentsAttack1Towers,
+                         attack2Towers                 = oponentsAttack2Towers,
+                         attack3Towers                 = oponentsAttack3Towers,
+                         attackTowersUnderConstruction = oponentsAttackTowersUnderConstruction }) }) =
+  (countBuildings myAttack0Towers +
+   countBuildings myAttack1Towers +
+   countBuildings myAttack2Towers +
+   countBuildings myAttack3Towers +
+   countBuildings myAttackTowersUnderConstruction) -
+  (countBuildings oponentsAttack0Towers +
+   countBuildings oponentsAttack1Towers +
+   countBuildings oponentsAttack2Towers +
+   countBuildings oponentsAttack3Towers +
+   countBuildings oponentsAttackTowersUnderConstruction)
+
+attackTowerGameOver :: GameState -> Bool
+attackTowerGameOver gameState =
+  attackDeficit gameState < -2 ||
+  attackDeficit gameState > 2
+
+gameOver :: GameState -> Bool
+gameOver (GameState { me      = (Player { health = myHealth' }),
+                      oponent = (Player { health = oponentsHealth' }) }) =
+  myHealth' <= 0 || oponentsHealth' <= 0
+
+iWon :: GameState -> Bool
+iWon (GameState { me      = (Player { health = myHealth' }),
+                  oponent = (Player { health = oponentsHealth' }) }) =
+  oponentsHealth' <= 0 && myHealth' > 0
+
+-- I'm traversing the tree every time.  This is not necessary!!!
+advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
+advanceState (g, moves, currentState, _) = do
+  gameTree          <- get
+  let ourNode        = M.subTree moves gameTree
+  let isEmpty        = isNothing ourNode
+  let myMoves        = myAvailableMoves currentState
+  let oponentsMoves  = oponentsAvailableMoves currentState
+  let oponentsScores =
+        if isEmpty
+        then oponentsNormalisedScores currentState oponentsMoves
+        else M.oponentsScores $ fromJust ourNode
+  let myScores =
+        if isEmpty
+        then myNormalisedScores currentState myMoves
+        else M.myScores $ fromJust ourNode
+  let (g', g'') = split g
+  let (indexOfMyMove, myMove', _)                = chooseAMove g'  myMoves myScores
+  let (indexOfOponentsMove, oponentsMove', g''') = chooseAMove g'' oponentsMoves oponentsScores
+  let nextState = makeMoves myMove' oponentsMove' currentState
+  let moves'    =
+        if isEmpty
+        then moves
+        else (combineCommands indexOfMyMove indexOfOponentsMove):moves
+  when isEmpty $
+    put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
+  return (g''', moves', nextState, isEmpty)
+
+makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
+makeMoves myMove' oponentsMove' =
+  updateMyMove myMove' . updateOponentsMove oponentsMove' . tickEngine
+
+type Scores = UV.Vector Float
+
+chooseAMove :: RandomGen g => g -> Moves -> Scores -> (Int, EfficientCommand, g)
+chooseAMove g moves = chooseOne g moves . cdf
+
+myNormalisedScores :: GameState -> Moves -> Scores
+myNormalisedScores gameState =
+  normaliseScores .
+  UV.map
+  ((1 + ) . myIntermediateBoardScore . (flip updateMyMove gameState))
+
+oponentsNormalisedScores :: GameState -> Moves -> Scores
+oponentsNormalisedScores gameState =
+  normaliseScores .
+  UV.map
+  ((1 + ) . oponentsIntermediateBoardScore . (flip updateOponentsMove gameState))
+
+normaliseScores :: Scores -> Scores
+normaliseScores xs =
+  let maxScore = UV.sum xs
+  in UV.map (/ maxScore) xs
+
+playRandomly :: AdvanceStateResult -> AdvanceStateResult
+playRandomly (g, moves, currentState, _) =
+  let myMoves               = myAvailableMoves currentState
+      oponentsMoves         = oponentsAvailableMoves currentState
+      (g', g'')             = split g
+      (myMove', _)          = chooseRandomly g' myMoves
+      (oponentsMove', g''') = chooseRandomly g'' oponentsMoves
+      nextState             = updateMyMove myMove' $
+        updateOponentsMove oponentsMove' $
+        tickEngine currentState
+  in (g''', moves, nextState, True)
+
+chooseRandomly :: (RandomGen g) => g -> Moves -> (EfficientCommand, g)
+chooseRandomly g moves =
+  (moves `uVectorIndex` idx, g')
+  where
+    (value, g') = next g
+    idx         = mod value (UV.length moves)
+
+cdf :: Scores -> Scores
+cdf xs = normalised
+  where
+    normalised = UV.map (/ (UV.head summed)) summed
+    summed     = (UV.reverse . UV.scanl1 (+)) adjusted
+    adjusted   = UV.map (+minValue) xs
+    minValue   = abs $ UV.minimum xs
+
+chooseOne :: (RandomGen g) => g -> Moves -> Scores -> (Int, EfficientCommand, g)
+chooseOne g moves scores =
+  (indexOfMove, scanForValue, g')
+  where
+    (_, max')     = genRange g
+    floatingMax   = fromIntegral max'
+    normalise     = (/ floatingMax) . fromIntegral . abs
+    (value, g')   = next g
+    normalised    = normalise value
+    numberOfMoves = UV.length moves
+    indexOfLast   = numberOfMoves - 1
+    indexOfMove   =
+      fromJust $
+      lastIfNothing indexOfLast $
+      fmap ( \ x -> x - 1) $
+      UV.findIndex ((<= normalised)) scores
+    scanForValue  = indexMoves indexOfMove
+    indexMoves i  = moves `uVectorIndex` (numberOfMoves - i - 1)
+
+lastIfNothing :: Int -> Maybe Int -> Maybe Int
+lastIfNothing _         x@(Just _) = x
+lastIfNothing lastIndex Nothing    = Just lastIndex
