@@ -226,7 +226,15 @@ Only allow attack towers in rows w/ attack towers
  - go for the energy towers;
  - go for the kill;
 ** TODO [#A] Take a look at how I narrow the state for energy tower moves
+** TODO [#A] Stop searching deeper on early moves
 ** TODO [#A] Test `advanceState'
+** TODO [#B] Investigate why some moves are never considered
+   :LOGBOOK:
+   - Note taken on [2018-08-28 Tue 19:54] \\
+     I believe that the problem is that it becomes incredibly unlikely that
+     some moves will be selected because even the slightest adjustment
+     completely bumps a move up or down the CDF.
+   :END:
 ** TODO [#B] Use Accelerate for the top-level vector calculations
 ** TODO [#B] At a certain energy, go for the kill
 ** TODO [#B] Make a type for each row state
