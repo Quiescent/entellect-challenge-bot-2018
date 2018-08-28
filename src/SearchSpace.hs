@@ -30,7 +30,7 @@ import Control.Parallel.Strategies (using, rdeepseq)
 import Control.Exception (evaluate)
 
 maxSearchTime :: Int64
-maxSearchTime = 10000000000
+maxSearchTime = 2000000000
 
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time
