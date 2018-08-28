@@ -146,28 +146,84 @@ emptyBuildings = 0
 -- Rows:
 
 row0 :: Word64
-row0 = 255
+row0 = addBuilding (toCoord 0 0)
+       (addBuilding (toCoord 1 0)
+        (addBuilding (toCoord 2 0)
+         (addBuilding (toCoord 3 0)
+          (addBuilding (toCoord 4 0)
+           (addBuilding (toCoord 5 0)
+            (addBuilding (toCoord 6 0)
+             (addBuilding (toCoord 7 0) 0)))))))
 
 row1 :: Word64
-row1 = row0 `shiftL` halfWay
+row1 = addBuilding (toCoord 0 1)
+       (addBuilding (toCoord 1 1)
+        (addBuilding (toCoord 2 1)
+         (addBuilding (toCoord 3 1)
+          (addBuilding (toCoord 4 1)
+           (addBuilding (toCoord 5 1)
+            (addBuilding (toCoord 6 1)
+             (addBuilding (toCoord 7 1) 0)))))))
 
 row2 :: Word64
-row2 = row0 `shiftL` (halfWay * 2)
+row2 = addBuilding (toCoord 0 2)
+       (addBuilding (toCoord 1 2)
+        (addBuilding (toCoord 2 2)
+         (addBuilding (toCoord 3 2)
+          (addBuilding (toCoord 4 2)
+           (addBuilding (toCoord 5 2)
+            (addBuilding (toCoord 6 2)
+             (addBuilding (toCoord 7 2) 0)))))))
 
 row3 :: Word64
-row3 = row0 `shiftL` (halfWay * 3)
+row3 = addBuilding (toCoord 0 3)
+       (addBuilding (toCoord 1 3)
+        (addBuilding (toCoord 2 3)
+         (addBuilding (toCoord 3 3)
+          (addBuilding (toCoord 4 3)
+           (addBuilding (toCoord 5 3)
+            (addBuilding (toCoord 6 3)
+             (addBuilding (toCoord 7 3) 0)))))))
 
 row4 :: Word64
-row4 = row0 `shiftL` (halfWay * 4)
+row4 = addBuilding (toCoord 0 4)
+       (addBuilding (toCoord 1 4)
+        (addBuilding (toCoord 2 4)
+         (addBuilding (toCoord 3 4)
+          (addBuilding (toCoord 4 4)
+           (addBuilding (toCoord 5 4)
+            (addBuilding (toCoord 6 4)
+             (addBuilding (toCoord 7 4) 0)))))))
 
 row5 :: Word64
-row5 = row0 `shiftL` (halfWay * 5)
+row5 = addBuilding (toCoord 0 5)
+       (addBuilding (toCoord 1 5)
+        (addBuilding (toCoord 2 5)
+         (addBuilding (toCoord 3 5)
+          (addBuilding (toCoord 4 5)
+           (addBuilding (toCoord 5 5)
+            (addBuilding (toCoord 6 5)
+             (addBuilding (toCoord 7 5) 0)))))))
 
 row6 :: Word64
-row6 = row0 `shiftL` (halfWay * 6)
+row6 = addBuilding (toCoord 0 6)
+       (addBuilding (toCoord 1 6)
+        (addBuilding (toCoord 2 6)
+         (addBuilding (toCoord 3 6)
+          (addBuilding (toCoord 4 6)
+           (addBuilding (toCoord 5 6)
+            (addBuilding (toCoord 6 6)
+             (addBuilding (toCoord 7 6) 0)))))))
 
 row7 :: Word64
-row7 = row0 `shiftL` (halfWay * 7)
+row7 = addBuilding (toCoord 0 7)
+       (addBuilding (toCoord 1 7)
+        (addBuilding (toCoord 2 7)
+         (addBuilding (toCoord 3 7)
+          (addBuilding (toCoord 4 7)
+           (addBuilding (toCoord 5 7)
+            (addBuilding (toCoord 6 7)
+             (addBuilding (toCoord 7 7) 0)))))))
 
 -- Boards:
 
