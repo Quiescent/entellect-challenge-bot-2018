@@ -63,7 +63,7 @@ playToEnd g initialState gameTree =
     playToEndIter 0 _                                             gameTree' = gameTree'
     playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
       if ((startingTurn - (gameRound currentState) > minimumTurnsIntoTheFuture) && attackTowerGameOver currentState)
-      then updateAttackTowerEnding currentState advanceStateResult gameTree'
+      then updateEnding currentState advanceStateResult gameTree'
       else if gameOver currentState
            then updateEnding currentState advanceStateResult gameTree'
            else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
@@ -77,22 +77,6 @@ updateEnding currentState advanceStateResult gameTree' =
   if iWon currentState
   then updateWin  genuineWinLossAmplifier advanceStateResult gameTree'
   else updateLoss genuineWinLossAmplifier advanceStateResult gameTree'
-
-earlyWinLossAmplifier :: Float
-earlyWinLossAmplifier = genuineWinLossAmplifier
-
-updateAttackTowerEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
-updateAttackTowerEnding gameState advanceStateResult gameTree =
-  if attackDeficit gameState > 2
-  then updateWin  earlyWinLossAmplifier advanceStateResult gameTree
-  else updateLoss earlyWinLossAmplifier advanceStateResult gameTree
-
--- lengthenWinLossAmplifier :: Float
--- lengthenWinLossAmplifier = genuineWinLossAmplifier
-
--- updateLengthenGameEnding :: M.GameTree -> AdvanceStateResult -> M.GameTree
--- updateLengthenGameEnding gameTree (_, moves, _, _) =
---   M.incrementIncrementBy moves lengthenWinLossAmplifier gameTree
 
 -- Moves are added to an accumulater by consing onto the front; thus,
 -- they are reversed when we arrive here.
@@ -160,17 +144,16 @@ advanceState (g, moves, currentState, _) = do
   let isEmpty        = isNothing ourNode
   let myMoves        = myAvailableMoves currentState
   let oponentsMoves  = oponentsAvailableMoves currentState
-  let oponentsScores =
+  let (g', oponentsScores) =
         if isEmpty
-        then oponentsNormalisedScores currentState oponentsMoves
-        else M.oponentsScores $ fromJust ourNode
-  let myScores =
+        then playOponentToEnd g  currentState oponentsMoves
+        else (g, M.oponentsScores $ fromJust ourNode)
+  let (g'', myScores) =
         if isEmpty
-        then myNormalisedScores currentState myMoves
-        else M.myScores $ fromJust ourNode
-  let (g', g'') = split g
-  let (indexOfMyMove, myMove', _)                = chooseAMove g'  myMoves myScores
-  let (indexOfOponentsMove, oponentsMove', g''') = chooseAMove g'' oponentsMoves oponentsScores
+        then playMeToEnd g' currentState myMoves
+        else (g', M.myScores $ fromJust ourNode)
+  let (indexOfMyMove, myMove')             = chooseBestMove myMoves myScores
+  let (indexOfOponentsMove, oponentsMove') = chooseBestMove oponentsMoves oponentsScores
   let nextState = makeMoves myMove' oponentsMove' currentState
   let moves'    =
         if isEmpty
@@ -178,33 +161,26 @@ advanceState (g, moves, currentState, _) = do
         else (combineCommands indexOfMyMove indexOfOponentsMove):moves
   when isEmpty $
     put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
-  return (g''', moves', nextState, isEmpty)
+  return (g'', moves', nextState, isEmpty)
+
+playOponentToEnd :: RandomGen g => g -> GameState -> Moves -> (g, Scores)
+playOponentToEnd g _ moves =
+  (g, UV.map (\ _ -> 1) moves)
+
+playMeToEnd :: RandomGen g => g -> GameState -> Moves -> (g, Scores)
+playMeToEnd g _ moves =
+  (g, UV.map (\ _ -> 1) moves)
+
+chooseBestMove :: Moves -> Scores -> (Int, EfficientCommand)
+chooseBestMove moves scores =
+  let indexOfMax = UV.maxIndex scores
+  in (indexOfMax, moves `uVectorIndex` indexOfMax)
 
 makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
 makeMoves myMove' oponentsMove' =
   updateMyMove myMove' . updateOponentsMove oponentsMove' . tickEngine
 
 type Scores = UV.Vector Float
-
-chooseAMove :: RandomGen g => g -> Moves -> Scores -> (Int, EfficientCommand, g)
-chooseAMove g moves = chooseOne g moves . cdf
-
-myNormalisedScores :: GameState -> Moves -> Scores
-myNormalisedScores gameState =
-  normaliseScores .
-  UV.map
-  ((1 + ) . myIntermediateBoardScore . (flip updateMyMove gameState))
-
-oponentsNormalisedScores :: GameState -> Moves -> Scores
-oponentsNormalisedScores gameState =
-  normaliseScores .
-  UV.map
-  ((1 + ) . oponentsIntermediateBoardScore . (flip updateOponentsMove gameState))
-
-normaliseScores :: Scores -> Scores
-normaliseScores xs =
-  let maxScore = UV.sum xs
-  in UV.map (/ maxScore) xs
 
 playRandomly :: AdvanceStateResult -> AdvanceStateResult
 playRandomly (g, moves, currentState, _) =
@@ -224,34 +200,3 @@ chooseRandomly g moves =
   where
     (value, g') = next g
     idx         = mod value (UV.length moves)
-
-cdf :: Scores -> Scores
-cdf xs = normalised
-  where
-    normalised = UV.map (/ (UV.head summed)) summed
-    summed     = (UV.reverse . UV.scanl1 (+)) adjusted
-    adjusted   = UV.map (+minValue) xs
-    minValue   = abs $ UV.minimum xs
-
-chooseOne :: (RandomGen g) => g -> Moves -> Scores -> (Int, EfficientCommand, g)
-chooseOne g moves scores =
-  (indexOfMove, scanForValue, g')
-  where
-    (_, max')     = genRange g
-    floatingMax   = fromIntegral max'
-    normalise     = (/ floatingMax) . fromIntegral . abs
-    (value, g')   = next g
-    normalised    = normalise value
-    numberOfMoves = UV.length moves
-    indexOfLast   = numberOfMoves - 1
-    indexOfMove   =
-      fromJust $
-      lastIfNothing indexOfLast $
-      fmap ( \ x -> x - 1) $
-      UV.findIndex ((<= normalised)) scores
-    scanForValue  = indexMoves indexOfMove
-    indexMoves i  = moves `uVectorIndex` (numberOfMoves - i - 1)
-
-lastIfNothing :: Int -> Maybe Int -> Maybe Int
-lastIfNothing _         x@(Just _) = x
-lastIfNothing lastIndex Nothing    = Just lastIndex
