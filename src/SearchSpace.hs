@@ -145,14 +145,50 @@ switchMovesICanAfford =
 theMagicalRoundWhenIStopMakingEnergyTowers :: Int
 theMagicalRoundWhenIStopMakingEnergyTowers = 12
 
+midGameEnd :: Int
+midGameEnd = 30
+
+isInRowOfOponentsAttackTowers :: Player -> EfficientCommand -> Bool
+isInRowOfOponentsAttackTowers (Player { attackTowersUnderConstruction = attackTowersUnderConstruction',
+                                        attack3Towers = attack3Towers',
+                                        attack2Towers = attack2Towers',
+                                        attack1Towers = attack1Towers',
+                                        attack0Towers = attack0Towers' }) command =
+  let allAttackTowers = addAllBuildings attack3Towers'
+                        (addAllBuildings attack2Towers'
+                         (addAllBuildings attack1Towers'
+                          (addAllBuildings attack0Towers'
+                           (addAllBuildings attackTowersUnderConstruction' 0))))
+      coord           = coordOfCommand command
+      yCoord          = getY coord
+      row             =
+        case yCoord of
+          0 -> row0
+          1 -> row1
+          2 -> row2
+          3 -> row3
+          4 -> row4
+          5 -> row5
+          6 -> row6
+          7 -> row7
+          _ -> error $ "Invalid row of move: " ++ show yCoord
+  in command == 0 ||
+     buildingTypeOfCommand command /= ATTACK ||
+     allAttackTowers == 0 ||
+     onlyOverlappingBuildings row allAttackTowers > 0
+
 myAvailableMoves :: GameState -> Moves
 myAvailableMoves (GameState { gameRound = gameRound',
-                              me        = player@(Player { energy = energy' }) }) =
+                              me        = player@(Player { energy = energy' }),
+                              oponent   = oponent' }) =
   if gameRound' <= theMagicalRoundWhenIStopMakingEnergyTowers
   then if energy' >= energyTowerCost
        then UV.filter available allBackEnergyTowerMoves
        else UV.singleton nothingCommand
-  else UV.filter available affordableMoves
+  else if gameRound' <= midGameEnd
+       then UV.filter (\ move -> available move && isInRowOfOponentsAttackTowers oponent' move)
+            affordableMoves
+       else UV.filter available affordableMoves
   where
     available 0       = True
     available command = let i = coordOfCommand command in availableCoord i player
