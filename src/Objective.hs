@@ -8,7 +8,6 @@ module Objective (oponentsIntermediateBoardScore,
 
 import Engine
 import Interpretor (Command, GameState(..), Player(..))
-import BitSetMap
 import EfficientCommand
 import GameState
 import AvailableMoves
@@ -44,14 +43,10 @@ depth = 50
 
 type AdvanceStateResult = (StdGen, [PackedCommand], GameState, Bool)
 
-minimumTurnsIntoTheFuture :: Int
-minimumTurnsIntoTheFuture = 5
-
 playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
 playToEnd g initialState gameTree =
   playToEndIter depth (g, [], initialState, False) gameTree
   where
-    startingTurn = gameRound initialState
     -- TODO inline and transfer into secondary loop.
     playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
     playToEndIter n advanceStateResult@(_, _, currentState, True) gameTree' =
@@ -59,15 +54,12 @@ playToEnd g initialState gameTree =
       then updateEnding currentState advanceStateResult gameTree'
       else let advanceStateResult' = playRandomly advanceStateResult
            in  playToEndIter (n - 1) advanceStateResult' gameTree'
-    -- playToEndIter 0 advanceStateResult                            gameTree' = updateLengthenGameEnding gameTree' advanceStateResult
     playToEndIter 0 _                                             gameTree' = gameTree'
     playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
-      if ((startingTurn - (gameRound currentState) > minimumTurnsIntoTheFuture) && attackTowerGameOver currentState)
+      if gameOver currentState
       then updateEnding currentState advanceStateResult gameTree'
-      else if gameOver currentState
-           then updateEnding currentState advanceStateResult gameTree'
-           else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
-                in  playToEndIter (n - 1) advanceStateResult' gameTree''
+      else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
+           in  playToEndIter (n - 1) advanceStateResult' gameTree''
 
 genuineWinLossAmplifier :: Float
 genuineWinLossAmplifier = 1
@@ -95,36 +87,6 @@ updateLoss winLossAmplifier (_, moves, _, _) gameTree =
 decrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
 decrementTreeFitness winLossAmplifier moves gameTree =
   M.incrementDecrementBy moves (-winLossAmplifier) gameTree
-
-attackDeficit :: GameState -> Int
-attackDeficit
-  (GameState { me      =
-               (Player { attack0Towers                 = myAttack0Towers,
-                         attack1Towers                 = myAttack1Towers,
-                         attack2Towers                 = myAttack2Towers,
-                         attack3Towers                 = myAttack3Towers,
-                         attackTowersUnderConstruction = myAttackTowersUnderConstruction }),
-               oponent =
-               (Player { attack0Towers                 = oponentsAttack0Towers,
-                         attack1Towers                 = oponentsAttack1Towers,
-                         attack2Towers                 = oponentsAttack2Towers,
-                         attack3Towers                 = oponentsAttack3Towers,
-                         attackTowersUnderConstruction = oponentsAttackTowersUnderConstruction }) }) =
-  (countBuildings myAttack0Towers +
-   countBuildings myAttack1Towers +
-   countBuildings myAttack2Towers +
-   countBuildings myAttack3Towers +
-   countBuildings myAttackTowersUnderConstruction) -
-  (countBuildings oponentsAttack0Towers +
-   countBuildings oponentsAttack1Towers +
-   countBuildings oponentsAttack2Towers +
-   countBuildings oponentsAttack3Towers +
-   countBuildings oponentsAttackTowersUnderConstruction)
-
-attackTowerGameOver :: GameState -> Bool
-attackTowerGameOver gameState =
-  attackDeficit gameState < -2 ||
-  attackDeficit gameState > 2
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth' }),
