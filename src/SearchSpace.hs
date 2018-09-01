@@ -17,8 +17,8 @@ import Data.Int
 import System.Clock
 import System.Random
 import Control.Monad.State.Lazy
-import qualified Data.Vector.Unboxed as UV
-import qualified Data.List           as L
+import qualified Data.List as L
+-- import qualified Data.Vector.Unboxed as UV
 
 import Control.Concurrent (readChan,
                            newChan,
@@ -91,14 +91,15 @@ searchDeeper best commTo commFrom g initialState =
          commsCountDown'  = if commsCountDown == 0 then ticksBeforeComms else (commsCountDown - 1)
          searchTree'      = playToEnd h'' initialState searchTree
          scores           = M.myScores searchTree'
-         indexOfBestSoFar = UV.maxIndex scores
-         scoreOfBestSoFar = scores `uVectorIndex` indexOfBestSoFar
-         bestSoFarThunk   = toCommand (moves `uVectorIndex` indexOfBestSoFar)
+         count            = (M.gamesPlayed searchTree')
+         (indexOfBestSoFar, bestSoFarThunk) =
+           chooseBestMove count moves scores
+         myWinLoss        = scores `uVectorIndex` indexOfBestSoFar
       in do
-        -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
-        bestSoFar <- evaluate (bestSoFarThunk `using` rdeepseq)
+        bestSoFar <- evaluate ((toCommand bestSoFarThunk) `using` rdeepseq)
         if (commsCountDown == 0) then do
-          writeChan best (scoreOfBestSoFar, bestSoFar)
+          -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
+          writeChan best (confidence count myWinLoss, bestSoFar)
           neighbourTree <- readChan commFrom
           searchDeeperIter commsCountDown' h' $ M.mergeTrees searchTree' neighbourTree
         else if (commsCountDown == commsMidPoint)

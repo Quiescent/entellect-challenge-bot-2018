@@ -105,14 +105,6 @@ switchAffordableMoves energyTowerMoves
     energyTowerMoves UV.++
     teslaTowerMoves
 
--- NOTE: Assumes that attack towers cost the same as defense towers
-switchMovesICanAfford :: Int -> Int -> Moves
-switchMovesICanAfford =
-  switchAffordableMoves usefulEnergyMoves
-                        allForwardDefenseTowerMoves
-                        allMidToFrontAttackTowerMoves
-                        allFrontTeslaTowerMoves
-
 theMagicalRoundWhenIStopMakingEnergyTowers :: Int
 theMagicalRoundWhenIStopMakingEnergyTowers = 12
 
@@ -148,6 +140,14 @@ isInRowOfOponentsAttackTowers _ _ = True
 
 midGameEnd :: Int
 midGameEnd = 30
+
+-- NOTE: Assumes that attack towers cost the same as defense towers
+switchMovesICanAfford :: Int -> Int -> Moves
+switchMovesICanAfford =
+  switchAffordableMoves usefulEnergyMoves
+                        allForwardDefenseTowerMoves
+                        allMidToFrontAttackTowerMoves
+                        allFrontTeslaTowerMoves
 
 myAvailableMoves :: GameState -> Moves
 myAvailableMoves (GameState { gameRound = gameRound',
@@ -187,3 +187,35 @@ oponentsAvailableMoves (GameState { gameRound = gameRound',
     available command = let i = coordOfCommand command in availableCoord i player
     energyGenPerTurn' = energyGenPerTurn player
     affordableMoves   = switchMovesOponentCanAfford energy' energyGenPerTurn'
+
+myRandomMoves :: GameState -> Moves
+myRandomMoves (GameState { me = player@(Player { energy = energy' }) }) =
+  UV.filter available affordableMoves
+  where
+    available 0       = True
+    available command = let i = coordOfCommand command in availableCoord i player
+    affordableMoves   = switchRandomMovesICanAfford energy'
+
+switchRandomMovesICanAfford :: Int -> Moves
+switchRandomMovesICanAfford =
+  switchAffordableRandomMoves usefulEnergyMoves allMidToFrontAttackTowerMoves
+
+oponentsRandomMoves :: GameState -> Moves
+oponentsRandomMoves (GameState { oponent = player@(Player { energy = energy' }) }) =
+  UV.filter available affordableMoves
+  where
+    available 0       = True
+    available command = let i = coordOfCommand command in availableCoord i player
+    affordableMoves   = switchRandomMovesOponentCanAfford energy'
+
+switchRandomMovesOponentCanAfford :: Int -> Moves
+switchRandomMovesOponentCanAfford =
+  switchAffordableRandomMoves oponentsPotentialEnergyMoves allMidToFrontAttackTowerMoves
+
+switchAffordableRandomMoves :: Moves -> Moves -> Int -> Moves
+switchAffordableRandomMoves energyTowerMoves attackTowerMoves energy'
+  | energy' < energyTowerCost = UV.singleton nothingCommand
+  | energy' < attackTowerCost = energyTowerMoves
+  | energy' < teslaTowerCost  = attackTowerMoves
+  -- TODO this should be the iron curtain when that's in
+  | otherwise                 = attackTowerMoves

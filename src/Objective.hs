@@ -3,6 +3,8 @@
 module Objective (oponentsIntermediateBoardScore,
                   myIntermediateBoardScore,
                   playToEnd,
+                  confidence,
+                  chooseBestMove,
                   Move(..))
   where
 
@@ -17,7 +19,6 @@ import qualified Data.IntMap as IM
 
 import Data.Maybe
 import System.Random
-import Control.Monad.State.Lazy
 import qualified Data.Vector.Unboxed as UV
 
 import Control.DeepSeq
@@ -39,123 +40,150 @@ myIntermediateBoardScore :: GameState -> Float
 myIntermediateBoardScore _ = 1
 
 depth :: Int
-depth = 50
+depth = 100
 
-type AdvanceStateResult = (StdGen, [PackedCommand], GameState, Bool)
-
+-- TODO: Check the random generators
 playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
 playToEnd g initialState gameTree =
-  playToEndIter depth (g, [], initialState, False) gameTree
+  playToEndIter depth g [] initialState gameTree
   where
-    -- TODO inline and transfer into secondary loop.
-    playToEndIter :: Int -> AdvanceStateResult -> M.GameTree -> M.GameTree
-    playToEndIter n advanceStateResult@(_, _, currentState, True) gameTree' =
+    -- ===Play Through Tree===
+    playToEndIter :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
+    playToEndIter 0 _ _     _            gameTree' = gameTree'
+    playToEndIter n j moves currentState gameTree' =
+      let count                                = M.gamesPlayed gameTree
+          ourNode                              = M.subTree moves gameTree
+          isEmpty                              = isNothing ourNode
+          myMoves                              = myAvailableMoves currentState
+          oponentsMoves                        = oponentsAvailableMoves currentState
+          oponentsScores                       = M.oponentsScores $ fromJust ourNode
+          myScores                             = M.myScores $ fromJust ourNode
+          eitherIsUninitialised                = UV.any hasEmptyScore myScores || UV.any hasEmptyScore oponentsScores
+          (indexOfMyMove, myMove')             = chooseBestMove count myMoves       myScores
+          (indexOfOponentsMove, oponentsMove') = chooseBestMove count oponentsMoves oponentsScores
+          nextState                            = makeMoves myMove' oponentsMove' currentState
+          moves'                               = (combineCommands indexOfMyMove indexOfOponentsMove):moves
+      in if gameOver currentState
+         then updateEnding currentState moves gameTree'
+         else if isEmpty
+              then rollout n j currentState moves gameTree'
+              else if eitherIsUninitialised
+                   then rolloutInitialised n j currentState moves gameTree'
+                   else playToEndIter (n - 1) j moves' nextState gameTree'
+    -- ===Play Rollout With Initialised==
+    rolloutInitialised :: Int -> StdGen -> GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
+    rolloutInitialised 0 _ _            _     gameTree' = gameTree'
+    rolloutInitialised n k currentState moves gameTree' =
+      let oponentsMoves  = oponentsAvailableMoves currentState
+          (x, k')        = next k
+          oponentIdx     = mod x (UV.length oponentsMoves)
+          oponentsMove'  = oponentsMoves `uVectorIndex` oponentIdx
+          myMoves        = myAvailableMoves currentState
+          (y, k'')       = next k'
+          myIdx          = mod y (UV.length myMoves)
+          myMove'        = myMoves `uVectorIndex` myIdx
+          moves'         = (combineCommands myIdx oponentIdx):moves
+          nextState      = updateMyMove myMove' $
+                           updateOponentsMove oponentsMove' $
+                           tickEngine currentState
+      in playToEndRandomly (n - 1) k'' moves' nextState gameTree'
+    -- ===Initialise Rollout===
+    rollout :: Int -> StdGen -> GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
+    rollout 0 _ _            _     gameTree' = gameTree'
+    rollout n k currentState moves gameTree' =
+      let oponentsMoves  = oponentsAvailableMoves currentState
+          (x, k')        = next k
+          oponentIdx     = mod x (UV.length oponentsMoves)
+          oponentsMove'  = oponentsMoves `uVectorIndex` oponentIdx
+          myMoves        = myAvailableMoves currentState
+          (y, k'')       = next k'
+          myIdx          = mod y (UV.length myMoves)
+          myMove'        = myMoves `uVectorIndex` myIdx
+          myScores       = UV.replicate (UV.length myMoves)       (0, 0)
+          oponentsScores = UV.replicate (UV.length oponentsMoves) (0, 0)
+          gameTree''     = M.addAt moves (M.GameTree 0 myScores IM.empty oponentsScores) gameTree'
+          moves'         = (combineCommands myIdx oponentIdx):moves
+          nextState      = updateMyMove myMove' $
+                           updateOponentsMove oponentsMove' $
+                           tickEngine currentState
+      in playToEndRandomly (n - 1) k'' moves' nextState gameTree''
+    -- ===Random Playout===
+    playToEndRandomly :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
+    playToEndRandomly 0 _ _     _            gameTree' = gameTree'
+    playToEndRandomly n h moves currentState gameTree' =
       if gameOver currentState
-      then updateEnding currentState advanceStateResult gameTree'
-      else let advanceStateResult' = playRandomly advanceStateResult
-           in  playToEndIter (n - 1) advanceStateResult' gameTree'
-    playToEndIter 0 _                                             gameTree' = gameTree'
-    playToEndIter n advanceStateResult@(_, _, currentState, _)    gameTree' =
-      if gameOver currentState
-      then updateEnding currentState advanceStateResult gameTree'
-      else let (advanceStateResult', gameTree'') = runState (advanceState advanceStateResult) gameTree'
-           in  playToEndIter (n - 1) advanceStateResult' gameTree''
+      then updateEnding currentState moves gameTree'
+      else let myMoves               = myRandomMoves currentState
+               oponentsMoves         = oponentsRandomMoves currentState
+               (h', h'')             = split h
+               (myMove', _)          = chooseRandomly h' myMoves
+               (oponentsMove', h''') = chooseRandomly h'' oponentsMoves
+               nextState             = updateMyMove myMove' $
+                 updateOponentsMove oponentsMove' $
+                 tickEngine currentState
+      in playToEndRandomly (n - 1) h''' moves nextState gameTree'
 
-genuineWinLossAmplifier :: Float
-genuineWinLossAmplifier = 1
+hasEmptyScore :: (Float, Float) -> Bool
+hasEmptyScore (0, 0) = True
+hasEmptyScore _      = False
 
-updateEnding :: GameState -> AdvanceStateResult -> M.GameTree -> M.GameTree
-updateEnding currentState advanceStateResult gameTree' =
+updateEnding :: GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
+updateEnding currentState moves gameTree' =
   if iWon currentState
-  then updateWin  genuineWinLossAmplifier advanceStateResult gameTree'
-  else updateLoss genuineWinLossAmplifier advanceStateResult gameTree'
+  then updateWin  moves gameTree'
+  else updateLoss moves gameTree'
 
 -- Moves are added to an accumulater by consing onto the front; thus,
 -- they are reversed when we arrive here.
-updateWin :: Float -> AdvanceStateResult -> M.GameTree -> M.GameTree
-updateWin winLossAmplifier (_, moves, _, _) gameTree =
-  incrementTreeFitness winLossAmplifier (reverse moves) gameTree
+updateWin :: [PackedCommand] -> M.GameTree -> M.GameTree
+updateWin moves gameTree =
+  incrementTreeFitness (reverse moves) gameTree
 
-incrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
-incrementTreeFitness winLossAmplifier moves gameTree =
-  M.incrementDecrementBy moves winLossAmplifier gameTree
+incrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
+incrementTreeFitness moves gameTree =
+  M.incrementDecrement moves gameTree
 
-updateLoss :: Float -> AdvanceStateResult -> M.GameTree -> M.GameTree
-updateLoss winLossAmplifier (_, moves, _, _) gameTree =
-  decrementTreeFitness winLossAmplifier (reverse moves) gameTree
+updateLoss :: [PackedCommand] -> M.GameTree -> M.GameTree
+updateLoss moves gameTree =
+  decrementTreeFitness (reverse moves) gameTree
 
-decrementTreeFitness :: Float -> [PackedCommand] -> M.GameTree -> M.GameTree
-decrementTreeFitness winLossAmplifier moves gameTree =
-  M.incrementDecrementBy moves (-winLossAmplifier) gameTree
+decrementTreeFitness :: [PackedCommand] -> M.GameTree -> M.GameTree
+decrementTreeFitness moves gameTree =
+  M.decrementIncrement moves gameTree
 
 gameOver :: GameState -> Bool
 gameOver (GameState { me      = (Player { health = myHealth' }),
                       oponent = (Player { health = oponentsHealth' }) }) =
-  myHealth' <= 0 || oponentsHealth' <= 0
+  (myHealth' <= 0 || oponentsHealth' <= 0)
 
 iWon :: GameState -> Bool
 iWon (GameState { me      = (Player { health = myHealth' }),
                   oponent = (Player { health = oponentsHealth' }) }) =
   oponentsHealth' <= 0 && myHealth' > 0
 
--- I'm traversing the tree every time.  This is not necessary!!!
-advanceState :: AdvanceStateResult -> State M.GameTree AdvanceStateResult
-advanceState (g, moves, currentState, _) = do
-  gameTree          <- get
-  let ourNode        = M.subTree moves gameTree
-  let isEmpty        = isNothing ourNode
-  let myMoves        = myAvailableMoves currentState
-  let oponentsMoves  = oponentsAvailableMoves currentState
-  let (g', oponentsScores) =
-        if isEmpty
-        then playOponentToEnd g  currentState oponentsMoves
-        else (g, M.oponentsScores $ fromJust ourNode)
-  let (g'', myScores) =
-        if isEmpty
-        then playMeToEnd g' currentState myMoves
-        else (g', M.myScores $ fromJust ourNode)
-  let (indexOfMyMove, myMove')             = chooseBestMove myMoves myScores
-  let (indexOfOponentsMove, oponentsMove') = chooseBestMove oponentsMoves oponentsScores
-  let nextState = makeMoves myMove' oponentsMove' currentState
-  let moves'    =
-        if isEmpty
-        then moves
-        else (combineCommands indexOfMyMove indexOfOponentsMove):moves
-  when isEmpty $
-    put $ M.addAt moves (M.GameTree myScores IM.empty oponentsScores) gameTree
-  return (g'', moves', nextState, isEmpty)
+confidence :: Float -> (Float, Float) -> Float
+confidence _ (_, 0) = 10
+confidence count (wins, games) =
+  (w_i / n_i) +
+  c * sqrt ((log count_i) / n_i)
+  where
+    count_i = count
+    n_i     = games
+    w_i     = wins
+    c       = sqrt 2
 
-playOponentToEnd :: RandomGen g => g -> GameState -> Moves -> (g, Scores)
-playOponentToEnd g _ moves =
-  (g, UV.map (\ _ -> 1) moves)
-
-playMeToEnd :: RandomGen g => g -> GameState -> Moves -> (g, Scores)
-playMeToEnd g _ moves =
-  (g, UV.map (\ _ -> 1) moves)
-
-chooseBestMove :: Moves -> Scores -> (Int, EfficientCommand)
-chooseBestMove moves scores =
-  let indexOfMax = UV.maxIndex scores
+chooseBestMove :: Float -> Moves -> Scores -> (Int, EfficientCommand)
+chooseBestMove matchCount moves scores =
+  let indexOfMax = UV.maxIndex $ UV.map (confidence matchCount) scores
   in (indexOfMax, moves `uVectorIndex` indexOfMax)
 
 makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
 makeMoves myMove' oponentsMove' =
   updateMyMove myMove' . updateOponentsMove oponentsMove' . tickEngine
 
-type Scores = UV.Vector Float
+type Scores = UV.Vector (Float, Float)
 
-playRandomly :: AdvanceStateResult -> AdvanceStateResult
-playRandomly (g, moves, currentState, _) =
-  let myMoves               = myAvailableMoves currentState
-      oponentsMoves         = oponentsAvailableMoves currentState
-      (g', g'')             = split g
-      (myMove', _)          = chooseRandomly g' myMoves
-      (oponentsMove', g''') = chooseRandomly g'' oponentsMoves
-      nextState             = updateMyMove myMove' $
-        updateOponentsMove oponentsMove' $
-        tickEngine currentState
-  in (g''', moves, nextState, True)
-
+-- TODO inline
 chooseRandomly :: (RandomGen g) => g -> Moves -> (EfficientCommand, g)
 chooseRandomly g moves =
   (moves `uVectorIndex` idx, g')

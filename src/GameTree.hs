@@ -1,4 +1,5 @@
 module GameTree (GameTree(..),
+                 gamesPlayed,
                  mergeTrees,
                  subTree,
                  addAt,
@@ -7,82 +8,97 @@ module GameTree (GameTree(..),
                  myScores,
                  isEmpty,
                  oponentsScores,
-                 incrementIncrementBy,
-                 incrementDecrementBy)
+                 decrementIncrement,
+                 incrementDecrement)
   where
 
 import EfficientCommand
+
+import Data.Ratio
 
 import qualified Data.IntMap                 as M
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as MVector
 
-data GameTree = GameTree (UV.Vector Float) (M.IntMap GameTree) (UV.Vector Float)
+type SubTree = M.IntMap GameTree
+
+type WinLoss = UV.Vector (Float, Float)
+
+data GameTree = GameTree Float WinLoss SubTree WinLoss
               | EmptyTree
   deriving (Show, Eq)
+
+gamesPlayed :: GameTree -> Float
+gamesPlayed EmptyTree          = 0
+gamesPlayed (GameTree x _ _ _) = x
 
 -- TODO: Don't use nothing (see comment on advance state for way of
 -- zipping through tree so that we never need this anyway)
 subTree :: [PackedCommand] -> GameTree -> Maybe GameTree
-subTree _            EmptyTree               = Nothing
-subTree []           tree                    = Just tree
-subTree (move:moves) (GameTree _ branches _) = M.lookup move branches >>= subTree moves 
+subTree _            EmptyTree                 = Nothing
+subTree []           tree                      = Just tree
+subTree (move:moves) (GameTree _ _ branches _) = M.lookup move branches >>= subTree moves
 
-incrementDecrementBy :: [PackedCommand] -> Float -> GameTree -> GameTree
-incrementDecrementBy _            _ EmptyTree = EmptyTree
-incrementDecrementBy []           _ tree      = tree
-incrementDecrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
-  let updatedSubTree = M.adjust (incrementDecrementBy moves x) move branches
-  in GameTree (UV.modify increment myMoveScores) updatedSubTree (UV.modify decrement oponentsMoveScores)
+incrementDecrement :: [PackedCommand] -> GameTree -> GameTree
+incrementDecrement _            EmptyTree = EmptyTree
+incrementDecrement []           tree      = tree
+incrementDecrement (move:moves) (GameTree count myWinLoss branches oponentsWinLoss) =
+  let updatedSubTree = M.adjust (incrementDecrement moves) move branches
+  in GameTree count (UV.modify modifyMyScore myWinLoss) updatedSubTree (UV.modify modifyOponentsScore oponentsWinLoss)
   where
     (myMove, oponentsMove) = unpackPackedCommand move
-    increment scores       = do
-      myOldScore <- MVector.read scores myMove
+    modifyMyScore scores       = do
+      (myWins, myGames) <- MVector.read scores myMove
       MVector.write scores myMove
-                    (myOldScore + (x / (fromIntegral $ UV.length myMoveScores)))
-    decrement scores       = do
-      oponentsOldScore <- MVector.read scores oponentsMove
+                    (myWins + 1, myGames + 1)
+    modifyOponentsScore scores       = do
+      (oponentsWins, oponentsGames) <- MVector.read scores oponentsMove
       MVector.write scores oponentsMove
-                    (oponentsOldScore - (x / (fromIntegral $ UV.length oponentsMoveScores)))
+                    (oponentsWins, oponentsGames + 1)
 
-incrementIncrementBy :: [PackedCommand] -> Float -> GameTree -> GameTree
-incrementIncrementBy _            _ EmptyTree = EmptyTree
-incrementIncrementBy []           _ tree      = tree
-incrementIncrementBy (move:moves) x (GameTree myMoveScores branches oponentsMoveScores) =
-  let updatedSubTree = M.adjust (incrementIncrementBy moves x) move branches
-  in GameTree (UV.modify incrementMe myMoveScores) updatedSubTree (UV.modify incrementOponent oponentsMoveScores)
+decrementIncrement :: [PackedCommand] -> GameTree -> GameTree
+decrementIncrement _            EmptyTree = EmptyTree
+decrementIncrement []           tree      = tree
+decrementIncrement (move:moves) (GameTree count myWinLoss branches oponentsWinLoss) =
+  let updatedSubTree = M.adjust (decrementIncrement moves) move branches
+  in GameTree count (UV.modify modifyMyScore myWinLoss) updatedSubTree (UV.modify modifyOponentsScore oponentsWinLoss)
   where
     (myMove, oponentsMove) = unpackPackedCommand move
-    incrementMe scores       = do
-      myOldScore <- MVector.read scores myMove
+    modifyMyScore scores       = do
+      (myWins, myGames) <- MVector.read scores myMove
       MVector.write scores myMove
-                    (myOldScore + (x / (fromIntegral $ UV.length myMoveScores)))
-    incrementOponent scores       = do
-      myOldScore <- MVector.read scores oponentsMove
-      MVector.write scores myMove
-                    (myOldScore + (x / (fromIntegral $ UV.length myMoveScores)))
+                    (myWins, myGames + 1)
+    modifyOponentsScore scores       = do
+      (oponentsWins, oponentsGames) <- MVector.read scores oponentsMove
+      MVector.write scores oponentsMove
+                    (oponentsWins + 1, oponentsGames + 1)
 
 addAt :: [PackedCommand] -> GameTree -> GameTree -> GameTree
-addAt _            subTreeToAdd EmptyTree                                           = subTreeToAdd
-addAt []           subTreeToAdd _                                                   = subTreeToAdd
-addAt (move:[])    subTreeToAdd (GameTree myMoveScores branches oponentsMoveScores) =
+addAt _            subTreeToAdd EmptyTree                                                 = subTreeToAdd
+addAt []           subTreeToAdd _                                                         = subTreeToAdd
+addAt (move:[])    subTreeToAdd (GameTree count myMoveScores branches oponentsMoveScores) =
   let updatedSubTree = M.insert move subTreeToAdd branches
-  in GameTree myMoveScores updatedSubTree oponentsMoveScores
-addAt (move:moves) subTreeToAdd (GameTree myMoveScores branches oponentsMoveScores) =
+  in GameTree (count + 1) myMoveScores updatedSubTree oponentsMoveScores
+addAt (move:moves) subTreeToAdd (GameTree count myMoveScores branches oponentsMoveScores) =
   let updatedSubTree = M.adjust (addAt moves subTreeToAdd) move branches
-  in GameTree myMoveScores updatedSubTree oponentsMoveScores
-
-average :: Float -> Float -> Float
-average x y = (x + y) / 2
+  in GameTree (count + 1) myMoveScores updatedSubTree oponentsMoveScores
 
 mergeTrees :: GameTree -> GameTree -> GameTree
-mergeTrees EmptyTree y                                   = y
-mergeTrees x         EmptyTree                           = x
-mergeTrees (GameTree myScores1 myBranches1 enemyScores1)
-           (GameTree myScores2 myBranches2 enemyScores2) =
-  (GameTree (UV.zipWith average myScores1 myScores2)
+mergeTrees EmptyTree y                                          = y
+mergeTrees x         EmptyTree                                  = x
+mergeTrees (GameTree count1 myScores1 myBranches1 enemyScores1)
+           (GameTree count2 myScores2 myBranches2 enemyScores2) =
+  (GameTree (count1 + count2)
+            (UV.zipWith addCorresponding myScores1 myScores2)
             (M.unionWith mergeTrees myBranches1 myBranches2)
-            (UV.zipWith average enemyScores1 enemyScores2))
+            (UV.zipWith addCorresponding enemyScores1 enemyScores2))
+
+addCorresponding :: (Float, Float) -> (Float, Float) -> (Float, Float)
+addCorresponding (0, 0) (x', y') = (x', y')
+addCorresponding (x, y) (0, 0)   = (x, y)
+addCorresponding (x, y) (x', y') =
+  let fraction = (toRational x / toRational y) + (toRational x' / toRational y')
+  in (fromIntegral $ numerator fraction, fromIntegral $ denominator fraction)
 
 empty :: GameTree
 empty = EmptyTree
@@ -93,12 +109,12 @@ isEmpty _         = False
 
 hasNoBranches :: GameTree -> Bool
 hasNoBranches EmptyTree        = False
-hasNoBranches (GameTree _ x _) = M.null x
+hasNoBranches (GameTree _ _ x _) = M.null x
 
-myScores :: GameTree -> UV.Vector Float
+myScores :: GameTree -> WinLoss
 myScores EmptyTree        = UV.empty
-myScores (GameTree x _ _) = x
+myScores (GameTree _ x _ _) = x
 
-oponentsScores :: GameTree -> UV.Vector Float
+oponentsScores :: GameTree -> WinLoss
 oponentsScores EmptyTree        = UV.empty
-oponentsScores (GameTree _ _ x) = x
+oponentsScores (GameTree _ _ _ x) = x
