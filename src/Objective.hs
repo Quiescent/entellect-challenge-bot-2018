@@ -113,15 +113,18 @@ playToEnd g initialState gameTree =
     playToEndRandomly n h moves currentState gameTree' =
       if gameOver currentState
       then updateEnding currentState moves gameTree'
-      else let myMoves               = myRandomMoves currentState
-               oponentsMoves         = oponentsRandomMoves currentState
-               (h', h'')             = split h
-               (myMove', _)          = chooseRandomly h' myMoves
-               (oponentsMove', h''') = chooseRandomly h'' oponentsMoves
-               nextState             = updateMyMove myMove' $
+      else let oponentsMoves = oponentsRandomMoves currentState
+               (x, h')       = next h
+               oponentIdx    = mod x (UV.length oponentsMoves)
+               oponentsMove' = oponentsMoves `uVectorIndex` oponentIdx
+               myMoves       = myRandomMoves currentState
+               (y, h'')      = next h'
+               myIdx         = mod y (UV.length myMoves)
+               myMove'       = myMoves `uVectorIndex` myIdx
+               nextState     = updateMyMove myMove' $
                  updateOponentsMove oponentsMove' $
                  tickEngine currentState
-      in playToEndRandomly (n - 1) h''' moves nextState gameTree'
+      in playToEndRandomly (n - 1) h'' moves nextState gameTree'
 
 hasEmptyScore :: (Float, Float) -> Bool
 hasEmptyScore (0, 0) = True
@@ -172,7 +175,7 @@ confidence count (wins, games) =
     w_i     = wins
     c       = sqrt 2
 
-chooseBestMove :: Float -> Moves -> Scores -> (Int, EfficientCommand)
+chooseBestMove :: Float -> Moves -> UV.Vector (Float, Float) -> (Int, EfficientCommand)
 chooseBestMove matchCount moves scores =
   let indexOfMax = UV.maxIndex $ UV.map (confidence matchCount) scores
   in (indexOfMax, moves `uVectorIndex` indexOfMax)
@@ -180,13 +183,3 @@ chooseBestMove matchCount moves scores =
 makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
 makeMoves myMove' oponentsMove' =
   updateMyMove myMove' . updateOponentsMove oponentsMove' . tickEngine
-
-type Scores = UV.Vector (Float, Float)
-
--- TODO inline
-chooseRandomly :: (RandomGen g) => g -> Moves -> (EfficientCommand, g)
-chooseRandomly g moves =
-  (moves `uVectorIndex` idx, g')
-  where
-    (value, g') = next g
-    idx         = mod value (UV.length moves)
