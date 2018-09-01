@@ -92,8 +92,7 @@ searchDeeper best commTo commFrom g initialState =
          searchTree'      = playToEnd h'' initialState searchTree
          scores           = M.myScores searchTree'
          count            = (M.gamesPlayed searchTree')
-         (indexOfBestSoFar, bestSoFarThunk) =
-           chooseBestMove count moves scores
+         (indexOfBestSoFar, bestSoFarThunk) = chooseBestMove count moves scores
          myWinLoss        = scores `uVectorIndex` indexOfBestSoFar
       in do
         bestSoFar <- evaluate ((toCommand bestSoFarThunk) `using` rdeepseq)

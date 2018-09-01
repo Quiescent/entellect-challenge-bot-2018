@@ -59,8 +59,8 @@ playToEnd g initialState gameTree =
           oponentsScores                       = M.oponentsScores $ fromJust ourNode
           myScores                             = M.myScores $ fromJust ourNode
           eitherIsUninitialised                = UV.any hasEmptyScore myScores || UV.any hasEmptyScore oponentsScores
-          (indexOfMyMove, myMove')             = chooseBestMove count myMoves       myScores
-          (indexOfOponentsMove, oponentsMove') = chooseBestMove count oponentsMoves oponentsScores
+          (indexOfMyMove, myMove')             = chooseBestMove' count myMoves       myScores
+          (indexOfOponentsMove, oponentsMove') = chooseBestMove' count oponentsMoves oponentsScores
           nextState                            = makeMoves myMove' oponentsMove' currentState
           moves'                               = (combineCommands indexOfMyMove indexOfOponentsMove):moves
       in if gameOver currentState
@@ -165,7 +165,6 @@ iWon (GameState { me      = (Player { health = myHealth' }),
   oponentsHealth' <= 0 && myHealth' > 0
 
 confidence :: Float -> (Float, Float) -> Float
-confidence _ (_, 0) = 10
 confidence count (wins, games) =
   (w_i / n_i) +
   c * sqrt ((log count_i) / n_i)
@@ -175,9 +174,19 @@ confidence count (wins, games) =
     w_i     = wins
     c       = sqrt 2
 
+chooseBestMove' :: Float -> Moves -> UV.Vector (Float, Float) -> (Int, EfficientCommand)
+chooseBestMove' matchCount moves scores =
+  let indexOfMax = UV.maxIndex $ UV.map (confidence matchCount) scores
+  in (indexOfMax, moves `uVectorIndex` indexOfMax)
+
+confidenceDownVotingUninitialised :: Float -> (Float, Float) -> Float
+confidenceDownVotingUninitialised _     (_, 0) = -1
+confidenceDownVotingUninitialised count scores = confidence count scores
+
 chooseBestMove :: Float -> Moves -> UV.Vector (Float, Float) -> (Int, EfficientCommand)
 chooseBestMove matchCount moves scores =
-  let indexOfMax = UV.maxIndex $ UV.map (confidence matchCount) scores
+  let indexOfMax = UV.maxIndex $
+        UV.map (confidenceDownVotingUninitialised matchCount) scores
   in (indexOfMax, moves `uVectorIndex` indexOfMax)
 
 makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
