@@ -66,9 +66,9 @@ playToEnd g initialState gameTree =
       in if gameOver currentState
          then updateEnding currentState moves gameTree'
          else if isEmpty
-              then rollout n j currentState moves gameTree
+              then rollout n j currentState moves gameTree'
               else if eitherIsUninitialised
-                   then rolloutInitialised n j currentState moves gameTree
+                   then rolloutInitialised n j currentState moves gameTree'
                    else playToEndIter (n - 1) j moves' nextState gameTree'
     -- ===Play Rollout With Initialised==
     rolloutInitialised :: Int -> StdGen -> GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
@@ -99,7 +99,7 @@ playToEnd g initialState gameTree =
           myMove'        = myMoves `uVectorIndex` myIdx
           myScores       = UV.replicate (UV.length myMoves)       (0, 0)
           oponentsScores = UV.replicate (UV.length oponentsMoves) (0, 0)
-          gameTree''     = M.addAt moves (M.GameTree 0 myScores IM.empty oponentsScores) gameTree'
+          gameTree''     = M.addAt moves (M.GameTree 1 myScores IM.empty oponentsScores) gameTree'
           moves'         = (combineCommands myIdx oponentIdx):moves
           nextState      = makeMoves myMove' oponentsMove' currentState
       in playToEndRandomly (n - 1) l'' moves' nextState gameTree''
@@ -117,9 +117,7 @@ playToEnd g initialState gameTree =
                (y, l'')      = next l'
                myIdx         = mod y (UV.length myMoves)
                myMove'       = myMoves `uVectorIndex` myIdx
-               nextState     = updateMyMove myMove' $
-                 updateOponentsMove oponentsMove' $
-                 tickEngine currentState
+               nextState     = makeMoves myMove' oponentsMove' currentState
       in playToEndRandomly (n - 1) l'' moves nextState gameTree'
 
 hasEmptyScore :: (Int, Int) -> Bool
