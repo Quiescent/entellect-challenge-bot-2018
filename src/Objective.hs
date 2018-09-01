@@ -66,9 +66,9 @@ playToEnd g initialState gameTree =
       in if gameOver currentState
          then updateEnding currentState moves gameTree'
          else if isEmpty
-              then rollout n j currentState moves gameTree'
+              then rollout n j currentState moves gameTree
               else if eitherIsUninitialised
-                   then rolloutInitialised n j currentState moves gameTree'
+                   then rolloutInitialised n j currentState moves gameTree
                    else playToEndIter (n - 1) j moves' nextState gameTree'
     -- ===Play Rollout With Initialised==
     rolloutInitialised :: Int -> StdGen -> GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
@@ -83,9 +83,7 @@ playToEnd g initialState gameTree =
           myIdx          = mod y (UV.length myMoves)
           myMove'        = myMoves `uVectorIndex` myIdx
           moves'         = (combineCommands myIdx oponentIdx):moves
-          nextState      = updateMyMove myMove' $
-                           updateOponentsMove oponentsMove' $
-                           tickEngine currentState
+          nextState      = makeMoves myMove' oponentsMove' currentState
       in playToEndRandomly (n - 1) k'' moves' nextState gameTree'
     -- ===Initialise Rollout===
     rollout :: Int -> StdGen -> GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
@@ -103,9 +101,7 @@ playToEnd g initialState gameTree =
           oponentsScores = UV.replicate (UV.length oponentsMoves) (0, 0)
           gameTree''     = M.addAt moves (M.GameTree 0 myScores IM.empty oponentsScores) gameTree'
           moves'         = (combineCommands myIdx oponentIdx):moves
-          nextState      = updateMyMove myMove' $
-                           updateOponentsMove oponentsMove' $
-                           tickEngine currentState
+          nextState      = makeMoves myMove' oponentsMove' currentState
       in playToEndRandomly (n - 1) l'' moves' nextState gameTree''
     -- ===Random Playout===
     playToEndRandomly :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
