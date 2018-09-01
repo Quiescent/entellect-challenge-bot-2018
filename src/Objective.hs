@@ -90,13 +90,13 @@ playToEnd g initialState gameTree =
     -- ===Initialise Rollout===
     rollout :: Int -> StdGen -> GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
     rollout 0 _ _            _     gameTree' = gameTree'
-    rollout n k currentState moves gameTree' =
+    rollout n l currentState moves gameTree' =
       let oponentsMoves  = oponentsAvailableMoves currentState
-          (x, k')        = next k
+          (x, l')        = next l
           oponentIdx     = mod x (UV.length oponentsMoves)
           oponentsMove'  = oponentsMoves `uVectorIndex` oponentIdx
           myMoves        = myAvailableMoves currentState
-          (y, k'')       = next k'
+          (y, l'')       = next l'
           myIdx          = mod y (UV.length myMoves)
           myMove'        = myMoves `uVectorIndex` myIdx
           myScores       = UV.replicate (UV.length myMoves)       (0, 0)
@@ -106,27 +106,27 @@ playToEnd g initialState gameTree =
           nextState      = updateMyMove myMove' $
                            updateOponentsMove oponentsMove' $
                            tickEngine currentState
-      in playToEndRandomly (n - 1) k'' moves' nextState gameTree''
+      in playToEndRandomly (n - 1) l'' moves' nextState gameTree''
     -- ===Random Playout===
     playToEndRandomly :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
     playToEndRandomly 0 _ _     _            gameTree' = gameTree'
-    playToEndRandomly n h moves currentState gameTree' =
+    playToEndRandomly n l moves currentState gameTree' =
       if gameOver currentState
       then updateEnding currentState moves gameTree'
       else let oponentsMoves = oponentsRandomMoves currentState
-               (x, h')       = next h
+               (x, l')       = next l
                oponentIdx    = mod x (UV.length oponentsMoves)
                oponentsMove' = oponentsMoves `uVectorIndex` oponentIdx
                myMoves       = myRandomMoves currentState
-               (y, h'')      = next h'
+               (y, l'')      = next l'
                myIdx         = mod y (UV.length myMoves)
                myMove'       = myMoves `uVectorIndex` myIdx
                nextState     = updateMyMove myMove' $
                  updateOponentsMove oponentsMove' $
                  tickEngine currentState
-      in playToEndRandomly (n - 1) h'' moves nextState gameTree'
+      in playToEndRandomly (n - 1) l'' moves nextState gameTree'
 
-hasEmptyScore :: (Float, Float) -> Bool
+hasEmptyScore :: (Int, Int) -> Bool
 hasEmptyScore (0, 0) = True
 hasEmptyScore _      = False
 
@@ -164,26 +164,27 @@ iWon (GameState { me      = (Player { health = myHealth' }),
                   oponent = (Player { health = oponentsHealth' }) }) =
   oponentsHealth' <= 0 && myHealth' > 0
 
-confidence :: Float -> (Float, Float) -> Float
+confidence :: Int -> (Int, Int) -> Float
 confidence count (wins, games) =
   (w_i / n_i) +
   c * sqrt ((log count_i) / n_i)
   where
-    count_i = count
-    n_i     = games
-    w_i     = wins
+    count_i = fromIntegral count
+    n_i     = fromIntegral games
+    w_i     = fromIntegral wins
     c       = sqrt 2
 
-chooseBestMove' :: Float -> Moves -> UV.Vector (Float, Float) -> (Int, EfficientCommand)
+chooseBestMove' :: Int -> Moves -> UV.Vector (Int, Int) -> (Int, EfficientCommand)
 chooseBestMove' matchCount moves scores =
-  let indexOfMax = UV.maxIndex $ UV.map (confidence matchCount) scores
+  let indexOfMax = UV.maxIndex $
+        UV.map (confidence (fromIntegral matchCount)) scores
   in (indexOfMax, moves `uVectorIndex` indexOfMax)
 
-confidenceDownVotingUninitialised :: Float -> (Float, Float) -> Float
+confidenceDownVotingUninitialised :: Int -> (Int, Int) -> Float
 confidenceDownVotingUninitialised _     (_, 0) = -1
 confidenceDownVotingUninitialised count scores = confidence count scores
 
-chooseBestMove :: Float -> Moves -> UV.Vector (Float, Float) -> (Int, EfficientCommand)
+chooseBestMove :: Int -> Moves -> UV.Vector (Int, Int) -> (Int, EfficientCommand)
 chooseBestMove matchCount moves scores =
   let indexOfMax = UV.maxIndex $
         UV.map (confidenceDownVotingUninitialised matchCount) scores

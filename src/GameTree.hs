@@ -14,21 +14,19 @@ module GameTree (GameTree(..),
 
 import EfficientCommand
 
-import Data.Ratio
-
 import qualified Data.IntMap                 as M
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as MVector
 
 type SubTree = M.IntMap GameTree
 
-type WinLoss = UV.Vector (Float, Float)
+type WinLoss = UV.Vector (Int, Int)
 
-data GameTree = GameTree Float WinLoss SubTree WinLoss
+data GameTree = GameTree Int WinLoss SubTree WinLoss
               | EmptyTree
   deriving (Show, Eq)
 
-gamesPlayed :: GameTree -> Float
+gamesPlayed :: GameTree -> Int
 gamesPlayed EmptyTree          = 0
 gamesPlayed (GameTree x _ _ _) = x
 
@@ -83,22 +81,19 @@ addAt (move:moves) subTreeToAdd (GameTree count myMoveScores branches oponentsMo
   let updatedSubTree = M.adjust (addAt moves subTreeToAdd) move branches
   in GameTree (count + 1) myMoveScores updatedSubTree oponentsMoveScores
 
+-- Merge happens once and only to your neighbour so there's no duplication here
 mergeTrees :: GameTree -> GameTree -> GameTree
 mergeTrees EmptyTree y                                          = y
 mergeTrees x         EmptyTree                                  = x
 mergeTrees (GameTree count1 myScores1 myBranches1 enemyScores1)
            (GameTree count2 myScores2 myBranches2 enemyScores2) =
-  (GameTree (count1 + count2)
-            (UV.zipWith addCorresponding myScores1 myScores2)
-            (M.unionWith mergeTrees myBranches1 myBranches2)
-            (UV.zipWith addCorresponding enemyScores1 enemyScores2))
+  GameTree (count1 + count2)
+           (UV.zipWith addCorresponding myScores1    myScores2)
+           (M.unionWith mergeTrees myBranches1 myBranches2)
+           (UV.zipWith addCorresponding enemyScores1 enemyScores2)
 
-addCorresponding :: (Float, Float) -> (Float, Float) -> (Float, Float)
-addCorresponding (0, 0) (x', y') = (x', y')
-addCorresponding (x, y) (0, 0)   = (x, y)
-addCorresponding (x, y) (x', y') =
-  let fraction = (toRational x / toRational y) + (toRational x' / toRational y')
-  in (fromIntegral $ numerator fraction, fromIntegral $ denominator fraction)
+addCorresponding :: (Int, Int) -> (Int, Int) -> (Int, Int)
+addCorresponding (x, y) (x', y') = (x + x', y + y')
 
 empty :: GameTree
 empty = EmptyTree
