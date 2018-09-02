@@ -15,7 +15,6 @@ import Player
 import EfficientCommand
 import Cell
 import Magic
-import Engine
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -80,18 +79,13 @@ oponentsPotentialEnergyMoves = allTwoBackEnergyTowerMoves UV.++ allMidToFrontEne
 allTwoBackEnergyTowerMoves :: Moves
 allTwoBackEnergyTowerMoves = allMovesOfType ENERGY twoBackCells
 
-switchAffordableMoves :: Moves -> Moves -> Moves -> Int -> Int -> Moves
+switchAffordableMoves :: Moves -> Moves -> Moves -> Int -> Moves
 switchAffordableMoves energyTowerMoves
                       defenseTowerMoves
                       attackTowerMoves
                       energy'
-                      energyPerTurn'
   | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = addNothingCommand $ energyTowerMoves
-  | energy' < teslaTowerCost  = addNothingCommand $
-    if energyPerTurn' > attackTowerCost
-    then attackTowerMoves UV.++ defenseTowerMoves
-    else attackTowerMoves UV.++ defenseTowerMoves UV.++ energyTowerMoves
   | otherwise                 = addNothingCommand $
     attackTowerMoves UV.++
     defenseTowerMoves UV.++
@@ -101,7 +95,7 @@ theMagicalRoundWhenIStopMakingEnergyTowers :: Int
 theMagicalRoundWhenIStopMakingEnergyTowers = 12
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
-switchMovesICanAfford :: Int -> Int -> Moves
+switchMovesICanAfford :: Int -> Moves
 switchMovesICanAfford =
   switchAffordableMoves allEnergyTowerMoves
                         allDefenseTowerMoves
@@ -125,10 +119,9 @@ myAvailableMoves (GameState { me = player@(Player { energy = energy' }) }) =
   where
     available 0       = True
     available command = let i = coordOfCommand command in availableCoord i player
-    energyGenPerTurn' = energyGenPerTurn player
-    affordableMoves   = switchMovesICanAfford energy' energyGenPerTurn'
+    affordableMoves   = switchMovesICanAfford energy'
 
-switchMovesOponentCanAfford :: Int -> Int -> Moves
+switchMovesOponentCanAfford :: Int -> Moves
 switchMovesOponentCanAfford =
   switchAffordableMoves allEnergyTowerMoves
                         allDefenseTowerMoves
@@ -140,8 +133,7 @@ oponentsAvailableMoves (GameState { oponent = player@(Player { energy = energy' 
   where
     available 0       = True
     available command = let i = coordOfCommand command in availableCoord i player
-    energyGenPerTurn' = energyGenPerTurn player
-    affordableMoves   = switchMovesOponentCanAfford energy' energyGenPerTurn'
+    affordableMoves   = switchMovesOponentCanAfford energy'
 
 myRandomMoves :: GameState -> Moves
 myRandomMoves (GameState { me = player@(Player { energy = energy' }) }) =

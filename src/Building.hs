@@ -55,21 +55,11 @@ updateBuildingProgress'
                    defenseTowersUnderConstruction2 = defenseTowersUnderConstruction2',
                    defenseTowersUnderConstruction1 = defenseTowersUnderConstruction1',
                    defenseTowersUnderConstruction0 = defenseTowersUnderConstruction0',
-                   defense4Towers                  = defense4Towers',
-                   teslaTower0                     = teslaTower0',
-                   teslaTower0ConstructionTime     = teslaTower0ConstructionTime',
-                   teslaTower1                     = teslaTower1',
-                   teslaTower1ConstructionTime     = teslaTower1ConstructionTime' }) =
+                   defense4Towers                  = defense4Towers' }) =
   player { allBuiltTowers                  = addAllBuildings allBuiltTowers'
                                              (addAllBuildings energyTowersUnderConstruction'
                                               (addAllBuildings attackTowersUnderConstruction'
-                                               (addAllBuildings defenseTowersUnderConstruction0'
-                                                (addAllBuildings (if teslaTower0ConstructionTime' == 1
-                                                                  then teslaTower0'
-                                                                  else 0)
-                                                 (if teslaTower1ConstructionTime' == 1
-                                                                  then teslaTower1'
-                                                                  else 0))))),
+                                               (addAllBuildings defenseTowersUnderConstruction0' 0))),
            energyTowersUnderConstruction   = emptyBuildings,
            energyTowers                    = addAllBuildings energyTowersUnderConstruction' energyTowers',
            attackTowersUnderConstruction   = emptyBuildings,
@@ -77,6 +67,4 @@ updateBuildingProgress'
            defenseTowersUnderConstruction2 = emptyBuildings,
            defenseTowersUnderConstruction1 = defenseTowersUnderConstruction2',
            defenseTowersUnderConstruction0 = defenseTowersUnderConstruction1',
-           defense4Towers                  = addAllBuildings defense4Towers' defenseTowersUnderConstruction0',
-           teslaTower0ConstructionTime     = teslaTower0ConstructionTime' - if teslaTower0ConstructionTime' <= 0 then 0 else 1,
-           teslaTower1ConstructionTime     = teslaTower1ConstructionTime' - if teslaTower1ConstructionTime' <= 0 then 0 else 1 }
+           defense4Towers                  = addAllBuildings defense4Towers' defenseTowersUnderConstruction0' }

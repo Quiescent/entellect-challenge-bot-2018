@@ -118,7 +118,7 @@ playToEnd g initialState gameTree =
                myIdx         = mod y (UV.length myMoves)
                myMove'       = myMoves `uVectorIndex` myIdx
                nextState     = makeMoves myMove' oponentsMove' currentState
-      in playToEndRandomly (n - 1) l'' moves nextState gameTree'
+           in playToEndRandomly (n - 1) l'' moves nextState gameTree'
 
 hasEmptyScore :: (Int, Int) -> Bool
 hasEmptyScore (0, 0) = True

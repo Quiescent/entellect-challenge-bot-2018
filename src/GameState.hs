@@ -27,12 +27,12 @@ mapOponentsPlayer f state@(GameState { oponent = oponent' }) =
 
 runCommand :: Player -> Command -> Player
 runCommand player NothingCommand               = player
-runCommand player (Deconstruct coord')         =
-  deconstructAt coord' player
 runCommand player (Build coord' buildingType') =
   buildOnMap coord' building' player
   where
     building' = buildingFromStats buildingType'
+runCommand player command                      =
+  error $ "Unsupported command: " ++ show command ++ ", for player: " ++ show player
 
 -- Order is: collide, check boundary conditions, move.  This is
 -- repeated twice and then the missiles are finally collided again.

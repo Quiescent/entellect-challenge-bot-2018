@@ -88,12 +88,6 @@ data Player = Player { energy                          :: !Int,
                        defense3Towers                  :: !BuildingPlacements,
                        defense2Towers                  :: !BuildingPlacements,
                        defense1Towers                  :: !BuildingPlacements,
-                       teslaTower0                     :: !BuildingPlacements,
-                       teslaTower1                     :: !BuildingPlacements,
-                       teslaTower0ConstructionTime     :: !Int,
-                       teslaTower1ConstructionTime     :: !Int,
-                       teslaTower0CooldownTime         :: !Int,
-                       teslaTower1CooldownTime         :: !Int,
                        missiles0                       :: !Missiles,
                        missiles1                       :: !Missiles,
                        missiles2                       :: !Missiles,
@@ -123,12 +117,6 @@ instance Eq Player where
                defenseTowers3A
                defenseTowers2A
                defenseTowers1A
-               teslaTower0A
-               teslaTower1A
-               teslaTower0ConstructionTimeA
-               teslaTower1ConstructionTimeA
-               teslaTower0CooldownTimeA
-               teslaTower1CooldownTimeA
                missiles0A
                missiles1A
                missiles2A
@@ -155,12 +143,6 @@ instance Eq Player where
                defenseTowers3B
                defenseTowers2B
                defenseTowers1B
-               teslaTower0B
-               teslaTower1B
-               teslaTower0ConstructionTimeB
-               teslaTower1ConstructionTimeB
-               teslaTower0CooldownTimeB
-               teslaTower1CooldownTimeB
                missiles0B
                missiles1B
                missiles2B
@@ -187,12 +169,6 @@ instance Eq Player where
       defenseTowers3A                  == defenseTowers3B &&
       defenseTowers2A                  == defenseTowers2B &&
       defenseTowers1A                  == defenseTowers1B &&
-      teslaTower0A                     == teslaTower0B &&
-      teslaTower1A                     == teslaTower1B &&
-      teslaTower0ConstructionTimeA     == teslaTower0ConstructionTimeB &&
-      teslaTower1ConstructionTimeA     == teslaTower1ConstructionTimeB &&
-      teslaTower0CooldownTimeA         == teslaTower0CooldownTimeB &&
-      teslaTower1CooldownTimeA         == teslaTower1CooldownTimeB &&
       missiles0A `xor` missiles1A `xor` missiles2A `xor` missiles3A ==
       missiles0B `xor` missiles1B `xor` missiles2B `xor` missiles3B &&
       missilesOtherSide0B `xor` missilesOtherSide1B `xor` missilesOtherSide2B `xor` missilesOtherSide3B ==
@@ -217,12 +193,6 @@ instance NFData Player where
               defense3Towers'
               defense2Towers'
               defense1Towers'
-              teslaTower0'
-              teslaTower1'
-              teslaTower0ConstructionTime'
-              teslaTower1ConstructionTime'
-              teslaTower0CooldownTime'
-              teslaTower1CooldownTime'
               missiles0'
               missiles1'
               missiles2'
@@ -249,12 +219,6 @@ instance NFData Player where
       defense3Towers'                  `seq`
       defense2Towers'                  `seq`
       defense1Towers'                  `seq`
-      teslaTower0'                     `seq`
-      teslaTower1'                     `seq`
-      teslaTower0ConstructionTime'     `seq`
-      teslaTower1ConstructionTime'     `seq`
-      teslaTower0CooldownTime'         `seq`
-      teslaTower1CooldownTime'         `seq`
       missiles0'                       `seq`
       missiles1'                       `seq`
       missiles2'                       `seq`
@@ -366,12 +330,6 @@ emptyPlayer = Player
   emptyBuildings
   emptyBuildings
   emptyBuildings
-  emptyBuildings
-  emptyBuildings
-  0
-  0
-  0
-  0
   emptyMissiles
   emptyMissiles
   emptyMissiles
@@ -522,8 +480,6 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
        (True,  _, Defense2)      -> player' { defense2Towers = addBuilding coord' defense2Towers' }
        (True,  _, Defense1)      -> player' { defense1Towers = addBuilding coord' defense1Towers' }
        (True,  _, EnergyTower)   -> player' { energyTowers   = addBuilding coord' energyTowers' }
-       -- TESLA Tower
-       (True,  _, _)             -> addTeslaTower coord' player' building'
        -- Under Construction:
        (False, 2, Defense4)      -> player' { defenseTowersUnderConstruction2 =
                                                addBuilding coord' defenseTowersUnderConstruction2' }
@@ -535,40 +491,7 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
                                               addBuilding coord' attackTowersUnderConstruction' }
        (False, _, EnergyTower)   -> player' { energyTowersUnderConstruction =
                                               addBuilding coord' energyTowersUnderConstruction' }
-        -- TESLA Tower Under Construction
-       (False, ctl', _)          -> addTeslaTowerUnderConstruction ctl' coord' player'
-
-addTeslaTower :: Coord -> Player -> Building -> Player
-addTeslaTower coord' player@(Player { teslaTower0 = teslaTower0' })
-  building' =
-  if buildingPlacementsAreEmpty teslaTower0'
-  then player { teslaTower0             = addBuilding coord' 0,
-                teslaTower0CooldownTime = cooldownTimeLeft' }
-  else player { teslaTower1             = addBuilding coord' 0,
-                teslaTower1CooldownTime = cooldownTimeLeft' }
-  where
-    cooldownTimeLeft' = cooldownTimeLeft building'
-    cooldownTimeLeft building''
-      | building'' == Tesla10 = 10
-      | building'' == Tesla9  = 9
-      | building'' == Tesla8  = 8
-      | building'' == Tesla7  = 7
-      | building'' == Tesla6  = 6
-      | building'' == Tesla5  = 5
-      | building'' == Tesla4  = 4
-      | building'' == Tesla3  = 3
-      | building'' == Tesla2  = 2
-      | building'' == Tesla1  = 1
-      | building'' == Tesla0  = 0
-      | otherwise             = error $ "Invalid building type for tesla tower: " ++ show building''
-
-addTeslaTowerUnderConstruction :: Int -> Coord -> Player -> Player
-addTeslaTowerUnderConstruction ctl coord' player@(Player { teslaTower0 = teslaTower0' }) =
-  if buildingPlacementsAreEmpty teslaTower0'
-  then player { teslaTower0                 = addBuilding coord' 0,
-                teslaTower0ConstructionTime = ctl }
-  else player { teslaTower1                 = addBuilding coord' 0,
-                teslaTower1ConstructionTime = ctl }
+       (_,     _, _)             -> error "Invalid building"
 
 chooseBuilding :: Int -> Int -> BuildingType -> Building
 
