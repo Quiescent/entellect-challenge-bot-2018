@@ -14,6 +14,7 @@ import EfficientCommand
 import GameState
 import AvailableMoves
 import VectorIndex
+import BitSetMap
 import qualified GameTree    as M
 import qualified Data.IntMap as IM
 
@@ -42,11 +43,16 @@ myIntermediateBoardScore _ = 1
 depth :: Int
 depth = 100
 
--- TODO: Check the random generators
 playToEnd :: StdGen -> GameState -> M.GameTree -> M.GameTree
 playToEnd g initialState gameTree =
   playToEndIter depth g [] initialState gameTree
   where
+    gameOver' =
+      if attackTowerGameOver initialState
+      then if towerGameOver initialState
+           then gameOver
+           else towerGameOver
+      else attackTowerGameOver
     -- ===Play Through Tree===
     playToEndIter :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
     playToEndIter 0 _ _     _            gameTree' = gameTree'
@@ -63,7 +69,7 @@ playToEnd g initialState gameTree =
           (indexOfOponentsMove, oponentsMove') = chooseBestMove' count oponentsMoves oponentsScores
           nextState                            = makeMoves myMove' oponentsMove' currentState
           moves'                               = (combineCommands indexOfMyMove indexOfOponentsMove):moves
-      in if gameOver currentState
+      in if gameOver' currentState
          then updateEnding currentState moves gameTree'
          else if isEmpty
               then rollout n j currentState moves gameTree'
@@ -107,7 +113,7 @@ playToEnd g initialState gameTree =
     playToEndRandomly :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
     playToEndRandomly 0 _ _     _            gameTree' = gameTree'
     playToEndRandomly n l moves currentState gameTree' =
-      if gameOver currentState
+      if gameOver' currentState
       then updateEnding currentState moves gameTree'
       else let oponentsMoves = oponentsRandomMoves currentState
                (x, l')       = next l
@@ -120,13 +126,64 @@ playToEnd g initialState gameTree =
                nextState     = makeMoves myMove' oponentsMove' currentState
            in playToEndRandomly (n - 1) l'' moves nextState gameTree'
 
+myTowerCount  :: GameState -> Int
+myTowerCount (GameState { me = (Player { allTowers = allMyTowers }) }) =
+  countBuildings allMyTowers
+
+oponentsTowerCount :: GameState -> Int
+oponentsTowerCount (GameState { oponent = (Player { allTowers = allOponentsTowers }) }) =
+  countBuildings allOponentsTowers
+
+towerGameOver :: GameState -> Bool
+towerGameOver gameState = myTowerCount gameState == 0 || oponentsTowerCount gameState == 0
+
+attackDeficit :: GameState -> Int
+attackDeficit
+  (GameState { me      =
+               (Player { attack0Towers                 = myAttack0Towers,
+                         attack1Towers                 = myAttack1Towers,
+                         attack2Towers                 = myAttack2Towers,
+                         attack3Towers                 = myAttack3Towers,
+                         attackTowersUnderConstruction = myAttackTowersUnderConstruction }),
+               oponent =
+               (Player { attack0Towers                 = oponentsAttack0Towers,
+                         attack1Towers                 = oponentsAttack1Towers,
+                         attack2Towers                 = oponentsAttack2Towers,
+                         attack3Towers                 = oponentsAttack3Towers,
+                         attackTowersUnderConstruction = oponentsAttackTowersUnderConstruction }) }) =
+  (countBuildings myAttack0Towers +
+   countBuildings myAttack1Towers +
+   countBuildings myAttack2Towers +
+   countBuildings myAttack3Towers +
+   countBuildings myAttackTowersUnderConstruction) -
+  (countBuildings oponentsAttack0Towers +
+   countBuildings oponentsAttack1Towers +
+   countBuildings oponentsAttack2Towers +
+   countBuildings oponentsAttack3Towers +
+   countBuildings oponentsAttackTowersUnderConstruction)
+
+attackTowerGameOver :: GameState -> Bool
+attackTowerGameOver gameState =
+  attackDeficit gameState < -3 ||
+  attackDeficit gameState > 3
+
 hasEmptyScore :: (Int, Int) -> Bool
 hasEmptyScore (0, 0) = True
 hasEmptyScore _      = False
 
+iWonAttackTowerGame :: GameState -> Bool
+iWonAttackTowerGame gameState =
+  (not $ iLost gameState) && attackDeficit gameState > 3
+
+iWonTowerGame :: GameState -> Bool
+iWonTowerGame gameState =
+  (not $ iLost gameState) && oponentsTowerCount gameState == 0
+
 updateEnding :: GameState -> [PackedCommand] -> M.GameTree -> M.GameTree
 updateEnding currentState moves gameTree' =
-  if iWon currentState
+  if iWon currentState ||
+     iWonAttackTowerGame currentState ||
+     iWonTowerGame currentState
   then updateWin  moves gameTree'
   else updateLoss moves gameTree'
 
@@ -157,6 +214,11 @@ iWon :: GameState -> Bool
 iWon (GameState { me      = (Player { health = myHealth' }),
                   oponent = (Player { health = oponentsHealth' }) }) =
   oponentsHealth' <= 0 && myHealth' > 0
+
+iLost :: GameState -> Bool
+iLost (GameState { me      = (Player { health = myHealth' }),
+                  oponent = (Player { health = oponentsHealth' }) }) =
+  oponentsHealth' > 0 && myHealth' <= 0
 
 confidence :: Int -> (Int, Int) -> Float
 confidence count (wins, games) =
