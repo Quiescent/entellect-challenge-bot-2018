@@ -51,8 +51,8 @@ playToEnd g initialState gameTree =
     playToEndIter :: Int -> StdGen -> [PackedCommand] -> GameState -> M.GameTree -> M.GameTree
     playToEndIter 0 _ _     _            gameTree' = gameTree'
     playToEndIter n j moves currentState gameTree' =
-      let count                                = M.gamesPlayed gameTree
-          ourNode                              = M.subTree moves gameTree
+      let count                                = M.gamesPlayed gameTree'
+          ourNode                              = M.subTree moves gameTree'
           isEmpty                              = isNothing ourNode
           myMoves                              = myAvailableMoves currentState
           oponentsMoves                        = oponentsAvailableMoves currentState
