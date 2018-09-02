@@ -9,7 +9,6 @@ import Interpretor (commandFilePath,
 import GameState
 import Objective
 import EfficientCommand
-import VectorIndex
 import AvailableMoves
 import qualified GameTree as M
 
@@ -17,9 +16,9 @@ import Data.Maybe
 import Data.Int
 import System.Clock
 import System.Random
-import Control.Monad.State.Lazy
-import qualified Data.List as L
 -- import qualified Data.Vector.Unboxed as UV
+
+import Control.Exception (evaluate)
 
 import Control.Concurrent (readChan,
                            newChan,
@@ -27,11 +26,8 @@ import Control.Concurrent (readChan,
                            forkIO,
                            Chan)
 
-import Control.Parallel.Strategies (using, rdeepseq)
-import Control.Exception (evaluate)
-
 maxSearchTime :: Int64
-maxSearchTime = 2000000000
+maxSearchTime = 1800000000
 
 timeToNanos :: TimeSpec -> Int64
 timeToNanos time = ((sec time) * 1000000000) + nsec time
@@ -50,71 +46,42 @@ search g state' = do
       putStrLn "Playing oponing book move..."
       printCommand $ fromJust openingMove
     else do
+      let moves          = myAvailableMoves state'
       let clock          = Realtime
       startTime         <- getTime clock
       let startTimeNanos = timeToNanos startTime
-      bestMove1          <- newChan
-      neighbour1         <- newChan
-      bestMove2          <- newChan
-      neighbour2         <- newChan
-      bestMove3          <- newChan
-      neighbour3         <- newChan
-      bestMove4          <- newChan
-      neighbour4         <- newChan
-      _                  <- forkIO $ searchDeeper bestMove1 neighbour2 neighbour4 h state'
-      _                  <- forkIO $ searchDeeper bestMove2 neighbour3 neighbour1 j state'
-      _                  <- forkIO $ searchDeeper bestMove3 neighbour4 neighbour2 k state'
-      _                  <- forkIO $ searchDeeper bestMove4 neighbour1 neighbour3 l state'
+      treeChan1         <- newChan
+      treeChan2         <- newChan
+      treeChan3         <- newChan
+      treeChan4         <- newChan
+      _                 <- forkIO $ searchDeeper clock startTimeNanos treeChan1 h state'
+      _                 <- forkIO $ searchDeeper clock startTimeNanos treeChan2 j state'
+      _                 <- forkIO $ searchDeeper clock startTimeNanos treeChan3 k state'
+      _                 <- forkIO $ searchDeeper clock startTimeNanos treeChan4 l state'
       let searchIter = do
-            (bestScore1, bestMove1') <- readChan bestMove1
-            (bestScore2, bestMove2') <- readChan bestMove2
-            (bestScore3, bestMove3') <- readChan bestMove3
-            (bestScore4, bestMove4') <- readChan bestMove4
-            timeNow                  <- getTime clock
-            let best = snd $ L.maximumBy cmpByFst $ [(bestScore1, bestMove1'),
-                                                     (bestScore2, bestMove2'),
-                                                     (bestScore3, bestMove3'),
-                                                     (bestScore4, bestMove4')]
-            let timeSoFar = timeToNanos timeNow - startTimeNanos
+            tree1         <- readChan treeChan1
+            tree2         <- readChan treeChan2
+            tree3         <- readChan treeChan3
+            tree4         <- readChan treeChan4
+            let finalTree = (M.mergeTrees (M.mergeTrees (M.mergeTrees tree1 tree2) tree3) tree4)
+            let scores    = M.myScores finalTree
+            let count     = M.gamesPlayed finalTree
+            let (_, best) = chooseBestMove count moves scores
             putStrLn "Tick"
-            printCommand best
-            when (timeSoFar < maxSearchTime) $ searchIter
+            printCommand $ toCommand best
       searchIter
 
-cmpByFst :: (Float, Command) -> (Float, Command) -> Ordering
-cmpByFst (x, _) (y, _) = compare x y
-
-ticksBeforeComms :: Int
-ticksBeforeComms = 100
-
-neighbourCommsPoint :: Int
-neighbourCommsPoint = 5000
-
-searchDeeper :: Chan (Float, Command) -> Chan M.GameTree -> Chan M.GameTree -> StdGen -> GameState -> IO ()
-searchDeeper best commTo commFrom g initialState =
-  searchDeeperIter ticksBeforeComms neighbourCommsPoint g M.empty
+searchDeeper :: Clock -> Int64 -> Chan M.GameTree -> StdGen -> GameState -> IO ()
+searchDeeper clock startingTime best g initialState =
+  searchDeeperIter g M.empty
   where
-    searchDeeperIter :: Int -> Int -> StdGen -> M.GameTree -> IO ()
-    searchDeeperIter !commsCountDown ticksBeforeSharing h searchTree =
-     let (h', h'')           = split h
-         commsCountDown'     = if commsCountDown == 0 then ticksBeforeComms else (commsCountDown - 1)
-         ticksBeforeSharing' = ticksBeforeSharing - 1
-         searchTree'         = playToEnd h'' initialState searchTree
-         scores              = M.myScores searchTree'
-         count               = (M.gamesPlayed searchTree')
-         (indexOfBestSoFar, bestSoFarThunk) = chooseBestMove count moves scores
-         myWinLoss           = scores `uVectorIndex` indexOfBestSoFar
+    searchDeeperIter :: StdGen -> M.GameTree -> IO ()
+    searchDeeperIter h searchTree =
+     let (h', h'')       = split h
       in do
-        bestSoFar <- evaluate ((toCommand bestSoFarThunk) `using` rdeepseq)
-        if (commsCountDown == 0) then do
-          -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores searchTree') (UV.toList moves)
-          writeChan best (confidence count myWinLoss, bestSoFar)
-          searchDeeperIter commsCountDown' ticksBeforeSharing' h' searchTree'
-        else if (ticksBeforeSharing == 0)
-             then do
-               writeChan commTo searchTree'
-               neighbourTree <- readChan commFrom
-               searchDeeperIter commsCountDown' ticksBeforeSharing' h' $
-                 M.mergeTrees searchTree' neighbourTree
-             else searchDeeperIter commsCountDown' ticksBeforeSharing' h' searchTree'
-    moves = myAvailableMoves initialState
+        timeNow      <- getTime clock
+        searchTree'  <- evaluate $ playToEnd h'' initialState searchTree
+        let timeSoFar = timeToNanos timeNow - startingTime
+        if timeSoFar > maxSearchTime
+        then writeChan best searchTree
+        else searchDeeperIter h' searchTree'
