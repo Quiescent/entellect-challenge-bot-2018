@@ -32,6 +32,7 @@ build coord' buildingType' = buildingType' .|. (coord' `shiftL` 3)
 
 toCommand :: EfficientCommand -> Command
 toCommand 0 = NothingCommand
+toCommand 4 = IronCurtain
 toCommand x =
   let buildingType = buildingTypeOfCommand x
       coord'       = coordOfCommand x
