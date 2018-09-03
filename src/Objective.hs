@@ -3,7 +3,6 @@
 module Objective (oponentsIntermediateBoardScore,
                   myIntermediateBoardScore,
                   playToEnd,
-                  confidence,
                   chooseBestMove,
                   Move(..))
   where

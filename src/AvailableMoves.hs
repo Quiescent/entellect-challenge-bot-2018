@@ -120,6 +120,7 @@ openingBookMove (GameState { gameRound = gameRound',
   else Nothing
   where
     available 0       = True
+    available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
 
 myAvailableMoves :: GameState -> Moves
@@ -128,6 +129,7 @@ myAvailableMoves (GameState { me = player@(Player { energy               = energ
   UV.filter available affordableMoves
   where
     available 0       = True
+    available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
     affordableMoves   = switchMovesICanAfford energy' ironCurtainAvailable'
 
@@ -143,6 +145,7 @@ oponentsAvailableMoves (GameState { oponent = player@(Player { energy = energy',
   UV.filter available affordableMoves
   where
     available 0       = True
+    available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
     affordableMoves   = switchMovesOponentCanAfford energy' ironCurtainAvailable'
 
@@ -152,6 +155,7 @@ myRandomMoves (GameState { me = player@(Player { energy = energy',
   UV.filter available affordableMoves
   where
     available 0       = True
+    available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
     affordableMoves   = switchRandomMovesICanAfford energy' ironCurtainAvailable'
 
@@ -165,6 +169,7 @@ oponentsRandomMoves (GameState { oponent = player@(Player { energy = energy',
   UV.filter available affordableMoves
   where
     available 0       = True
+    available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
     affordableMoves   = switchRandomMovesOponentCanAfford energy' ironCurtainAvailable'
 
