@@ -1,6 +1,7 @@
 # Editor files
 *~
 TAGS
+*.patch
 
 # Project (stack) files
 .stack-work/
@@ -10,9 +11,11 @@ EntelectChallenge2018.cabal
 # Compiled files
 *.o
 bin/
+*.dump-simpl
 
 # Game files
 command.txt
+*.out
 
 # Testing Files
 .dir-locals.el
