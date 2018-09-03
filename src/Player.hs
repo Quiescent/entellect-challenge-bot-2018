@@ -70,8 +70,9 @@ buildingFromStats DEFENSE = Defense4
 updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
 updateMove 0       player' = player'
-updateMove 4       player' = player' { ironCurtainAvailable = False,
-                                       isIronCurtainActive  = True }
+updateMove 4       player' = player' { ironCurtainAvailable      = False,
+                                       activeIronCurtainLifetime = ironCurtainActiveTime - 1,
+                                       energy                    = energy player' - ironCurtainCost }
 updateMove command player' =
   buildOnMap coord' building' player'
   where
@@ -215,8 +216,8 @@ moveCheckingBoundaries
                          missilesOtherSide1 = missilesOtherSide1',
                          missilesOtherSide2 = missilesOtherSide2',
                          missilesOtherSide3 = missilesOtherSide3'})
-  playerToHit@(Player { health              = health',
-                        isIronCurtainActive = isIronCurtainActive' }) =
+  playerToHit@(Player { health                    = health',
+                        activeIronCurtainLifetime = activeIronCurtainLifetime' }) =
   let missilesAboutToTransfer0  = onlyOverlappingMissiles missilesAboutToTransfer missiles0'
       missilesAboutToTransfer1  = onlyOverlappingMissiles missilesAboutToTransfer missiles1'
       missilesAboutToTransfer2  = onlyOverlappingMissiles missilesAboutToTransfer missiles2'
@@ -229,6 +230,7 @@ moveCheckingBoundaries
                                   countMissiles missilesAboutToHitPlayer1 +
                                   countMissiles missilesAboutToHitPlayer2 +
                                   countMissiles missilesAboutToHitPlayer3
+      isIronCurtainActive'      = activeIronCurtainLifetime' >= 0
       missilesOtherSide0''      = (if isIronCurtainActive' then id else addAllMissiles missilesAboutToTransfer0) $
                                   moveMissilesLeft $
                                   removeAllMissiles missilesAboutToHitPlayer0 missilesOtherSide0'

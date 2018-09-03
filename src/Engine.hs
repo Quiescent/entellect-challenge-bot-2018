@@ -13,20 +13,25 @@ tickEngine :: GameState -> GameState
 tickEngine = tickIronCurtain . incrementRound . gainEnergy . collideMissiles . tickBuildings
 
 tickIronCurtain :: GameState -> GameState
-tickIronCurtain gameState@(GameState { me      = me'@(Player { activeIronCurtainLifetime = myActiveIronCurtainLifetime }),
-                                       oponent = oponent'@(Player { activeIronCurtainLifetime = oponentsActiveIronCurtainLifetime })}) =
-  resetIronCurtain $
-  gameState { me      = me'      { activeIronCurtainLifetime = myActiveIronCurtainLifetime - 1,
-                                   isIronCurtainActive       = myRemainingTime > 0 },
-              oponent = oponent' { activeIronCurtainLifetime = oponentsActiveIronCurtainLifetime - 1,
-                                   isIronCurtainActive       = oponentsRemainingTime > 0}}
+tickIronCurtain gameState = resetIronCurtain $ updateIronCurtainActiveTime gameState
+
+updateIronCurtainActiveTime :: GameState -> GameState
+updateIronCurtainActiveTime
+  gameState@(GameState { gameRound = gameRound',
+                         me        = me'@(Player { activeIronCurtainLifetime =
+                                                   myActiveIronCurtainLifetime }),
+                         oponent   = oponent'@(Player { activeIronCurtainLifetime =
+                                                        oponentsActiveIronCurtainLifetime })}) =
+  gameState { me      = me'      { activeIronCurtainLifetime = myNewActiveTime },
+              oponent = oponent' { activeIronCurtainLifetime = oponentsNewActiveTime } }
   where
-    myRemainingTime       = myActiveIronCurtainLifetime - 1
-    oponentsRemainingTime = oponentsActiveIronCurtainLifetime - 1
+    timeToReset           = mod (gameRound' - 1) 30 == 0 && gameRound' > 1
+    myNewActiveTime       = if timeToReset then -1 else myActiveIronCurtainLifetime - 1
+    oponentsNewActiveTime = if timeToReset then -1 else oponentsActiveIronCurtainLifetime - 1
 
 resetIronCurtain :: GameState -> GameState
 resetIronCurtain gameState@(GameState gameRound' me' oponent') =
-  if mod gameRound' 30 == 0
+  if mod (gameRound' - 1) 30 == 0 && gameRound' > 1
   then (gameState { me      = me'      { ironCurtainAvailable = True },
                     oponent = oponent' { ironCurtainAvailable = True }})
   else gameState

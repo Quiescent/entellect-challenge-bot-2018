@@ -64,6 +64,9 @@ energyTowerConstructionTime = 1
 ironCurtainCost :: Int
 ironCurtainCost = 100
 
+ironCurtainActiveTime :: Int
+ironCurtainActiveTime = 6
+
 teslaTowerCost :: Int
 teslaTowerCost = 100
 
