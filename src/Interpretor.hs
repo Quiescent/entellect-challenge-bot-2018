@@ -97,7 +97,8 @@ data Player = Player { energy                          :: !Int,
                        missilesOtherSide2              :: !Missiles,
                        missilesOtherSide3              :: !Missiles,
                        ironCurtainAvailable            :: !Bool,
-                       isIronCurtainActive             :: !Bool }
+                       isIronCurtainActive             :: !Bool,
+                       activeIronCurtainLifetime       :: !Int }
               deriving (Show)
 
 instance Eq Player where
@@ -128,7 +129,8 @@ instance Eq Player where
                missilesOtherSide2A
                missilesOtherSide3A
                ironCurtainAvailableA
-               isIronCurtainActiveA)
+               isIronCurtainActiveA
+               activeIronCurtainLifetimeA)
        (Player energyB
                healthB
                allTowersB
@@ -156,7 +158,8 @@ instance Eq Player where
                missilesOtherSide2B
                missilesOtherSide3B
                ironCurtainAvailableB
-               isIronCurtainActiveB)
+               isIronCurtainActiveB
+               activeIronCurtainLifetimeB)
     = energyA                          == energyB &&
       healthA                          == healthB &&
       allTowersA                       == allTowersB &&
@@ -177,6 +180,7 @@ instance Eq Player where
       defenseTowers1A                  == defenseTowers1B &&
       isIronCurtainActiveA             == isIronCurtainActiveB &&
       ironCurtainAvailableA            == ironCurtainAvailableB &&
+      activeIronCurtainLifetimeA       == activeIronCurtainLifetimeB &&
       missiles0A `xor` missiles1A `xor` missiles2A `xor` missiles3A ==
       missiles0B `xor` missiles1B `xor` missiles2B `xor` missiles3B &&
       missilesOtherSide0B `xor` missilesOtherSide1B `xor` missilesOtherSide2B `xor` missilesOtherSide3B ==
@@ -210,7 +214,8 @@ instance NFData Player where
               missilesOtherSide2'
               missilesOtherSide3'
               ironCurtainAvailable'
-              isIronCurtainActive')
+              isIronCurtainActive'
+              activeIronCurtainLifetime')
     = energy'                          `seq`
       health'                          `seq`
       allTowers'                       `seq`
@@ -239,23 +244,26 @@ instance NFData Player where
       missilesOtherSide3'              `seq`
       ironCurtainAvailable'            `seq`
       isIronCurtainActive'             `seq`
+      activeIronCurtainLifetime'       `seq`
       ()
 
-data ScratchPlayer = ScratchPlayer String Int Int Bool Bool
+data ScratchPlayer = ScratchPlayer String Int Int Bool Bool Int
                    deriving (Show, Eq)
 
 instance FromJSON ScratchPlayer where
   parseJSON = withObject "ScratchPlayer" $ \ v -> do
-    playerType'            <- v .: "playerType"
-    energy''               <- v .: "energy"
-    health''               <- v .: "health"
-    ironCurtainAvailable'' <- v .: "ironCurtainAvailable"
-    isIronCurtainActive''  <- v .: "isIronCurtainActive"
+    playerType'                 <- v .: "playerType"
+    energy''                    <- v .: "energy"
+    health''                    <- v .: "health"
+    ironCurtainAvailable''      <- v .: "ironCurtainAvailable"
+    isIronCurtainActive''       <- v .: "isIronCurtainActive"
+    activeIronCurtainLifetime'' <- v.: "activeIronCurtainLifetime"
     return $ ScratchPlayer playerType'
                            energy''
                            health''
                            ironCurtainAvailable''
                            isIronCurtainActive''
+                           activeIronCurtainLifetime''
                            
 
 data GameDetails = GameDetails { gameRound' :: Int }
@@ -287,25 +295,29 @@ instance FromJSON GameState where
                          aEnergy
                          aHealth
                          aIronCurtainAvailable
-                         aIronCurtainIsActive),
+                         aIronCurtainIsActive
+                         aActiveIronCurtainLifetime),
            (ScratchPlayer _
                           bEnergy
                           bHealth
                           bIronCurtainAvailable
-                          bIronCurtainIsActive))) = extractPlayers players'
+                          bIronCurtainIsActive
+                          bActiveIronCurtainLifetime))) = extractPlayers players'
     return (GameState (gameRound' gameDetails)
-                      me' { energy               = aEnergy,
-                            health               = aHealth,
-                            ironCurtainAvailable = aIronCurtainAvailable,
-                            isIronCurtainActive  = aIronCurtainIsActive }
-                      oponent' { energy               = bEnergy,
-                                 health               = bHealth,
-                                 ironCurtainAvailable = bIronCurtainAvailable,
-                                 isIronCurtainActive  = bIronCurtainIsActive })
+                      me' { energy                    = aEnergy,
+                            health                    = aHealth,
+                            ironCurtainAvailable      = aIronCurtainAvailable,
+                            isIronCurtainActive       = aIronCurtainIsActive,
+                            activeIronCurtainLifetime = aActiveIronCurtainLifetime }
+                      oponent' { energy                    = bEnergy,
+                                 health                    = bHealth,
+                                 ironCurtainAvailable      = bIronCurtainAvailable,
+                                 isIronCurtainActive       = bIronCurtainIsActive,
+                                 activeIronCurtainLifetime = bActiveIronCurtainLifetime })
 
 extractPlayers :: V.Vector ScratchPlayer -> (ScratchPlayer, ScratchPlayer)
 extractPlayers players =
-  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _ _)  = players `vectorIndex` 0
+  let firstPlayer@(ScratchPlayer firstPlayerType _ _ _ _ _)  = players `vectorIndex` 0
       secondPlayer = players `vectorIndex` 1
   in if firstPlayerType == "A"
      then (firstPlayer,  secondPlayer)
@@ -365,6 +377,7 @@ emptyPlayer = Player
   emptyMissiles
   False
   False
+  0
 
 emptyGameState :: GameState
 emptyGameState = GameState 0 emptyPlayer emptyPlayer
