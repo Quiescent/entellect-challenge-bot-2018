@@ -28,7 +28,6 @@ import Buildings
 import EfficientCommand
 import BitSetMap
 
-
 myPlayer :: GameState -> Player
 myPlayer = me
 
@@ -71,7 +70,7 @@ updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
 updateMove 0       player' = player'
 updateMove 4       player' = player' { ironCurtainAvailable      = False,
-                                       activeIronCurtainLifetime = ironCurtainActiveTime - 1,
+                                       activeIronCurtainLifetime = ironCurtainActiveTime,
                                        energy                    = energy player' - ironCurtainCost }
 updateMove command player' =
   buildOnMap coord' building' player'

@@ -10,7 +10,7 @@ import Magic
 import BitSetMap
 
 tickEngine :: GameState -> GameState
-tickEngine = tickIronCurtain . incrementRound . gainEnergy . collideMissiles . tickBuildings
+tickEngine = gainEnergy . collideMissiles . tickBuildings . tickIronCurtain . incrementRound
 
 tickIronCurtain :: GameState -> GameState
 tickIronCurtain gameState = resetIronCurtain $ updateIronCurtainActiveTime gameState

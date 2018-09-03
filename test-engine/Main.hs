@@ -33,7 +33,7 @@ main = do
         playerTwoMove <- fmap transposePlayerTwosMove $ readPlayerCommand $ playerTwoDir round'
         putStrLn $ "Player 2's move: " ++ show playerTwoMove
         reportedState <- parseState $ playerOneDir (round' + 1)
-        let updatedState = updateMyMove (toEfficientCommand playerOneMove) $ updateOponentsMove (toEfficientCommand playerTwoMove) $ tickEngine currentState
+        let updatedState = updateMovesWithIronCurtainFirst playerOneMove playerTwoMove currentState
         if reportedState /= updatedState
           then error $ "On round: " ++ show round' ++ "\nExpected:\t" ++ show reportedState ++ "\nGot:\t\t" ++ show updatedState
           else return updatedState
@@ -44,6 +44,24 @@ main = do
              matchDirectory
   foldM_ playMoveForRound initialState [0..roundCount - 2]
   putStrLn "Done"
+
+updateMovesWithIronCurtainFirst :: Command -> Command -> GameState -> GameState
+updateMovesWithIronCurtainFirst IronCurtain IronCurtain     =
+  tickEngine .
+  updateMyMove (toEfficientCommand IronCurtain) .
+  updateOponentsMove (toEfficientCommand IronCurtain)
+updateMovesWithIronCurtainFirst IronCurtain oponentsCommand =
+  updateOponentsMove (toEfficientCommand oponentsCommand) .
+  tickEngine .
+  updateMyMove (toEfficientCommand IronCurtain)
+updateMovesWithIronCurtainFirst myCommand   IronCurtain     =
+  updateMyMove (toEfficientCommand myCommand) .
+  tickEngine .
+  updateOponentsMove (toEfficientCommand IronCurtain)
+updateMovesWithIronCurtainFirst myCommand   oponentsCommand =
+  updateMyMove (toEfficientCommand myCommand) .
+  updateOponentsMove (toEfficientCommand oponentsCommand) .
+  tickEngine
 
 transposePlayerTwosMove :: Command -> Command
 transposePlayerTwosMove (Build       coord' buildingType) =
@@ -89,4 +107,5 @@ readPlayerCommand directory = do
                        "2" -> Build coord ENERGY
                        "3" -> Deconstruct coord
                        "4" -> Build coord TESLA
+                       "5" -> IronCurtain
                        _   -> error ("Read unhandled building type: " ++ bstr)

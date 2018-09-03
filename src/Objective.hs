@@ -185,5 +185,19 @@ chooseBestMove matchCount moves scores =
   in (indexOfMax, moves `uVectorIndex` indexOfMax)
 
 makeMoves :: EfficientCommand -> EfficientCommand -> GameState -> GameState
-makeMoves myMove' oponentsMove' =
-  updateMyMove myMove' . updateOponentsMove oponentsMove' . tickEngine
+makeMoves 4           4               =
+  tickEngine .
+  updateMyMove 4 .
+  updateOponentsMove 4
+makeMoves 4           oponentsCommand =
+  updateOponentsMove oponentsCommand .
+  tickEngine .
+  updateMyMove 4
+makeMoves myCommand   4               =
+  updateMyMove myCommand .
+  tickEngine .
+  updateOponentsMove 4
+makeMoves myCommand   oponentsCommand =
+  updateMyMove myCommand .
+  updateOponentsMove oponentsCommand .
+  tickEngine
