@@ -10,7 +10,19 @@ import Magic
 import BitSetMap
 
 tickEngine :: GameState -> GameState
-tickEngine = resetIronCurtain . incrementRound . gainEnergy . collideMissiles . tickBuildings
+tickEngine = tickIronCurtain . incrementRound . gainEnergy . collideMissiles . tickBuildings
+
+tickIronCurtain :: GameState -> GameState
+tickIronCurtain gameState@(GameState { me      = me'@(Player { activeIronCurtainLifetime = myActiveIronCurtainLifetime }),
+                                       oponent = oponent'@(Player { activeIronCurtainLifetime = oponentsActiveIronCurtainLifetime })}) =
+  resetIronCurtain $
+  gameState { me      = me'      { activeIronCurtainLifetime = myActiveIronCurtainLifetime - 1,
+                                   isIronCurtainActive       = myRemainingTime > 0 },
+              oponent = oponent' { activeIronCurtainLifetime = oponentsActiveIronCurtainLifetime - 1,
+                                   isIronCurtainActive       = oponentsRemainingTime > 0}}
+  where
+    myRemainingTime       = myActiveIronCurtainLifetime - 1
+    oponentsRemainingTime = oponentsActiveIronCurtainLifetime - 1
 
 resetIronCurtain :: GameState -> GameState
 resetIronCurtain gameState@(GameState gameRound' me' oponent') =
