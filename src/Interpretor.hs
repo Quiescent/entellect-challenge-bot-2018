@@ -538,6 +538,7 @@ readGameState = fmap parseStateString $ B.readFile stateFilePath
 
 data Command = Build { bCoord   :: Coord,
                        building :: BuildingType }
+               | IronCurtain
                | Deconstruct { dCoord :: Coord }
                | NothingCommand
              deriving (Eq)
@@ -547,6 +548,7 @@ instance NFData Command where
     bCoord'   `seq`
     building' `seq`
     ()
+  rnf IronCurtain = ()
   rnf (Deconstruct dCoord') =
     dCoord' `seq` ()
   rnf cmd@(NothingCommand) =
@@ -560,6 +562,7 @@ instance Show Command where
       ATTACK  -> "1"
       ENERGY  -> "2"
       TESLA   -> "4"
+  show IronCurtain = "5"
   show (Deconstruct dCoord') =
     let (x', y') = fromCoord dCoord'
     in show x' ++ "," ++ show y' ++ ","  ++ "3"

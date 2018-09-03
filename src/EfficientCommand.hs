@@ -9,19 +9,21 @@ buildingTypeToInt :: BuildingType -> Int
 buildingTypeToInt DEFENSE = 1
 buildingTypeToInt ATTACK  = 2
 buildingTypeToInt ENERGY  = 3
-buildingTypeToInt TESLA   = 4
+buildingTypeToInt x       = error $ "Invalid building type: " ++ show x
 
 intToBuildingType :: Int -> BuildingType
 intToBuildingType 1 = DEFENSE
 intToBuildingType 2 = ATTACK
 intToBuildingType 3 = ENERGY
-intToBuildingType 4 = TESLA
 intToBuildingType x = error $ "Unhandled building type: " ++ show x
 
 type EfficientCommand = Int
 
 nothingCommand :: EfficientCommand
 nothingCommand = 0
+
+ironCurtainCommand :: Int
+ironCurtainCommand = 4
 
 type EfficientBuilding = Int
 
@@ -45,6 +47,7 @@ coordOfCommand x = x `shiftR` 3
 toEfficientCommand :: Command -> EfficientCommand
 toEfficientCommand (Deconstruct _)    = -5
 toEfficientCommand (Build coord' bt') = build coord' (buildingTypeToInt bt')
+toEfficientCommand IronCurtain        = ironCurtainCommand
 toEfficientCommand NothingCommand     = nothingCommand
 
 type PackedCommand = Int

@@ -45,6 +45,9 @@ type Moves = UV.Vector EfficientCommand
 addNothingCommand :: Moves -> Moves
 addNothingCommand = UV.cons nothingCommand
 
+addIronCurtainCommand :: Moves -> Moves
+addIronCurtainCommand = UV.cons nothingCommand
+
 allMovesOfType :: BuildingType -> Cells -> Moves
 allMovesOfType buildingType' cells' =
   UV.map ((flip build) (buildingTypeToInt buildingType')) cells'
@@ -86,7 +89,12 @@ switchAffordableMoves energyTowerMoves
                       energy'
   | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = addNothingCommand $ energyTowerMoves
-  | otherwise                 = addNothingCommand $
+  | energy' < ironCurtainCost = addNothingCommand $
+    attackTowerMoves UV.++
+    defenseTowerMoves UV.++
+    energyTowerMoves
+  | otherwise = addIronCurtainCommand $
+    addNothingCommand $
     attackTowerMoves UV.++
     defenseTowerMoves UV.++
     energyTowerMoves
@@ -163,6 +171,6 @@ switchAffordableRandomMoves :: Moves -> Moves -> Int -> Moves
 switchAffordableRandomMoves energyTowerMoves attackTowerMoves energy'
   | energy' < energyTowerCost = UV.singleton nothingCommand
   | energy' < attackTowerCost = energyTowerMoves
-  | energy' < teslaTowerCost  = attackTowerMoves
+  | energy' < ironCurtainCost = attackTowerMoves
   -- TODO this should be the iron curtain when that's in
-  | otherwise                 = attackTowerMoves
+  | otherwise                 = UV.singleton ironCurtainCommand
