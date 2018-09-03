@@ -70,6 +70,8 @@ buildingFromStats DEFENSE = Defense4
 updateMove :: EfficientCommand -> Player -> Player
 -- TODO: Handle deconstruct
 updateMove 0       player' = player'
+updateMove 4       player' = player' { ironCurtainAvailable = False,
+                                       isIronCurtainActive  = True }
 updateMove command player' =
   buildOnMap coord' building' player'
   where
@@ -213,7 +215,8 @@ moveCheckingBoundaries
                          missilesOtherSide1 = missilesOtherSide1',
                          missilesOtherSide2 = missilesOtherSide2',
                          missilesOtherSide3 = missilesOtherSide3'})
-  playerToHit@(Player { health = health' }) =
+  playerToHit@(Player { health              = health',
+                        isIronCurtainActive = isIronCurtainActive' }) =
   let missilesAboutToTransfer0  = onlyOverlappingMissiles missilesAboutToTransfer missiles0'
       missilesAboutToTransfer1  = onlyOverlappingMissiles missilesAboutToTransfer missiles1'
       missilesAboutToTransfer2  = onlyOverlappingMissiles missilesAboutToTransfer missiles2'
@@ -226,10 +229,18 @@ moveCheckingBoundaries
                                   countMissiles missilesAboutToHitPlayer1 +
                                   countMissiles missilesAboutToHitPlayer2 +
                                   countMissiles missilesAboutToHitPlayer3
-      missilesOtherSide0''      = addAllMissiles missilesAboutToTransfer0 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer0 missilesOtherSide0'
-      missilesOtherSide1''      = addAllMissiles missilesAboutToTransfer1 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer1 missilesOtherSide1'
-      missilesOtherSide2''      = addAllMissiles missilesAboutToTransfer2 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer2 missilesOtherSide2'
-      missilesOtherSide3''      = addAllMissiles missilesAboutToTransfer3 $ moveMissilesLeft $ removeAllMissiles missilesAboutToHitPlayer3 missilesOtherSide3'
+      missilesOtherSide0''      = (if isIronCurtainActive' then id else addAllMissiles missilesAboutToTransfer0) $
+                                  moveMissilesLeft $
+                                  removeAllMissiles missilesAboutToHitPlayer0 missilesOtherSide0'
+      missilesOtherSide1''      = (if isIronCurtainActive' then id else addAllMissiles missilesAboutToTransfer1) $
+                                  moveMissilesLeft $
+                                  removeAllMissiles missilesAboutToHitPlayer1 missilesOtherSide1'
+      missilesOtherSide2''      = (if isIronCurtainActive' then id else addAllMissiles missilesAboutToTransfer2) $
+                                  moveMissilesLeft $
+                                  removeAllMissiles missilesAboutToHitPlayer2 missilesOtherSide2'
+      missilesOtherSide3''      = (if isIronCurtainActive' then id else addAllMissiles missilesAboutToTransfer3) $
+                                  moveMissilesLeft $
+                                  removeAllMissiles missilesAboutToHitPlayer3 missilesOtherSide3'
       missiles0''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer0 missiles0'
       missiles1''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer1 missiles1'
       missiles2''               = moveMissilesRight $ removeAllMissiles missilesAboutToTransfer2 missiles2'

@@ -10,7 +10,14 @@ import Magic
 import BitSetMap
 
 tickEngine :: GameState -> GameState
-tickEngine = incrementRound . gainEnergy . collideMissiles . tickBuildings
+tickEngine = resetIronCurtain . incrementRound . gainEnergy . collideMissiles . tickBuildings
+
+resetIronCurtain :: GameState -> GameState
+resetIronCurtain gameState@(GameState gameRound' me' oponent') =
+  if mod gameRound' 30 == 0
+  then (gameState { me      = me'      { ironCurtainAvailable = True },
+                    oponent = oponent' { ironCurtainAvailable = True }})
+  else gameState
 
 incrementRound :: GameState -> GameState
 incrementRound gameState@(GameState { gameRound = gameRound' }) =
