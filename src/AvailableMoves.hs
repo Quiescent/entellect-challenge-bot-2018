@@ -70,9 +70,6 @@ allMidToFrontAttackTowerMoves = allMovesOfType ATTACK midToFrontCells
 allForwardEnergyTowerMoves :: Moves
 allForwardEnergyTowerMoves = allMovesOfType ENERGY forwardCells
 
-allForwardAttackTowerMoves :: Moves
-allForwardAttackTowerMoves = allMovesOfType ATTACK forwardCells
-
 allMidToFrontEnergyTowerMoves :: Moves
 allMidToFrontEnergyTowerMoves = allMovesOfType ENERGY midToFrontCells
 
@@ -104,10 +101,7 @@ switchAffordableMoves energyTowerMoves
     energyTowerMoves
 
 theMagicalRoundWhenIStopMakingEnergyTowers :: Int
-theMagicalRoundWhenIStopMakingEnergyTowers = 13
-
-theRoundOfTheSneakyAttackTower :: Int
-theRoundOfTheSneakyAttackTower = 10
+theMagicalRoundWhenIStopMakingEnergyTowers = 12
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
 switchMovesICanAfford :: Int -> Bool -> Moves
@@ -119,13 +113,11 @@ switchMovesICanAfford =
 openingBookMove :: GameState -> Maybe Command
 openingBookMove (GameState { gameRound = gameRound',
                              me        = player@(Player { energy = energy' }) }) =
-  if gameRound' == theRoundOfTheSneakyAttackTower
-  then Just $ toCommand $ UV.head $ allForwardAttackTowerMoves
-  else if gameRound' <= theMagicalRoundWhenIStopMakingEnergyTowers
-       then if energy' >= energyTowerCost
-            then Just $ toCommand $ UV.head $ UV.filter available allBackEnergyTowerMoves
-            else Just $ toCommand nothingCommand
-       else Nothing
+  if gameRound' <= theMagicalRoundWhenIStopMakingEnergyTowers
+  then if energy' >= energyTowerCost
+       then Just $ toCommand $ UV.head $ UV.filter available allBackEnergyTowerMoves
+       else Just $ toCommand nothingCommand
+  else Nothing
   where
     available 0       = True
     available 4       = True
