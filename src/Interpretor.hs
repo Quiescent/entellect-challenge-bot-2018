@@ -518,7 +518,7 @@ accBuildingToPlayer x' y' (ScratchBuilding int ctl wctl bt _)
                                               addBuilding coord' attackTowersUnderConstruction' }
        (False, _, EnergyTower)   -> player' { energyTowersUnderConstruction =
                                               addBuilding coord' energyTowersUnderConstruction' }
-       (_,     _, _)             -> error "Invalid building"
+       (_,     _, _)             -> player'
 
 chooseBuilding :: Int -> Int -> BuildingType -> Building
 
