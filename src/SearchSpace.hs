@@ -65,6 +65,7 @@ search g state' = do
             tree4         <- readChan treeChan4
             let finalTree = (M.mergeTrees (M.mergeTrees (M.mergeTrees tree1 tree2) tree3) tree4)
             -- putStrLn $ show $ map (\ (score, move) -> "[" ++ show (toCommand move) ++ ": " ++ show score ++ "]") $ zip (UV.toList $ M.myScores finalTree) (UV.toList moves)
+            -- putStrLn $ show $ UV.sum $ UV.map snd $ M.myScores finalTree
             let scores    = M.myScores finalTree
             let count     = M.gamesPlayed finalTree
             let (_, best) = chooseBestMove count moves scores
