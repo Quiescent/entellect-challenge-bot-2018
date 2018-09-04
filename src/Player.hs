@@ -85,6 +85,9 @@ constructionTime ENERGY  = energyTowerConstructionTime
 constructionTime DEFENSE = defenseTowerConstructionTime
 constructionTime ATTACK  = attackTowerConstructionTime
 
+sndParam :: a -> b -> b
+sndParam _ y = y
+
 collide :: Player -> Player -> (Player, Player)
 collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                                      missilesOtherSide1 = missilesOtherSide1',
@@ -103,90 +106,130 @@ collide playerWithMissiles@(Player { missilesOtherSide0 = missilesOtherSide0',
                    defense1Towers              = defense1Towers' }) =
   -- First round of missiles
   let allPlacements   = allBuiltTowers'
+      removeAllMissilesR1  = if missilesOtherSide0' == 0 then sndParam else removeAllMissiles
+      removeAllBuildingsR1 = if missilesOtherSide0' == 0 then sndParam else removeAllBuildings
       collided0       = missilesWhichCollided missilesOtherSide0' allPlacements
-      missiles0After  = removeAllMissiles  collided0 missilesOtherSide0'
-      energyTowers0   = removeAllBuildings collided0 energyTowers'
-      attack3Towers0  = removeAllBuildings collided0 attack3Towers'
-      attack2Towers0  = removeAllBuildings collided0 attack2Towers'
-      attack1Towers0  = removeAllBuildings collided0 attack1Towers'
-      attack0Towers0  = removeAllBuildings collided0 attack0Towers'
-      defense4Towers0 = removeAllBuildings collided0 defense4Towers'
-      defense3Towers0 = addAllBuildings
-                        (buildingPlacementDifference defense4Towers' defense4Towers0)
-                        (removeAllBuildings collided0 defense3Towers')
-      defense2Towers0 = addAllBuildings
-                        (buildingPlacementDifference defense3Towers' (removeAllBuildings collided0 defense3Towers'))
-                        (removeAllBuildings collided0 defense2Towers')
-      defense1Towers0 = addAllBuildings
-                        (buildingPlacementDifference defense2Towers' (removeAllBuildings collided0 defense2Towers'))
-                        (removeAllBuildings collided0 defense1Towers')
+      missiles0After  = removeAllMissilesR1  collided0 missilesOtherSide0'
+      energyTowers0   = removeAllBuildingsR1 collided0 energyTowers'
+      attack3Towers0  = removeAllBuildingsR1 collided0 attack3Towers'
+      attack2Towers0  = removeAllBuildingsR1 collided0 attack2Towers'
+      attack1Towers0  = removeAllBuildingsR1 collided0 attack1Towers'
+      attack0Towers0  = removeAllBuildingsR1 collided0 attack0Towers'
+      defense4Towers0 = removeAllBuildingsR1 collided0 defense4Towers'
+      defense3Towers0 = if missilesOtherSide0' == 0
+                        then defense3Towers'
+                        else addAllBuildings
+                             (buildingPlacementDifference defense4Towers' defense4Towers0)
+                             (removeAllBuildings collided0 defense3Towers')
+      defense2Towers0 = if missilesOtherSide0' == 0
+                        then defense2Towers'
+                        else addAllBuildings
+                             (buildingPlacementDifference defense3Towers' (removeAllBuildings collided0 defense3Towers'))
+                             (removeAllBuildings collided0 defense2Towers')
+      defense1Towers0 = if missilesOtherSide0' == 0
+                        then defense1Towers'
+                        else addAllBuildings
+                             (buildingPlacementDifference defense2Towers' (removeAllBuildings collided0 defense2Towers'))
+                             (removeAllBuildings collided0 defense1Towers')
       -- Second round of missiles
-      allPlacements1  = (addAllBuildings (removeAllBuildings collided0 allBuiltTowers')
-                         (addAllBuildings defense3Towers0
-                          (addAllBuildings defense2Towers0 defense1Towers0)))
+      allPlacements1  = if missilesOtherSide0' == 0
+                        then allPlacements
+                        else (addAllBuildings (removeAllBuildings collided0 allBuiltTowers')
+                              (addAllBuildings defense3Towers0
+                               (addAllBuildings defense2Towers0 defense1Towers0)))
       collided1       = missilesWhichCollided missilesOtherSide1' allPlacements1
-      missiles1After  = removeAllMissiles  collided1 missilesOtherSide1'
-      energyTowers1   = removeAllBuildings collided1 energyTowers0
-      attack3Towers1  = removeAllBuildings collided1 attack3Towers0
-      attack2Towers1  = removeAllBuildings collided1 attack2Towers0
-      attack1Towers1  = removeAllBuildings collided1 attack1Towers0
-      attack0Towers1  = removeAllBuildings collided1 attack0Towers0
-      defense4Towers1 = removeAllBuildings collided1 defense4Towers0
-      defense3Towers1 = addAllBuildings
-                        (buildingPlacementDifference defense4Towers0 defense4Towers1)
-                        (removeAllBuildings collided1 defense3Towers0)
-      defense2Towers1 = addAllBuildings
-                        (buildingPlacementDifference defense3Towers0 (removeAllBuildings collided1 defense3Towers0))
-                        (removeAllBuildings collided1 defense2Towers0)
-      defense1Towers1 = addAllBuildings
-                        (buildingPlacementDifference defense2Towers0 (removeAllBuildings collided1 defense2Towers0))
-                        (removeAllBuildings collided1 defense1Towers0)
+      removeAllMissilesR2  = if missilesOtherSide1' == 0 then sndParam else removeAllMissiles
+      removeAllBuildingsR2 = if missilesOtherSide1' == 0 then sndParam else removeAllBuildings
+      missiles1After  = removeAllMissilesR2  collided1 missilesOtherSide1'
+      energyTowers1   = removeAllBuildingsR2 collided1 energyTowers0
+      attack3Towers1  = removeAllBuildingsR2 collided1 attack3Towers0
+      attack2Towers1  = removeAllBuildingsR2 collided1 attack2Towers0
+      attack1Towers1  = removeAllBuildingsR2 collided1 attack1Towers0
+      attack0Towers1  = removeAllBuildingsR2 collided1 attack0Towers0
+      defense4Towers1 = removeAllBuildingsR2 collided1 defense4Towers0
+      defense3Towers1 = if missilesOtherSide1' == 0
+                        then defense3Towers0
+                        else addAllBuildings
+                             (buildingPlacementDifference defense4Towers0 defense4Towers1)
+                             (removeAllBuildings collided1 defense3Towers0)
+      defense2Towers1 = if missilesOtherSide1' == 0
+                        then defense2Towers0
+                        else addAllBuildings
+                             (buildingPlacementDifference defense3Towers0 (removeAllBuildings collided1 defense3Towers0))
+                             (removeAllBuildings collided1 defense2Towers0)
+      defense1Towers1 = if missilesOtherSide1' == 0
+                        then defense1Towers0
+                        else addAllBuildings
+                             (buildingPlacementDifference defense2Towers0 (removeAllBuildings collided1 defense2Towers0))
+                             (removeAllBuildings collided1 defense1Towers0)
       -- Third round of missiles
-      allPlacements2  = (addAllBuildings (removeAllBuildings collided1 allPlacements1)
-                         (addAllBuildings defense3Towers1
-                          (addAllBuildings defense2Towers1 defense1Towers1)))
+      allPlacements2  = if missilesOtherSide1' == 0
+                        then allPlacements1
+                        else (addAllBuildings (removeAllBuildings collided1 allPlacements1)
+                              (addAllBuildings defense3Towers1
+                               (addAllBuildings defense2Towers1 defense1Towers1)))
+      removeAllMissilesR3  = if missilesOtherSide2' == 0 then sndParam else removeAllMissiles
+      removeAllBuildingsR3 = if missilesOtherSide2' == 0 then sndParam else removeAllBuildings
       collided2       = missilesWhichCollided missilesOtherSide2' allPlacements2
-      missiles2After  = removeAllMissiles  collided2 missilesOtherSide2'
-      energyTowers2   = removeAllBuildings collided2 energyTowers1
-      attack3Towers2  = removeAllBuildings collided2 attack3Towers1
-      attack2Towers2  = removeAllBuildings collided2 attack2Towers1
-      attack1Towers2  = removeAllBuildings collided2 attack1Towers1
-      attack0Towers2  = removeAllBuildings collided2 attack0Towers1
-      defense4Towers2 = removeAllBuildings collided2 defense4Towers1
-      defense3Towers2 = addAllBuildings
-                        (buildingPlacementDifference defense4Towers1 defense4Towers2)
-                        (removeAllBuildings collided2 defense3Towers1)
-      defense2Towers2 = addAllBuildings
-                        (buildingPlacementDifference defense3Towers1 (removeAllBuildings collided2 defense3Towers1))
-                        (removeAllBuildings collided2 defense2Towers1)
-      defense1Towers2 = addAllBuildings
-                        (buildingPlacementDifference defense2Towers1 (removeAllBuildings collided2 defense2Towers1))
-                        (removeAllBuildings collided2 defense1Towers1)
+      missiles2After  = removeAllMissilesR3  collided2 missilesOtherSide2'
+      energyTowers2   = removeAllBuildingsR3 collided2 energyTowers1
+      attack3Towers2  = removeAllBuildingsR3 collided2 attack3Towers1
+      attack2Towers2  = removeAllBuildingsR3 collided2 attack2Towers1
+      attack1Towers2  = removeAllBuildingsR3 collided2 attack1Towers1
+      attack0Towers2  = removeAllBuildingsR3 collided2 attack0Towers1
+      defense4Towers2 = removeAllBuildingsR3 collided2 defense4Towers1
+      defense3Towers2 = if missilesOtherSide2' == 0
+                        then defense3Towers1
+                        else addAllBuildings
+                             (buildingPlacementDifference defense4Towers1 defense4Towers2)
+                             (removeAllBuildings collided2 defense3Towers1)
+      defense2Towers2 = if missilesOtherSide2' == 0
+                        then defense2Towers1
+                        else addAllBuildings
+                             (buildingPlacementDifference defense3Towers1 (removeAllBuildings collided2 defense3Towers1))
+                             (removeAllBuildings collided2 defense2Towers1)
+      defense1Towers2 = if missilesOtherSide2' == 0
+                        then defense1Towers1
+                        else addAllBuildings
+                             (buildingPlacementDifference defense2Towers1 (removeAllBuildings collided2 defense2Towers1))
+                             (removeAllBuildings collided2 defense1Towers1)
       -- Fourth round of missiles
-      allPlacements3  = (addAllBuildings (removeAllBuildings collided2 allPlacements2)
-                         (addAllBuildings defense3Towers2
-                          (addAllBuildings defense2Towers2 defense1Towers2)))
+      allPlacements3  = if missilesOtherSide3' == 0
+                        then allPlacements2
+                        else (addAllBuildings (removeAllBuildings collided2 allPlacements2)
+                              (addAllBuildings defense3Towers2
+                               (addAllBuildings defense2Towers2 defense1Towers2)))
       collided3       = missilesWhichCollided missilesOtherSide3' allPlacements3
-      missiles3After  = removeAllMissiles  collided3 missilesOtherSide3'
-      energyTowers3   = removeAllBuildings collided3 energyTowers2
-      attack3Towers3  = removeAllBuildings collided3 attack3Towers2
-      attack2Towers3  = removeAllBuildings collided3 attack2Towers2
-      attack1Towers3  = removeAllBuildings collided3 attack1Towers2
-      attack0Towers3  = removeAllBuildings collided3 attack0Towers2
-      defense4Towers3 = removeAllBuildings collided3 defense4Towers2
-      defense3Towers3 = addAllBuildings
-                        (buildingPlacementDifference defense4Towers2 defense4Towers3)
-                        (removeAllBuildings collided3 defense3Towers2)
-      defense2Towers3 = addAllBuildings
-                        (buildingPlacementDifference defense3Towers2 (removeAllBuildings collided3 defense3Towers2))
-                        (removeAllBuildings collided3 defense2Towers2)
-      defense1Towers3 = addAllBuildings
-                        (buildingPlacementDifference defense2Towers2 (removeAllBuildings collided3 defense2Towers2))
-                        (removeAllBuildings collided3 defense1Towers2)
+      removeAllMissilesR4  = if missilesOtherSide3' == 0 then sndParam else removeAllMissiles
+      removeAllBuildingsR4 = if missilesOtherSide3' == 0 then sndParam else removeAllBuildings
+      missiles3After  = removeAllMissilesR4  collided3 missilesOtherSide3'
+      energyTowers3   = removeAllBuildingsR4 collided3 energyTowers2
+      attack3Towers3  = removeAllBuildingsR4 collided3 attack3Towers2
+      attack2Towers3  = removeAllBuildingsR4 collided3 attack2Towers2
+      attack1Towers3  = removeAllBuildingsR4 collided3 attack1Towers2
+      attack0Towers3  = removeAllBuildingsR4 collided3 attack0Towers2
+      defense4Towers3 = removeAllBuildingsR4 collided3 defense4Towers2
+      defense3Towers3 = if missilesOtherSide3' == 0
+                        then defense3Towers2
+                        else addAllBuildings
+                             (buildingPlacementDifference defense4Towers2 defense4Towers3)
+                             (removeAllBuildings collided3 defense3Towers2)
+      defense2Towers3 = if missilesOtherSide3' == 0
+                        then defense2Towers2
+                        else addAllBuildings
+                             (buildingPlacementDifference defense3Towers2 (removeAllBuildings collided3 defense3Towers2))
+                             (removeAllBuildings collided3 defense2Towers2)
+      defense1Towers3 = if missilesOtherSide3' == 0
+                        then defense1Towers2
+                        else addAllBuildings
+                             (buildingPlacementDifference defense2Towers2 (removeAllBuildings collided3 defense2Towers2))
+                             (removeAllBuildings collided3 defense1Towers2)
       -- Final result
-      allPlacements4  = (addAllBuildings (removeAllBuildings collided3 allPlacements3)
-                         (addAllBuildings defense3Towers3
-                          (addAllBuildings defense2Towers3 defense1Towers3)))
+      allPlacements4  = if missilesOtherSide3' == 0
+                        then allPlacements3
+                        else (addAllBuildings (removeAllBuildings collided3 allPlacements3)
+                              (addAllBuildings defense3Towers3
+                               (addAllBuildings defense2Towers3 defense1Towers3)))
   in (playerWithMissiles { missilesOtherSide0 = missiles0After,
                            missilesOtherSide1 = missiles1After,
                            missilesOtherSide2 = missiles2After,
