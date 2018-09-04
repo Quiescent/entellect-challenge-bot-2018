@@ -108,15 +108,9 @@ playToEnd g initialState gameTree =
     playToEndRandomly n l moves currentState gameTree' =
       if gameOver currentState
       then updateEnding currentState moves gameTree'
-      else let oponentsMoves = oponentsRandomMoves currentState
-               (x, l')       = next l
-               oponentIdx    = mod x (UV.length oponentsMoves)
-               oponentsMove' = oponentsMoves `uVectorIndex` oponentIdx
-               myMoves       = myRandomMoves currentState
-               (y, l'')      = next l'
-               myIdx         = mod y (UV.length myMoves)
-               myMove'       = myMoves `uVectorIndex` myIdx
-               nextState     = makeMoves myMove' oponentsMove' currentState
+      else let (oponentsMove', l')  = oponentsRandomMove l  currentState
+               (myMove',       l'') = myRandomMove       l' currentState
+               nextState            = makeMoves myMove' oponentsMove' currentState
            in playToEndRandomly (n - 1) l'' moves nextState gameTree'
 
 hasEmptyScore :: (Int, Int) -> Bool
