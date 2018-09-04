@@ -1,10 +1,8 @@
-{-# LANGUAGE BangPatterns #-}
-
 module AvailableMoves (Moves,
                        myAvailableMoves,
-                       myRandomMove,
+                       myRandomMoves,
                        oponentsAvailableMoves,
-                       oponentsRandomMove,
+                       oponentsRandomMoves,
                        openingBookMove)
   where
 
@@ -17,9 +15,6 @@ import Player
 import EfficientCommand
 import Cell
 import Magic
-import VectorIndex
-
-import System.Random
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -165,14 +160,11 @@ oponentsAvailableMoves (GameState { oponent = player@(Player { energy = energy',
     available command = let i = coordOfCommand command in availableCoord i player
     affordableMoves   = switchMovesOponentCanAfford energy' ironCurtainAvailable'
 
-myRandomMove :: StdGen -> GameState -> (EfficientCommand, StdGen)
-myRandomMove g (GameState { me = player@(Player { energy = energy',
-                                                  ironCurtainAvailable = ironCurtainAvailable' }) }) =
-  (nthP available randomIdx affordableMoves, g')
+myRandomMoves :: GameState -> Moves
+myRandomMoves (GameState { me = player@(Player { energy = energy',
+                                                 ironCurtainAvailable = ironCurtainAvailable'}) }) =
+  UV.filter available affordableMoves
   where
-    (x, g')           = next g
-    randomIdx         = mod x numberOfAvailable
-    numberOfAvailable = UV.foldl' (countAcc available) 0 affordableMoves
     available 0       = True
     available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
@@ -182,33 +174,15 @@ switchRandomMovesICanAfford :: Int -> Bool -> Moves
 switchRandomMovesICanAfford =
   switchAffordableRandomMoves usefulEnergyMoves allMidToFrontAttackTowerMoves
 
-oponentsRandomMove :: StdGen -> GameState -> (EfficientCommand, StdGen)
-oponentsRandomMove g (GameState { oponent = player@(Player { energy = energy',
-                                                             ironCurtainAvailable = ironCurtainAvailable' }) }) =
-  (nthP available randomIdx affordableMoves, g')
+oponentsRandomMoves :: GameState -> Moves
+oponentsRandomMoves (GameState { oponent = player@(Player { energy = energy',
+                                                            ironCurtainAvailable = ironCurtainAvailable' }) }) =
+  UV.filter available affordableMoves
   where
-    (x, g')           = next g
-    randomIdx         = mod x numberOfAvailable
-    numberOfAvailable = UV.foldl' (countAcc available) 0 affordableMoves
     available 0       = True
     available 4       = True
     available command = let i = coordOfCommand command in availableCoord i player
     affordableMoves   = switchRandomMovesOponentCanAfford energy' ironCurtainAvailable'
-
-countAcc :: (EfficientCommand -> Bool) -> Int -> EfficientCommand -> Int
-countAcc p count x = if p x then count + 1 else count
-
-nthP :: (EfficientCommand -> Bool) -> Int -> Moves -> EfficientCommand
-nthP p nth xs =
-  nthPIter 0 nth
-  where
-    nthPIter !i !0
-      | p (xs `uVectorIndex` i) = xs `uVectorIndex` i
-      | otherwise               = nthPIter (i + 1) 0
-    nthPIter !i !n
-      | p (xs `uVectorIndex` i) = nthPIter (i + 1) (n - 1)
-      | otherwise               = nthPIter (i + 1) n
-  
 
 switchRandomMovesOponentCanAfford :: Int -> Bool -> Moves
 switchRandomMovesOponentCanAfford =
