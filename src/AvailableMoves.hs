@@ -46,7 +46,7 @@ addNothingCommand :: Moves -> Moves
 addNothingCommand = UV.cons nothingCommand
 
 addIronCurtainCommand :: Moves -> Moves
-addIronCurtainCommand = UV.cons nothingCommand
+addIronCurtainCommand = UV.cons ironCurtainCommand
 
 allMovesOfType :: BuildingType -> Cells -> Moves
 allMovesOfType buildingType' cells' =
