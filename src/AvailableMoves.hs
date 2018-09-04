@@ -39,6 +39,9 @@ forwardCells = UV.filter (xPredicate (>= 6)) cells
 midToFrontCells :: Cells
 midToFrontCells = UV.filter (xPredicate (>= 2)) cells
 
+frontCells :: Cells
+frontCells = UV.filter (xPredicate (== 7)) cells
+
 backCells :: Cells
 backCells = UV.filter (xPredicate (== 0)) cells
 
@@ -75,8 +78,8 @@ allMidToFrontAttackTowerMoves = allMovesOfType ATTACK midToFrontCells
 allForwardEnergyTowerMoves :: Moves
 allForwardEnergyTowerMoves = allMovesOfType ENERGY forwardCells
 
-allForwardAttackTowerMoves :: Moves
-allForwardAttackTowerMoves = allMovesOfType ATTACK forwardCells
+allFrontAttackTowerMoves :: Moves
+allFrontAttackTowerMoves = allMovesOfType ATTACK frontCells
 
 allMidToFrontEnergyTowerMoves :: Moves
 allMidToFrontEnergyTowerMoves = allMovesOfType ENERGY midToFrontCells
@@ -125,7 +128,7 @@ openingBookMove :: GameState -> Maybe Command
 openingBookMove (GameState { gameRound = gameRound',
                              me        = player@(Player { energy = energy' }) }) =
   if gameRound' == theRoundOfTheSneakyAttackTower
-  then Just $ toCommand $ UV.head $ allForwardAttackTowerMoves
+  then Just $ toCommand $ UV.head $ allFrontAttackTowerMoves
   else if gameRound' <= theMagicalRoundWhenIStopMakingEnergyTowers
        then if energy' >= energyTowerCost
             then Just $ toCommand $ UV.head $ UV.filter available allBackEnergyTowerMoves
