@@ -15,6 +15,7 @@ import Player
 import EfficientCommand
 import Cell
 import Magic
+import BitSetMap
 
 import qualified Data.Vector.Unboxed as UV
 
@@ -34,11 +35,14 @@ forwardCells = UV.filter (xPredicate (>= 6)) cells
 midToFrontCells :: Cells
 midToFrontCells = UV.filter (xPredicate (>= 2)) cells
 
-backCells :: Cells
-backCells = UV.filter (xPredicate (== 0)) cells
+-- backCells :: Cells
+-- backCells = UV.filter (xPredicate (== 0)) cells
 
 twoBackCells :: Cells
 twoBackCells = UV.filter (xPredicate (<= 1)) cells
+
+fourBackCells :: Cells
+fourBackCells = UV.filter (xPredicate (<= 4)) cells
 
 type Moves = UV.Vector EfficientCommand
 
@@ -52,8 +56,8 @@ allMovesOfType :: BuildingType -> Cells -> Moves
 allMovesOfType buildingType' cells' =
   UV.map ((flip build) (buildingTypeToInt buildingType')) cells'
 
-allBackEnergyTowerMoves :: Moves
-allBackEnergyTowerMoves = allMovesOfType ENERGY backCells
+-- allBackEnergyTowerMoves :: Moves
+-- allBackEnergyTowerMoves = allMovesOfType ENERGY backCells
 
 allEnergyTowerMoves :: Moves
 allEnergyTowerMoves = allMovesOfType ENERGY cells
@@ -82,6 +86,9 @@ oponentsPotentialEnergyMoves = allTwoBackEnergyTowerMoves UV.++ allMidToFrontEne
 allTwoBackEnergyTowerMoves :: Moves
 allTwoBackEnergyTowerMoves = allMovesOfType ENERGY twoBackCells
 
+allFourBackEnergyTowerMoves :: Moves
+allFourBackEnergyTowerMoves = allMovesOfType ENERGY fourBackCells
+
 switchAffordableMoves :: Moves -> Moves -> Moves -> Int -> Bool -> Moves
 switchAffordableMoves energyTowerMoves
                       defenseTowerMoves
@@ -101,7 +108,7 @@ switchAffordableMoves energyTowerMoves
     energyTowerMoves
 
 theMagicalRoundWhenIStopMakingEnergyTowers :: Int
-theMagicalRoundWhenIStopMakingEnergyTowers = 12
+theMagicalRoundWhenIStopMakingEnergyTowers = 14
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
 switchMovesICanAfford :: Int -> Bool -> Moves
@@ -110,12 +117,41 @@ switchMovesICanAfford =
                         allDefenseTowerMoves
                         allAttackTowerMoves
 
+missileTowerInSameRow :: Player -> EfficientCommand -> Bool
+missileTowerInSameRow (Player { attack3Towers = attack3Towers',
+                                attack2Towers = attack2Towers',
+                                attack1Towers = attack1Towers',
+                                attack0Towers = attack0Towers' }) move =
+  let allAttackTowers = addAllBuildings attack3Towers'
+                        (addAllBuildings attack2Towers'
+                         (addAllBuildings attack1Towers'
+                          (addAllBuildings attack0Towers' 0)))
+      yCoord          = getY $ coordOfCommand move
+      rowOfTower      = case yCoord of
+        0 -> row0
+        1 -> row1
+        2 -> row2
+        3 -> row3
+        4 -> row4
+        5 -> row5
+        6 -> row6
+        7 -> row7
+        x -> error $ "Invalid row of move: " ++ show x
+  in if onlyOverlappingBuildings rowOfTower allAttackTowers > 0
+     then False
+     else True
+
 openingBookMove :: GameState -> Maybe Command
 openingBookMove (GameState { gameRound = gameRound',
-                             me        = player@(Player { energy = energy' }) }) =
+                             me        = player@(Player { energy = energy' }),
+                             oponent   = oponent' }) =
   if gameRound' <= theMagicalRoundWhenIStopMakingEnergyTowers
   then if energy' >= energyTowerCost
-       then Just $ toCommand $ UV.head $ UV.filter available allBackEnergyTowerMoves
+       then Just $
+            toCommand $
+            UV.head $
+            UV.filter (missileTowerInSameRow oponent') $
+            UV.filter available allFourBackEnergyTowerMoves
        else Just $ toCommand nothingCommand
   else Nothing
   where
