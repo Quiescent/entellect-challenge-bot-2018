@@ -108,7 +108,7 @@ switchAffordableMoves energyTowerMoves
     energyTowerMoves
 
 theMagicalRoundWhenIStopMakingEnergyTowers :: Int
-theMagicalRoundWhenIStopMakingEnergyTowers = 13
+theMagicalRoundWhenIStopMakingEnergyTowers = 12
 
 -- NOTE: Assumes that attack towers cost the same as defense towers
 switchMovesICanAfford :: Int -> Bool -> Moves

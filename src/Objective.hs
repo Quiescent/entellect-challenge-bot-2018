@@ -13,6 +13,7 @@ import EfficientCommand
 import GameState
 import AvailableMoves
 import VectorIndex
+import BitSetMap
 import qualified GameTree    as M
 import qualified Data.IntMap as IM
 
@@ -148,14 +149,19 @@ decrementTreeFitness moves gameTree =
   M.decrementIncrement moves gameTree
 
 gameOver :: GameState -> Bool
-gameOver (GameState { me      = (Player { health = myHealth' }),
-                      oponent = (Player { health = oponentsHealth' }) }) =
+gameOver (GameState { me      = me'@(Player { health = myHealth' }),
+                      oponent = oponent'@(Player { health = oponentsHealth' }) }) =
+  (oponentsHealth' >= 20 && myHealth' >= 20 && towerCount me' < 5 && towerCount oponent' < 5) ||
   (myHealth' <= 0 || oponentsHealth' <= 0)
 
+towerCount :: Player -> Int
+towerCount = countBuildings . allBuiltTowers
+
 iWon :: GameState -> Bool
-iWon (GameState { me      = (Player { health = myHealth' }),
-                  oponent = (Player { health = oponentsHealth' }) }) =
-  oponentsHealth' <= 0 && myHealth' > 0
+iWon (GameState { me      = me'@(Player { health = myHealth' }),
+                  oponent = oponent'@(Player { health = oponentsHealth' }) }) =
+  (oponentsHealth' >= 20 && myHealth' >= 20 && towerCount me' > 5 && towerCount oponent' < 5) ||
+  (oponentsHealth' <= 0 && myHealth' > 0)
 
 confidence :: Int -> (Int, Int) -> Float
 confidence count (wins, games) =
